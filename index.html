@@ -108,6 +108,18 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .walker .nm{position:absolute;bottom:44px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
 .walker.me .nm{color:var(--dark);background:var(--gold)}
 .walker svg{display:block}
+.city2{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 6px;color:var(--gold);font-size:19px}
+.city2 small{color:var(--mute);font-size:13px}
+.tl{display:grid;grid-template-columns:5.5em 1fr auto;align-items:center;gap:8px;margin:5px 0;font-size:16px}
+.tl .bar{height:14px;background:var(--dark);border:2px solid #566c86}
+.tl .bar i{display:block;height:100%;background:var(--teal)}
+.tl.top .bar i{background:var(--gold)}
+.tl .ct{font-size:13px;color:var(--mute);white-space:nowrap}
+.fav{display:inline-block;background:var(--gold);color:var(--dark);font-size:11px;padding:0 4px;margin-left:4px}
+.sponsor{text-align:center;margin-top:18px;font-size:14px;color:var(--mute)}
+.sponsor b{font-family:"Press Start 2P",monospace;font-size:13px;color:var(--gold);font-weight:normal;letter-spacing:2px;text-shadow:2px 2px 0 var(--red)}
+.howto{border:3px dashed #566c86;padding:10px 12px;margin-top:18px;font-size:15px;line-height:1.6}
+.howto b{color:var(--gold);font-weight:normal}
 .press{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--gold);text-align:center;margin-top:18px}
 </style>
 </head>
@@ -316,6 +328,7 @@ function render(){
       '<button class="go" id="start"' + (nick.trim() ? "" : " disabled") + '>▶ START</button>' +
       (sentBefore ? '<p class="note">你已經送出過注單，重押一次會覆蓋舊的。</p>' : '<p class="press blink">PRESS START</p>'))) +
       '<button class="linkbtn" id="seeall">看大家的下注 ▶</button>' +
+      '<div class="howto"><b>✎ 想改答案？</b> 11/28 早上 8:00 前隨時回來，用同一支手機重押一次就會覆蓋舊的。<br><b>✕ 不玩了？</b> 到「看大家的下注」按「撤回我的注單」。<br><b>👀 開票前</b> 只看得到每都誰最被看好，誰押誰開票後才公開。</div>' +
       '<details><summary>▶ 遊戲規則</summary><ol>' +
       '<li>六都各押一位當選人，每都押 1～3 杯，沒把握可以按「不押」。至少押 3 都才算入局。</li>' +
       '<li>押錯：喝掉自己在那一都押的杯數。</li>' +
@@ -325,6 +338,7 @@ function render(){
       '<li>11/28 早上 8:00 截止。可以換無酒精飲料，喝酒不開車。</li>' +
       '</ol></details>' +
       '<p class="note">⚠ 一人一注，重複下注整筆作廢，大家玩得開心就好。<br>朋友間的小遊戲，只賭飲料，不涉及金錢。<br>候選人順序不代表號次。</p>' +
+      '<p class="sponsor">贊助商 ▸ <b>MARS</b></p>' +
       '<p class="sign">MADE BY ICEJACK</p>';
     const inp = $("nick");
     if (inp) {
@@ -394,6 +408,24 @@ async function sendBet(){
   sending = false; render();
 }
 
+let withdrawArmed = false, withdrawMsg = "", withdrawing = false;
+async function withdrawBet(){
+  if (withdrawing) return;
+  if (!withdrawArmed) { withdrawArmed = true; withdrawMsg = ""; render(); setTimeout(() => { if (withdrawArmed) { withdrawArmed = false; if (q === BOARD) render(); } }, 4000); return; }
+  withdrawArmed = false; withdrawing = true; withdrawMsg = "撤回中…"; render();
+  try {
+    const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"delete", key: deviceKey()})});
+    const res = await r.json();
+    if (!res.ok) throw new Error(res.error || "撤回失敗");
+    try { localStorage.removeItem("liudu_sent"); localStorage.removeItem("liudu_picks"); } catch (_) {}
+    picks = CITIES.map(() => ({c:null, n:null}));
+    data = res; info = res; syncWalkers(); withdrawMsg = ""; toast("已撤回注單"); sfx("err");
+  } catch (err) {
+    withdrawMsg = (err && err.message && !/fetch|network|JSON/i.test(err.message)) ? err.message : "撤回失敗，請檢查網路後再試。";
+  }
+  withdrawing = false; render();
+}
+
 function openBoard(){ data = null; go(BOARD); loadBoard(); }
 
 function settle(bets, winners){
@@ -418,9 +450,19 @@ function renderBoard(m){
   const bets = Array.isArray(data.bets) ? data.bets : [], winners = Array.isArray(data.winners) ? data.winners : [];
   const me = (store("liudu_nick") || "").trim();
   let h = '<div class="hero">' + sprite("mega",3,"") + sprite("ballot",4,"") + sprite("mug",3,"") + '</div>' +
-    '<h1 style="font-size:34px">大家的下注</h1><p class="sub">' + bets.length + ' PLAYERS</p>';
+    '<h1 style="font-size:34px">大家的下注</h1><p class="sub">' + bets.length + ' PLAYERS' + (data.revealed || winners.some(Boolean) ? '' : ' · 誰最被看好') + '</p>';
+  const revealed = !!data.revealed || winners.some(Boolean);
   if (!bets.length) h += '<p class="lead">還沒有人下注，當第一個吧！</p>';
-  else {
+  else if (!revealed && Array.isArray(data.tally)) {
+    h += '<p class="note" style="margin-top:0">開票前不公開誰押誰，只看大家最看好誰。</p><div class="box">' + CITIES.map((c,i) => {
+      const rows = (data.tally[i] || []).filter(t => t.votes > 0).sort((a,b) => b.votes - a.votes || b.cups - a.cups);
+      const total = rows.reduce((a,t) => a + t.votes, 0);
+      const maxV = rows.length ? rows[0].votes : 1;
+      return '<div class="city2">' + c.name + '<small>' + total + ' 人押</small></div>' + (rows.length ? rows.map((t,j) =>
+        '<div class="tl' + (j === 0 ? ' top' : '') + '"><span>' + esc(t.name) + (j === 0 && (rows.length === 1 || rows[1].votes < t.votes || rows[1].cups < t.cups) ? '<span class="fav">最看好</span>' : '') + '</span><span class="bar"><i style="width:' + Math.round(t.votes / maxV * 100) + '%"></i></span><span class="ct">' + t.votes + ' 人 · ' + t.cups + ' 杯</span></div>').join('') : '<p class="note" style="margin:4px 0">還沒有人押這都</p>');
+    }).join('') + '</div>';
+  }
+  else if (bets[0] && bets[0].picks) {
     h += '<div class="box tbl"><table><thead><tr><th>暱稱</th>' + CITIES.map(c => '<th>' + c.name.slice(0,2) + '</th>').join("") + '</tr></thead><tbody>' +
       bets.map(b => '<tr><td>' + esc(b.nick) + (b.nick === me ? '<span class="tag">我</span>' : '') + '</td>' + b.picks.map((p,i) => {
         if (p.c === "不押") return '<td class="dim">–</td>';
@@ -428,8 +470,8 @@ function renderBoard(m){
         return '<td class="' + cls + '">' + esc(p.c) + '×' + p.n + '</td>';
       }).join("") + '</tr>').join("") + '</tbody></table></div>';
   }
-  const st = settle(bets, winners);
-  if (st.decided) {
+  const st = settle(bets.filter(b => b.picks), winners);
+  if (st.decided && revealed) {
     h += '<h2>' + sprite("trophy",2,"").replace('<svg','<svg style="display:inline-block;vertical-align:-4px;margin-right:8px"') + '結算 ' + (st.decided === 6 ? 'FINAL' : st.decided + '/6') + '</h2>' +
       '<div class="box tbl"><table><thead><tr><th>暱稱</th><th>中</th><th>罰杯</th><th>指定券</th>' + (st.gods ? '<th>敬酒神</th>' : '') + '<th>至少喝</th></tr></thead><tbody>' +
       st.rows.map(r => '<tr><td>' + esc(r.nick) + (r.god ? '<span class="tag">酒神</span>' : '') + (r.zero ? '<span class="tag">槓龜</span>' : '') + '</td><td class="n">' + r.hit + '/' + st.decided + '</td><td class="n miss">' + r.pen + '</td><td class="n hit">' + r.tix + '</td>' + (st.gods ? '<td class="n">' + r.toast + '</td>' : '') + '<td class="n">' + r.drink + '</td></tr>').join("") +
@@ -437,10 +479,13 @@ function renderBoard(m){
   } else {
     h += '<p class="note">開票後主辦人填入當選人，這裡會自動結算每個人要喝幾杯。</p>';
   }
+  const mineListed = store("liudu_sent") && bets.some(b => b.nick === me);
+  if (mineListed && Date.now() < DEADLINE) h += '<button class="go ghost" id="withdraw" style="border-color:var(--orange);color:var(--orange)">' + (withdrawArmed ? '⚠ 再按一次確認撤回' : '✕ 撤回我的注單') + '</button>' + (withdrawMsg ? '<p class="warn">▶ ' + esc(withdrawMsg) + '</p>' : '');
   h += '<button class="go ghost" id="reload">↻ 重新整理</button>' +
     (Date.now() < DEADLINE ? '<button class="go" id="again">▶ ' + (store("liudu_sent") ? '修改我的注單' : '我要下注') + '</button>' : '');
   m.innerHTML = h;
   $("reload").onclick = () => { data = null; render(); loadBoard(); };
+  if ($("withdraw")) $("withdraw").onclick = withdrawBet;
   if ($("again")) $("again").onclick = () => { history = []; go(-1, false); };
 }
 
@@ -526,7 +571,7 @@ const SHIRT = ["#b13e53","#38b764","#3b5dc9","#41a6f6","#ffcd75","#ef7d57","#a7f
 const SKIN = ["#ffe0bd","#f1c27d","#e0ac69","#c68642"];
 function hash(str){ let h = 2166136261; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function personSVG(rows, nick){
-  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >> 4) % SKIN.length], t: SHIRT[(h >> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75"};
+  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75"};
   let r = "";
   rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = col[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
   return '<svg class="px" viewBox="0 0 13 13" width="39" height="39">' + r + '</svg>';
