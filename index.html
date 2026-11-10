@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>六都酒注 2026・快速下注</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1c2c; --bg2:#29366f; --panel:#333c57; --ink:#f4f4f4; --mute:#94b0c2;
+  --gold:#ffcd75; --orange:#ef7d57; --red:#b13e53; --green:#a7f070; --teal:#38b764; --dark:#0d0e17;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DotGothic16","Noto Sans TC",monospace;font-size:18px;line-height:1.5;-webkit-tap-highlight-color:transparent;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:100% 4px}
+.app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:14px 16px 28px}
+svg.px{image-rendering:pixelated;shape-rendering:crispEdges;display:block}
+.top{display:flex;align-items:center;gap:10px;min-height:44px}
+.back{background:none;border:0;color:var(--mute);font:inherit;font-size:16px;padding:8px 2px;cursor:pointer}
+.back[hidden]{display:block;visibility:hidden}
+.prog{flex:1;height:14px;background:var(--dark);border:3px solid var(--ink);padding:1px;display:flex;gap:2px}
+.prog[hidden]{display:flex;visibility:hidden}
+.prog i{flex:1;background:transparent}
+.prog i.on{background:var(--green)}
+.step{font-family:"Press Start 2P",monospace;font-size:10px;color:var(--gold);min-width:52px;text-align:right}
+main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 0}
+.hero{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin-bottom:14px}
+.bob{animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.blink{animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+h1{font-family:"DotGothic16",monospace;font-size:46px;line-height:1.1;margin:0;text-align:center;color:var(--gold);text-shadow:4px 4px 0 var(--red)}
+.sub{font-family:"Press Start 2P",monospace;font-size:10px;color:var(--mute);text-align:center;margin:10px 0 20px;letter-spacing:1px}
+.lead{text-align:center;margin:0 0 18px}
+.box{background:var(--panel);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--dark);padding:14px}
+.cityhead{display:flex;align-items:flex-end;gap:12px;margin-bottom:6px}
+.city{font-size:40px;line-height:1;margin:0;color:var(--gold);text-shadow:3px 3px 0 var(--red)}
+.q{font-size:21px;margin:10px 0 18px}
+.q .pick{color:var(--green)}
+.opts{display:grid;gap:10px}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;background:var(--panel);border:4px solid var(--ink);box-shadow:4px 4px 0 var(--dark);color:var(--ink);padding:12px 14px;font:inherit;font-size:21px;cursor:pointer;text-align:left;min-height:58px}
+.opt small{font-size:13px;color:var(--mute)}
+.opt:hover{background:var(--bg2)}
+.opt:active{transform:translate(4px,4px);box-shadow:none}
+.opt .cur{color:var(--gold);visibility:hidden;font-family:"Press Start 2P",monospace;font-size:12px}
+.opt:hover .cur,.opt.sel .cur{visibility:visible}
+.opt.sel{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+.opt.sel small{color:var(--red)}
+.opt.sel .cur{color:var(--red)}
+.opt.skip{background:transparent;border-style:dashed;box-shadow:none;color:var(--mute);font-size:17px}
+.cups{grid-template-columns:repeat(3,1fr)}
+.cups .opt{flex-direction:column;justify-content:flex-end;align-items:center;min-height:150px;padding:10px 4px;gap:6px}
+.cups .opt .num{font-family:"Press Start 2P",monospace;font-size:22px}
+.mugs{display:flex;gap:2px;align-items:flex-end;min-height:48px}
+input{width:100%;background:var(--dark);color:var(--ink);border:4px solid var(--ink);padding:14px;font:inherit;font-size:20px;border-radius:0}
+input::placeholder{color:#566c86}
+input:focus,button:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.go{display:block;width:100%;background:var(--red);color:var(--ink);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--dark);padding:14px;font:inherit;font-size:21px;cursor:pointer;margin-top:16px}
+.go:active{transform:translate(6px,6px);box-shadow:none}
+.go:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:6px 6px 0 var(--dark)}
+.go.alt{background:var(--teal)}
+.go.ghost{background:transparent;box-shadow:none}
+details{margin-top:24px;font-size:16px}
+summary{cursor:pointer;color:var(--gold);list-style:none}
+summary::-webkit-details-marker{display:none}
+details ol{padding-left:22px;margin:10px 0 0} details li{margin:6px 0}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:3px dotted #566c86;font-size:19px}
+.row:last-child{border-bottom:0}
+.row .dim{color:var(--mute)}
+.row b{color:var(--gold);font-weight:normal}
+.warn{color:var(--orange);margin:14px 0 0;font-size:16px}
+.note{font-size:14px;color:var(--mute);margin-top:14px;text-align:center}
+.skyline{margin:22px auto 0;opacity:.9}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--gold);color:var(--dark);border:4px solid var(--dark);padding:10px 16px;font-size:17px;opacity:0;transition:opacity .15s steps(2);pointer-events:none}
+.toast.on{opacity:1}
+textarea{width:100%;height:190px;margin-top:12px;background:var(--dark);color:var(--ink);border:4px solid var(--ink);padding:10px;font:inherit;font-size:16px;border-radius:0}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+th,td{padding:7px 8px;border-bottom:3px dotted #566c86;text-align:left;white-space:nowrap}
+th{color:var(--mute);font-weight:normal;font-size:13px}
+td.n{text-align:right}
+.hit{color:var(--green)} .miss{color:var(--orange)} .dim{color:var(--mute)}
+.tag{display:inline-block;background:var(--gold);color:var(--dark);padding:0 5px;font-size:12px;margin-left:6px}
+h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
+.linkbtn{background:none;border:0;color:var(--gold);font:inherit;font-size:17px;text-decoration:underline;cursor:pointer;display:block;margin:16px auto 0}
+.press{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--gold);text-align:center;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <button class="back" id="back" hidden>◀ 上一題</button>
+    <div class="prog" id="progwrap" hidden></div>
+    <span class="step" id="step"></span>
+  </div>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ---------- pixel sprites: each char is a color key ---------- */
+const PAL = {k:"#0d0e17",w:"#f4f4f4",g:"#94b0c2",s:"#566c86",y:"#ffcd75",o:"#ef7d57",r:"#b13e53",l:"#a7f070",t:"#38b764",b:"#3b5dc9",c:"#41a6f6",n:"#29366f",d:"#333c57",m:"#5d275d",f:"#ffe9b0"};
+const SPR = {
+  ballot:[
+    "....kkkkkk......",
+    "....kwwwwk......",
+    "....kwrrwk......",
+    "....kwrwrk......",
+    "....kwrrwk......",
+    "..kkkkwwkkkkkk..",
+    "..kccccwwccccck.",
+    ".kkkkkkkkkkkkkk.",
+    ".kbbbbbbbbbbbbk.",
+    ".kbbbbkkkkbbbbk.",
+    ".kbbbkwwwwkbbbk.",
+    ".kbbbkwyywkbbbk.",
+    ".kbbbkwwwwkbbbk.",
+    ".kbbbbkkkkbbbbk.",
+    ".knnnnnnnnnnnnk.",
+    ".kkkkkkkkkkkkkk."],
+  mug:[
+    "..wwwwwwww....",
+    ".wwwwwwwwww...",
+    ".kkkkkkkkkk...",
+    ".kyyyyyyyyk...",
+    ".kyfyyyyyykkk.",
+    ".kyfyyyyyyk.k.",
+    ".kyyyyyfyyk.k.",
+    ".kyyyyyyyyk.k.",
+    ".kyfyyyyyykkk.",
+    ".kyyyyyfyyk...",
+    ".kyyyyyyyyk...",
+    ".kkkkkkkkkk..."],
+  stamp:[
+    "....kkkkk....",
+    "....koook....",
+    "....koook....",
+    "...kkkkkkk...",
+    "...krrrrrk...",
+    "..kkkkkkkkk..",
+    "..kmmmmmmmk..",
+    "..kkkkkkkkk..",
+    ".............",
+    "...rrrrrrr...",
+    "..rr..r..rr..",
+    "..r.rrrrr.r..",
+    "..rr..r..rr..",
+    "...rrrrrrr..."],
+  mega:[
+    "..........kk..",
+    "........kkwk..",
+    "......kkwwwk..",
+    "kkkkkkwwwwwk..",
+    "kookkwwwwwwk.y",
+    "kookkwwwwwwk..",
+    "kookkwwwwwwky.",
+    "kkkkkkwwwwwk..",
+    "..kk..kkwwwk.y",
+    "..kk....kkwk..",
+    "..kkk.....kk.."],
+  trophy:[
+    "..kkkkkkkkkk..",
+    "kkkyyyyyyyykkk",
+    "kyky fyyyyykyk".replace(" ","y"),
+    "kyky fyyyyykyk".replace(" ","y"),
+    ".kkyfyyyyyykk.",
+    "...kyyyyyyk...",
+    "....kyyyyk....",
+    ".....kyyk.....",
+    ".....kyyk.....",
+    "....kkyykk....",
+    "...koooooook..".slice(0,14),
+    "...kkkkkkkk..."],
+  arrow:[
+    "k...",
+    "kk..",
+    "kyk.",
+    "kyyk",
+    "kyk.",
+    "kk..",
+    "k..."]
+};
+function sprite(name, scale, cls){
+  const rows = SPR[name], h = rows.length, w = Math.max(...rows.map(r => r.length));
+  let rects = "";
+  rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = PAL[row[x]]; if (c) rects += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
+  return '<svg class="px '+(cls||"")+'" viewBox="0 0 '+w+' '+h+'" width="'+w*scale+'" height="'+h*scale+'" aria-hidden="true">'+rects+'</svg>';
+}
+/* skyline per city: simple generic building profiles (height per column) */
+const SKY = {
+  "台北市":[3,3,5,5,4,4,6,6,9,12,16,16,12,9,6,6,4,4,5,5,7,7,3,3],
+  "新北市":[4,4,6,6,6,5,5,7,7,7,9,9,9,6,6,8,8,4,4,6,6,6,3,3],
+  "桃園市":[3,3,3,5,5,4,4,4,7,7,6,6,2,2,3,8,8,8,5,5,4,4,3,3],
+  "台中市":[3,4,4,6,6,6,8,8,10,10,10,7,7,5,5,9,9,6,6,4,4,4,3,3],
+  "台南市":[2,2,4,4,4,6,7,7,6,4,4,3,3,5,5,5,8,9,8,5,5,3,2,2],
+  "高雄市":[3,3,5,5,7,7,9,11,13,15,15,13,11,9,7,7,5,5,6,6,4,4,3,3]
+};
+function skyline(name, scale){
+  const hs = SKY[name] || SKY["台北市"], H = 18, W = hs.length;
+  let r = "";
+  hs.forEach((h,x) => {
+    for (let y = H - h; y < H; y++) {
+      const win = (x % 2 === 1) && (y % 3 === 1) && y < H - 1 && ((x * 7 + y * 3) % 5 !== 0);
+      r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+(win ? "#ffcd75" : (y === H - h ? "#566c86" : "#29366f"))+'"/>';
+    }
+  });
+  return '<svg class="px skyline" viewBox="0 0 '+W+' '+H+'" width="'+W*scale+'" height="'+H*scale+'" aria-hidden="true">'+r+'</svg>';
+}
+
+/* ---------- data ---------- */
+const CITIES = [
+  {name:"台北市", c:[["蔣萬安","國民黨・現任"],["沈伯洋","民進黨"],["郭璽","台灣麻將最大黨"],["蕭文乾","臺灣SoR無法黨"],["唐新民","三勢團結促進聯盟"],["林志成","無黨籍"]]},
+  {name:"新北市", c:[["李四川","國民黨"],["蘇巧慧","民進黨"],["蘇輝湟","無黨籍"]]},
+  {name:"桃園市", c:[["張善政","國民黨・現任"],["黃世杰","民進黨"]]},
+  {name:"台中市", c:[["江啟臣","國民黨"],["何欣純","民進黨"],["洪麗華","司法正義黨"]]},
+  {name:"台南市", c:[["謝龍介","國民黨"],["陳亭妃","民進黨"],["葉人文","無黨籍"],["蕭燐洪","臺灣SoR無法黨"]]},
+  {name:"高雄市", c:[["柯志恩","國民黨"],["賴瑞隆","民進黨"],["張靜","司法改革黨"],["王肇民","無黨籍"],["洪方隆","無黨籍"]]}
+];
+const CUPNOTE = {1:"小試一下",2:"有點把握",3:"穩了"};
+const DEADLINE = new Date("2026-11-28T08:00:00+08:00").getTime();
+const TOTAL = 12;
+const API = "https://script.google.com/macros/s/AKfycbzVu-3dx_Y5H21-ENjoAvboc0B-DvN6th04IjROIbPWNwjLQcxbw4FpqOOZ2bhioLtWvw/exec";
+const BOARD = 99;
+let sending = false, sendMsg = "", data = null, loadErr = "";
+
+function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } }
+function deviceKey(){
+  let k = store("liudu_key");
+  if (!k || !/^[A-Za-z0-9]{12,64}$/.test(k)) {
+    const a = new Uint8Array(16); crypto.getRandomValues(a);
+    k = [...a].map(x => x.toString(36).padStart(2,"0")).join("").replace(/[^A-Za-z0-9]/g,"").slice(0,24);
+    store("liudu_key", k);
+  }
+  return k;
+}
+async function loadBoard(){
+  loadErr = "";
+  try {
+    const r = await fetch(API, {credentials:"omit"});
+    data = await r.json();
+  } catch (_) { loadErr = "讀不到資料，請稍後重新整理。"; }
+  if (q === BOARD) render();
+}
+
+let nick = store("liudu_nick") || "";
+let picks = (() => { try { const p = JSON.parse(store("liudu_picks")); if (Array.isArray(p) && p.length === 6) return p; } catch (_) {} return CITIES.map(() => ({c:null, n:null})); })();
+const sentBefore = !!store("liudu_sent");
+let q = -1, history = [];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+$("progwrap").innerHTML = "<i></i>".repeat(TOTAL);
+
+function go(next, push = true){ if (push) history.push(q); q = next; render(); window.scrollTo(0,0); }
+function nextAfter(i){ return (i % 2 === 0 && picks[i/2].c === "不押") ? i + 2 : i + 1; }
+
+function render(){
+  const m = $("main"), inQuiz = q >= 0 && q < TOTAL;
+  $("back").hidden = q < 0;
+  $("progwrap").hidden = q < 0 || q === BOARD;
+  [...$("progwrap").children].forEach((el,i) => el.classList.toggle("on", i < Math.min(q, TOTAL)));
+  $("step").textContent = inQuiz ? String(q + 1).padStart(2,"0") + "/" + TOTAL : (q === BOARD ? "" : q >= TOTAL ? "CLEAR" : "");
+
+  if (q === -1) {
+    const closed = Date.now() >= DEADLINE;
+    m.innerHTML =
+      '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
+      '<h1>六都酒注</h1><p class="sub">ELECTION 2026 · 11.28</p>' +
+      '<p class="lead">押六都市長，賭注是酒<br>按 12 下就完成</p>' +
+      (closed ? '<p class="warn">▶ 下注已截止（11/28 08:00），等開票吧。</p>' :
+      '<input id="nick" maxlength="20" placeholder="輸入你的暱稱" value="' + esc(nick) + '" autocomplete="nickname">' +
+      '<button class="go" id="start"' + (nick.trim() ? "" : " disabled") + '>▶ START</button>' +
+      (sentBefore ? '<p class="note">你已經送出過注單，重押一次會覆蓋舊的。</p>' : '<p class="press blink">PRESS START</p>')) +
+      '<button class="linkbtn" id="seeall">看大家的下注 ▶</button>' +
+      '<details><summary>▶ 遊戲規則</summary><ol>' +
+      '<li>六都各押一位當選人，每都押 1～3 杯，沒把握可以按「不押」。至少押 3 都才算入局。</li>' +
+      '<li>押錯：喝掉自己在那一都押的杯數。</li>' +
+      '<li>押對：拿到同杯數的「指定券」，可以指定別人喝，或抵銷自己的罰杯。</li>' +
+      '<li>六都全押又全中是「酒神」，其他人各敬一杯；全押又全錯是「槓龜」，加罰一杯。</li>' +
+      '<li>11/28 早上 8:00 截止。可以換無酒精飲料，喝酒不開車。</li>' +
+      '</ol></details>' +
+      '<p class="note">朋友間的小遊戲，只賭飲料，不涉及金錢。<br>候選人順序不代表號次。</p>';
+    const inp = $("nick");
+    if (inp) {
+      inp.addEventListener("input", () => { nick = inp.value; $("start").disabled = !nick.trim(); });
+      inp.addEventListener("keydown", e => { if (e.key === "Enter" && nick.trim()) go(0); });
+      $("start").onclick = () => go(0);
+    }
+    $("seeall").onclick = openBoard;
+    return;
+  }
+
+  if (inQuiz) {
+    const ci = Math.floor(q / 2), city = CITIES[ci], p = picks[ci];
+    const head = '<div class="cityhead"><p class="city">' + city.name + '</p></div>' + skyline(city.name, 6).replace('class="px skyline"','class="px" style="margin:6px 0 0"');
+    if (q % 2 === 0) {
+      m.innerHTML = head + '<p class="q">' + sprite("stamp",2,"").replace('<svg','<svg style="display:inline-block;vertical-align:-6px;margin-right:8px"') + '誰會當選？</p><div class="opts">' +
+        city.c.map(c => '<button class="opt' + (p.c === c[0] ? " sel" : "") + '" data-c="' + esc(c[0]) + '"><span><span class="cur">▶</span> ' + esc(c[0]) + '</span><small>' + esc(c[1]) + '</small></button>').join("") +
+        '<button class="opt skip' + (p.c === "不押" ? " sel" : "") + '" data-c="不押">這都不押</button></div>';
+    } else {
+      m.innerHTML = head + '<p class="q">押 <span class="pick">' + esc(p.c) + '</span> 幾杯？</p><div class="opts cups">' +
+        [1,2,3].map(n => '<button class="opt' + (p.n === n ? " sel" : "") + '" data-n="' + n + '"><span class="mugs">' + sprite("mug",3,"").repeat(n).replace(/width="42" height="36"/g, n === 3 ? 'width="28" height="24"' : n === 2 ? 'width="35" height="30"' : 'width="42" height="36"') + '</span><span class="num">' + n + '</span><small>' + CUPNOTE[n] + '</small></button>').join("") + '</div>';
+    }
+    return;
+  }
+
+  if (q === BOARD) { renderBoard(m); return; }
+
+  // result
+  const bet = picks.filter(p => p.c && p.c !== "不押");
+  const total = bet.reduce((a,p) => a + p.n, 0), ok = bet.length >= 3;
+  m.innerHTML =
+    '<div class="hero">' + sprite("trophy",5,"bob") + '</div>' +
+    '<h1 style="font-size:32px">' + esc(nick.trim()) + '</h1><p class="sub">STAGE CLEAR · ' + bet.length + ' 都 · ' + total + ' 杯</p>' +
+    '<div class="box">' + CITIES.map((c,i) => {
+      const p = picks[i];
+      return '<div class="row"><span>' + c.name + '</span>' + (p.c === "不押" ? '<span class="dim">不押</span>' : '<span><b>' + esc(p.c) + '</b> ×' + p.n + '</span>') + '</div>';
+    }).join("") + '</div>' +
+    (ok ? '' : '<p class="warn">▶ 至少要押 3 都才算入局，按「上一題」或「重來」修改。</p>') +
+    '<button class="go alt" id="send"' + (ok && !sending ? "" : " disabled") + '>' + (sending ? "送出中…" : "▶ 送出注單") + '</button>' +
+    (sendMsg ? '<p class="warn">▶ ' + esc(sendMsg) + '</p>' : '') +
+    '<button class="go ghost" id="redo">↺ 重來</button>' +
+    '<p class="note">截止前想改，重押一次再送出就會覆蓋。</p>';
+  $("redo").onclick = () => { picks = CITIES.map(() => ({c:null, n:null})); history = []; sendMsg = ""; go(0, false); };
+  $("send").onclick = sendBet;
+}
+
+async function sendBet(){
+  if (sending) return;
+  if (Date.now() >= DEADLINE) { sendMsg = "已經截止下注了"; return render(); }
+  sending = true; sendMsg = ""; render();
+  const body = JSON.stringify({nick: nick.trim(), key: deviceKey(), picks: picks.map(p => (p.c && p.c !== "不押") ? {c:p.c, n:p.n} : {c:"不押"})});
+  try {
+    const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body});
+    const res = await r.json();
+    if (!res.ok) throw new Error(res.error || "送出失敗");
+    store("liudu_nick", nick.trim()); store("liudu_picks", JSON.stringify(picks)); store("liudu_sent", "1");
+    data = res; sending = false; toast("SAVED! 注單已送出");
+    history = []; go(BOARD, false); return;
+  } catch (err) {
+    sendMsg = (err && err.message && !/fetch|network|JSON/i.test(err.message)) ? err.message : "送出失敗，請檢查網路後再按一次。";
+  }
+  sending = false; render();
+}
+
+function openBoard(){ data = null; go(BOARD); loadBoard(); }
+
+function settle(bets, winners){
+  const decided = winners.filter(Boolean).length;
+  const rows = bets.filter(b => b.picks.filter(p => p.c !== "不押").length >= 3).map(b => {
+    let hit = 0, pen = 0, tix = 0;
+    const full = b.picks.every(p => p.c !== "不押");
+    b.picks.forEach((p,i) => { if (p.c === "不押" || !winners[i]) return; if (p.c === winners[i]) { hit++; tix += p.n; } else pen += p.n; });
+    return {nick:b.nick, hit, pen, tix, god: decided === 6 && full && hit === 6, zero: decided === 6 && full && hit === 0};
+  });
+  const gods = rows.filter(r => r.god).length;
+  rows.forEach(r => { if (r.zero) r.pen += 1; r.toast = gods - (r.god ? 1 : 0); r.drink = Math.max(0, r.pen - r.tix) + r.toast; });
+  rows.sort((a,b) => b.hit - a.hit || a.drink - b.drink);
+  return {rows, decided, gods};
+}
+
+function renderBoard(m){
+  if (!data) {
+    m.innerHTML = '<div class="hero">' + sprite("ballot",5,"bob") + '</div><p class="lead">' + (loadErr ? esc(loadErr) : 'NOW LOADING<span class="blink">…</span>') + '</p>';
+    return;
+  }
+  const bets = Array.isArray(data.bets) ? data.bets : [], winners = Array.isArray(data.winners) ? data.winners : [];
+  const me = (store("liudu_nick") || "").trim();
+  let h = '<div class="hero">' + sprite("mega",3,"") + sprite("ballot",4,"") + sprite("mug",3,"") + '</div>' +
+    '<h1 style="font-size:34px">大家的下注</h1><p class="sub">' + bets.length + ' PLAYERS</p>';
+  if (!bets.length) h += '<p class="lead">還沒有人下注，當第一個吧！</p>';
+  else {
+    h += '<div class="box tbl"><table><thead><tr><th>暱稱</th>' + CITIES.map(c => '<th>' + c.name.slice(0,2) + '</th>').join("") + '</tr></thead><tbody>' +
+      bets.map(b => '<tr><td>' + esc(b.nick) + (b.nick === me ? '<span class="tag">我</span>' : '') + '</td>' + b.picks.map((p,i) => {
+        if (p.c === "不押") return '<td class="dim">–</td>';
+        const cls = winners[i] ? (p.c === winners[i] ? "hit" : "miss") : "";
+        return '<td class="' + cls + '">' + esc(p.c) + '×' + p.n + '</td>';
+      }).join("") + '</tr>').join("") + '</tbody></table></div>';
+  }
+  const st = settle(bets, winners);
+  if (st.decided) {
+    h += '<h2>' + sprite("trophy",2,"").replace('<svg','<svg style="display:inline-block;vertical-align:-4px;margin-right:8px"') + '結算 ' + (st.decided === 6 ? 'FINAL' : st.decided + '/6') + '</h2>' +
+      '<div class="box tbl"><table><thead><tr><th>暱稱</th><th>中</th><th>罰杯</th><th>指定券</th>' + (st.gods ? '<th>敬酒神</th>' : '') + '<th>至少喝</th></tr></thead><tbody>' +
+      st.rows.map(r => '<tr><td>' + esc(r.nick) + (r.god ? '<span class="tag">酒神</span>' : '') + (r.zero ? '<span class="tag">槓龜</span>' : '') + '</td><td class="n">' + r.hit + '/' + st.decided + '</td><td class="n miss">' + r.pen + '</td><td class="n hit">' + r.tix + '</td>' + (st.gods ? '<td class="n">' + r.toast + '</td>' : '') + '<td class="n">' + r.drink + '</td></tr>').join("") +
+      '</tbody></table></div><p class="note">「至少喝」＝指定券全部拿來抵自己的罰杯。拿去指定別人的話，罰杯照喝。</p>';
+  } else {
+    h += '<p class="note">開票後主辦人填入當選人，這裡會自動結算每個人要喝幾杯。</p>';
+  }
+  h += '<button class="go ghost" id="reload">↻ 重新整理</button>' +
+    (Date.now() < DEADLINE ? '<button class="go" id="again">▶ ' + (store("liudu_sent") ? '修改我的注單' : '我要下注') + '</button>' : '');
+  m.innerHTML = h;
+  $("reload").onclick = () => { data = null; render(); loadBoard(); };
+  if ($("again")) $("again").onclick = () => { history = []; go(-1, false); };
+}
+function toast(s){ const el = $("toast"); el.textContent = s; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 1800); }
+
+document.addEventListener("click", e => {
+  const b = e.target.closest(".opt");
+  if (!b || q < 0 || q >= TOTAL) return;
+  const ci = Math.floor(q / 2);
+  if (b.dataset.c) { picks[ci].c = b.dataset.c; if (b.dataset.c === "不押") picks[ci].n = null; }
+  else picks[ci].n = Number(b.dataset.n);
+  b.classList.add("sel");
+  setTimeout(() => go(Math.min(nextAfter(q), TOTAL)), 180);
+});
+$("back").onclick = () => { q = history.length ? history.pop() : -1; if (q === BOARD && !data) loadBoard(); render(); };
+render();
+</script>
+</body>
+</html>
