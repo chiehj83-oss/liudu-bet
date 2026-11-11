@@ -899,8 +899,11 @@ function editSay(){
   });
   d.querySelectorAll(".ichip").forEach(b => b.onclick = async () => {
     const k = b.dataset.k; d.querySelectorAll(".ichip").forEach(x => x.classList.toggle("sel", x === b));
-    store("pred_item", k); mw.item = k; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
-    try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"item", key: deviceKey(), i: k})}); const j = await r.json(); toast(j.ok ? "✋ 換好了，大家都看得到" : (j.error || "只有你自己看得到")); } catch (_) {}
+    store("pred_item", k); mw.item = k;
+    if (mw.zone) { mw.zone = null; store("pred_zone", ""); const bx = $("lobby"); if (bx) { const b2 = zBounds(null, bx.clientWidth), y2 = zY(null); mw.x = b2[0] + Math.random() * (b2[1] - b2[0]); mw.y = y2[0] + Math.random() * (y2[1] - y2[0]); }
+      fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"zone", key: deviceKey(), z: ""})}).catch(() => {}); }
+    const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
+    try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"item", key: deviceKey(), i: k})}); const j = await r.json(); toast(j.ok ? "✋ 換好了！已回到舞池拿著它" : ((j.error || "後台沒存到") + "（目前只有你自己看得到）")); } catch (_) {}
   });
   d.querySelectorAll(".chip").forEach(b => b.onclick = () => { inp.value = b.textContent; d.querySelectorAll(".chip").forEach(x => x.classList.toggle("sel", x === b)); });
   d.querySelector(".no").onclick = () => d.remove();
