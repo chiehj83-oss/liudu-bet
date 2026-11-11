@@ -104,7 +104,14 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 @keyframes beam{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
 .lobby .empty{position:absolute;left:0;right:0;top:44px;text-align:center;color:var(--mute);font-size:15px;z-index:3}
 .lobby .tag2{position:absolute;top:6px;left:10px;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);z-index:3}
-.smz{position:absolute;top:0;bottom:0;right:0;width:32%;background:repeating-linear-gradient(45deg,rgba(86,108,134,.28) 0 6px,rgba(51,60,87,.28) 6px 12px);border-left:3px dashed #566c86;z-index:2}
+.smz{position:absolute;top:0;bottom:150px;right:0;width:32%;background:repeating-linear-gradient(45deg,rgba(86,108,134,.28) 0 6px,rgba(51,60,87,.28) 6px 12px);border-left:3px dashed #566c86;z-index:2}
+.yard{position:absolute;left:0;right:0;bottom:0;height:150px;display:flex;border-top:6px solid #566c86;z-index:2}
+.yard>div{position:relative;flex:1}
+.z-tree{background:repeating-linear-gradient(0deg,#a7f070 0 4px,#8fd65e 4px 8px)}
+.z-milk{background:repeating-conic-gradient(#29366f 0 25%,#333c57 0 50%) 0 0/16px 16px;border-left:4px solid #566c86}
+.yard b{position:absolute;top:6px;left:6px;font-size:11px;color:#f4f4f4;background:#0d0e17;padding:1px 5px;border:2px solid #566c86}
+.yard .tree{position:absolute;bottom:92px;right:8px}.yard .tree+.tree{right:42px;bottom:100px}.yard .tree+.tree+.tree{right:76px;bottom:90px}
+.yard .cow{position:absolute;bottom:96px;right:10px;filter:drop-shadow(0 0 0 #0d0e17) drop-shadow(1px 0 0 #566c86) drop-shadow(-1px 0 0 #566c86)}.yard .cow+.cow{right:58px;bottom:84px;transform:scaleX(-1)}
 .smz b{position:absolute;top:6px;right:6px;font-size:11px;color:#c2c3c7;background:#0d0e17;padding:1px 5px;border:2px solid #566c86}
 .puff{position:absolute;bottom:20px;left:36px;width:3px;height:3px;background:#c2c3c7;animation:puff 2.2s linear infinite}
 .puff::after{content:"";position:absolute;left:2px;top:0;width:3px;height:3px;background:#94b0c2;animation:puff 2.2s linear infinite;animation-delay:-1.1s}
@@ -593,7 +600,18 @@ function cigRows(rows){
   let hr = -1; rows.forEach((r,i) => { if (r.slice(7,9) === "ss" && r.slice(9) === "kyyk") hr = i; });
   return rows.map((r,i) => r.slice(0,9) + (i === hr ? "WWWn" : r.slice(9).replace(/[wky]/g, ".")));
 }
-LOOKS.forEach(L => { L.CA = cigRows(L.A); L.CB = cigRows(L.B); });
+function propRows(rows, pat){
+  let hr = -1; rows.forEach((r,i) => { if (r.slice(7,9) === "ss" && r.slice(9) === "kyyk") hr = i; });
+  return rows.map((r,i) => { const o = pat[i - hr]; return r.slice(0,9) + (o || r.slice(9).replace(/[wky]/g, ".")); });
+}
+const AXE_UP = {"-3":"..ZZ","-2":".oZZ","-1":".o..","0":"o...","1":"...."}, AXE_DN = {"-1":"....","0":"oooZ","1":"..ZZ"};
+const MILK = {"-4":".BB.","-3":"kWWk","-2":"kWWk","-1":"kWWk","0":"kWWk","1":".kk."};
+LOOKS.forEach(L => { L.P = {smoke:[cigRows(L.A), cigRows(L.B)], tree:[propRows(L.A, AXE_UP), propRows(L.B, AXE_DN)], milk:[propRows(L.A, MILK), propRows(L.B, MILK)]}; });
+const ZONES = ["smoke", "tree", "milk"], ZMSG = {smoke:"🚬 你走進吸菸區了", tree:"🪓 去砍樹囉", milk:"🥛 來一瓶鮮乳"};
+const YD = 170, YARD = 150;
+function zBounds(z, bw){ const W = bw - 39, Z = Math.round(bw * 0.68), H = Math.round(bw / 2);
+  return z === "smoke" ? [Z, W] : z === "tree" ? [0, H - 45] : z === "milk" ? [H + 6, W] : [0, Z - 39]; }
+function zY(z){ return (z === "tree" || z === "milk") ? [4, 48] : [YD + 4, YD + 274]; }
 const HUMANS = [0, 1, 2, 5];
 function lookOf(nick, av){ return (av >= 0 && av < LOOKS.length) ? av : HUMANS[(hash(nick) >>> 16) % 4]; }
 const HAIR = ["#0d0e17","#5d275d","#b13e53","#ef7d57","#ffcd75","#94b0c2","#333c57","#73eff7"];
@@ -601,7 +619,7 @@ const SHIRT = ["#b13e53","#38b764","#3b5dc9","#41a6f6","#ffcd75","#ef7d57","#a7f
 const SKIN = ["#ffe0bd","#f1c27d","#e0ac69","#c68642"];
 function hash(str){ let h = 2166136261; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function personSVG(rows, nick, pal){
-  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f:"#c68642", o:"#5d3a1a", n:"#ef7d57", W:"#f4f4f4", g:"#38b764", L:"#2e3047", G:"#7a88a8", Z:"#c2c3c7"};
+  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f:"#c68642", o:"#5d3a1a", n:"#ef7d57", W:"#f4f4f4", g:"#38b764", L:"#2e3047", G:"#7a88a8", Z:"#c2c3c7", B:"#41a6f6", b:"#29366f"};
   if (pal) Object.assign(col, pal);
   let r = "";
   rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = col[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
@@ -619,9 +637,9 @@ function syncWalkers(){
   for (let i = others.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [others[i], others[j]] = [others[j], others[i]]; }
   const names = (me && all.includes(me) ? [me] : []).concat(others).slice(0, 40);
   const W = Math.min(window.innerWidth, 512) - 39;
-  const depth = names.length > 15 ? 270 : 48;
-  walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
-  walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; if (w.smoke === undefined) { w.smoke = w.nick === me ? store("pred_smoke") === "1" : (hash(w.nick) >>> 20) % 7 === 0; w.x = w.smoke ? W * (0.72 + Math.random() * 0.28) : Math.random() * W * 0.6; } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
+  const depth = 270;
+  walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: YD + 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
+  walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; if (w.zone === undefined) { const hz = (hash(w.nick) >>> 20) % 10; w.zone = w.nick === me ? (ZONES.includes(store("pred_zone")) ? store("pred_zone") : null) : (hz < 3 ? ZONES[hz] : null); const b = zBounds(w.zone, W + 39), yb = zY(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
   walkers.sort((a,b) => b.y - a.y);
   if (!poolTimer && all.length > 40) poolTimer = setInterval(() => { if (q === -1) { syncWalkers(); render(); } }, 20000);
 }
@@ -631,16 +649,18 @@ function floorHTML(big){
   let beams = ""; for (let i = 0; i < 10; i++) beams += '<span class="beam" style="left:' + (8 + i * 9.3) + '%;top:' + (24 + (i * 13) % 50) + 'px;animation-delay:-' + (i * 0.37).toFixed(2) + 's"></span>';
   const pal = {k:"#0d0e17",g:"#94b0c2",w:"#f4f4f4",s:"#566c86"};
   let r = ""; BALL.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = pal[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
-  return '<div class="floor"' + (big ? ' style="height:320px;grid-template-rows:repeat(11,1fr)"' : '') + '>' + tiles + '</div>' + beams + '<svg class="px ball" viewBox="0 0 10 9" width="30" height="27" style="top:6px">' + r + '<rect x="4.5" y="-9" width="1" height="9" fill="#566c86"/></svg>';
+  return '<div class="floor"' + (big ? ' style="height:320px;bottom:' + YARD + 'px;grid-template-rows:repeat(11,1fr)"' : '') + '>' + tiles + '</div>' + beams + '<svg class="px ball" viewBox="0 0 10 9" width="30" height="27" style="top:6px">' + r + '<rect x="4.5" y="-9" width="1" height="9" fill="#566c86"/></svg>';
 }
+const TREE = '<svg class="px tree" viewBox="0 0 9 12" width="27" height="36">' + ["..ggggg..",".ggGgggg.","gggggGggg","ggGgggggg","gggggggGg",".ggggggg.","..ggggg..","....o....","....o....","...ooo...","....o....","...ooo..."].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({g:"#257179",G:"#38b764",o:"#5d3a1a"})[c]+'"/>').join("")).join("") + '</svg>';
+const COW = '<svg class="px cow" viewBox="0 0 14 10" width="42" height="30">' + ["k..........k..",".kwwwwwwwkkwk.","wwwkkwwwwwwwww","wwkkkwwwwkkwpp","wwwkwwwkkkwwpp",".wwwwwwwkwww..",".wwwwwwwwww...","..w.w...w.w...","..k.k...k.k...","..............".slice(0)].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({w:"#f4f4f4",k:"#0d0e17",p:"#ff9eb0"})[c]+'"/>').join("")).join("") + '</svg>';
 function lobbyHTML(){
-  const big = walkers.length > 15;
-  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:420px"' : '') + '>' + floorHTML(big) + '<div class="smz"><b>🚬 吸菸區</b></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  const big = true;
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="smz"><b>🚬 吸菸區</b></div><div class="yard"><div class="z-tree"><b>🪓 砍樹區</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳區</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(300 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + '</span>' + (w.smoke ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG(w.smoke ? LOOKS[w.look].CA : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG(w.smoke ? LOOKS[w.look].CB : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + '</span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG(w.zone ? LOOKS[w.look].P[w.zone][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG(w.zone ? LOOKS[w.look].P[w.zone][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
 }
 function tickLobby(t){
   const box = $("lobby");
@@ -655,12 +675,12 @@ function tickLobby(t){
     if (w.jt != null) {
       w.jt += dt; const p = Math.min(1, w.jt / 0.55);
       w.x = w.jx0 + (w.jx1 - w.jx0) * p; w.y = w.jy0 + (w.jy1 - w.jy0) * p; w.hop = -Math.sin(Math.PI * p) * 34;
-      el.style.bottom = w.y.toFixed(0) + "px"; el.style.zIndex = w.nick === me ? 999 : 10 + Math.round(300 - w.y);
+      el.style.bottom = w.y.toFixed(0) + "px"; el.style.zIndex = w.nick === me ? 999 : 10 + Math.round(600 - w.y);
       if (p >= 1) { w.jt = null; w.hop = 0; w.pause = 1.2; }
     } else if (w.pause > 0) { w.pause -= dt; w.ft += dt; if (w.ft > 0.18) { w.ft = 0; w.frame ^= 1; w.hop = w.frame ? -3 : 0; } }
     else {
       w.x += w.v * dt;
-      const lo = w.smoke ? Z : 0, hi = w.smoke ? W : Z - 39;
+      const [lo, hi] = zBounds(w.zone, box.clientWidth);
       if (w.x < lo) { w.x = lo; w.v = Math.abs(w.v); }
       if (w.x > hi) { w.x = hi; w.v = -Math.abs(w.v); }
       w.ft += dt; if (w.ft > 0.22) { w.ft = 0; w.frame ^= 1; }
@@ -687,11 +707,12 @@ document.addEventListener("click", e => {
   if (!w) { toast("送出預測後，你的角色才會進舞池"); return; }
   const r = box.getBoundingClientRect(), W = box.clientWidth - 39, Z = Math.round(box.clientWidth * 0.68);
   const cx = e.clientX - r.left - 19, cy = r.bottom - e.clientY - 20;
-  const smoke = cx + 19 >= Z;
-  w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(smoke ? Z : 0, Math.min(smoke ? W : Z - 39, cx)); w.jy1 = Math.max(4, Math.min(4 + w.d, cy)); w.jt = 0;
-  if (smoke !== !!w.smoke) {
-    w.smoke = smoke; store("pred_smoke", smoke ? "1" : "0"); sfx("coin");
-    toast(smoke ? "🚬 你走進吸菸區了" : "🍺 回舞池喝酒");
+  const zone = cy + 20 < YARD ? (cx + 19 < box.clientWidth / 2 ? "tree" : "milk") : (cx + 19 >= Z ? "smoke" : null);
+  const b = zBounds(zone, box.clientWidth), yb = zY(zone);
+  w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(b[0], Math.min(b[1], cx)); w.jy1 = Math.max(yb[0], Math.min(yb[1], cy)); w.jt = 0;
+  if (zone !== w.zone) {
+    w.zone = zone; store("pred_zone", zone || ""); sfx("coin");
+    toast(zone ? ZMSG[zone] : "🍺 回舞池喝酒");
     box.outerHTML = lobbyHTML();
   }
 });
