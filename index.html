@@ -631,7 +631,7 @@ let poolTimer = 0, labOff = 0, labT = 0;
 const LABN = 20;
 function syncWalkers(){
   const raw = (info && Array.isArray(info.nicks)) ? info.nicks : [];
-  const avOf = {}; raw.forEach(o => { if (o && typeof o === 'object') avOf[o.n] = o.a; });
+  const avOf = {}, zOf = {}; raw.forEach(o => { if (o && typeof o === 'object') { avOf[o.n] = o.a; zOf[o.n] = o.z; } });
   const all = raw.map(o => (o && typeof o === 'object') ? o.n : o);
   const me = myNick();
   const others = all.filter(n => n !== me);
@@ -640,7 +640,8 @@ function syncWalkers(){
   const W = Math.min(window.innerWidth, 512) - 39;
   const depth = 270;
   walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: YD + 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
-  walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; if (w.zone === undefined) { const hz = (hash(w.nick) >>> 20) % 10; w.zone = w.nick === me ? (ZONES.includes(store("pred_zone")) ? store("pred_zone") : null) : (hz < 3 ? ZONES[hz] : null); const b = zBounds(w.zone, W + 39), yb = zY(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
+  walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; const lz = store("pred_zone"), want = (w.nick === me && lz !== null) ? (ZONES.includes(lz) ? lz : null) : (ZONES.includes(zOf[w.nick]) ? zOf[w.nick] : null);
+    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
   walkers.sort((a,b) => b.y - a.y);
   if (!poolTimer && all.length > 40) poolTimer = setInterval(() => { if (q === -1) { syncWalkers(); render(); } }, 20000);
 }
@@ -713,10 +714,15 @@ document.addEventListener("click", e => {
   w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(b[0], Math.min(b[1], cx)); w.jy1 = Math.max(yb[0], Math.min(yb[1], cy)); w.jt = 0;
   if (zone !== w.zone) {
     w.zone = zone; store("pred_zone", zone || ""); sfx("coin");
+    fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"zone", key: deviceKey(), z: zone || ""})}).catch(() => {});
     toast(zone ? ZMSG[zone] : "🍺 回舞池喝酒");
     box.outerHTML = lobbyHTML();
   }
 });
+setInterval(async () => {
+  if (q !== -1 || document.hidden) return;
+  try { const r = await fetch(API, {credentials:"omit"}); const j = await r.json(); if (j && Array.isArray(j.nicks)) { info = j; data = j; syncWalkers(); const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); } } catch (_) {}
+}, 30000);
 function startLobby(){ if (!lobbyRAF) { lastT = 0; lobbyRAF = requestAnimationFrame(tickLobby); } }
 function toast(s){ const el = $("toast"); el.textContent = s; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 1800); }
 
