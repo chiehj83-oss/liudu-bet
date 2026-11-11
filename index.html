@@ -290,6 +290,7 @@ async function loadInfo(){
 function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } }
 function deviceKey(){
   let k = store("pred_key");
+  if (!k && /^[A-Za-z0-9]{12,64}$/.test(store("liudu_key") || "")) { k = store("liudu_key"); store("pred_key", k); }
   if (!k || !/^[A-Za-z0-9]{12,64}$/.test(k)) {
     const a = new Uint8Array(16); crypto.getRandomValues(a);
     k = [...a].map(x => x.toString(36).padStart(2,"0")).join("").replace(/[^A-Za-z0-9]/g,"").slice(0,24);
