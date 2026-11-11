@@ -104,6 +104,11 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 @keyframes beam{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
 .lobby .empty{position:absolute;left:0;right:0;top:44px;text-align:center;color:var(--mute);font-size:15px;z-index:3}
 .lobby .tag2{position:absolute;top:6px;left:10px;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);z-index:3}
+.smz{position:absolute;top:0;bottom:0;right:0;width:32%;background:repeating-linear-gradient(45deg,rgba(86,108,134,.28) 0 6px,rgba(51,60,87,.28) 6px 12px);border-left:3px dashed #566c86;z-index:2}
+.smz b{position:absolute;top:6px;right:6px;font-size:11px;color:#c2c3c7;background:#0d0e17;padding:1px 5px;border:2px solid #566c86}
+.puff{position:absolute;bottom:20px;left:36px;width:3px;height:3px;background:#c2c3c7;animation:puff 2.2s linear infinite}
+.puff::after{content:"";position:absolute;left:2px;top:0;width:3px;height:3px;background:#94b0c2;animation:puff 2.2s linear infinite;animation-delay:-1.1s}
+@keyframes puff{0%{transform:translate(0,0);opacity:.9}100%{transform:translate(4px,-26px) scale(2);opacity:0}}
 .walker{position:absolute;bottom:10px;width:39px;will-change:transform;cursor:pointer}
 .walker .nm{position:absolute;bottom:50px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
 .walker.me{z-index:999 !important}
@@ -382,7 +387,7 @@ function render(){
       const p = picks[i];
       return '<div class="row"><span>' + c.name + '</span>' + (p.c === "不押" ? '<span class="dim">不押</span>' : '<span><b>' + esc(p.c) + '</b> ×' + p.n + '</span>') + '</div>';
     }).join("") + '</div>' +
-    '<p class="label" style="text-align:center">舞池造型（可換）：</p><div class="looks">' + LOOKS.map((L,i) => '<button class="lookbtn' + (myLook() === i ? ' sel' : '') + '" data-look="' + i + '" aria-label="' + L.n + '">' + personSVG(L.A, nick.trim() || "x", L.fur) + '<small>' + L.n + '</small></button>').join('') + '</div>' +
+    '<p class="label" style="text-align:center">舞池造型（可換）：</p><div class="looks">' + LOOKS.map((L,i) => '<button class="lookbtn' + (myLook() === i ? ' sel' : '') + '" data-look="' + i + '" aria-label="' + L.n + '">' + personSVG(L.A, nick.trim() || "x", L.pal) + '<small>' + L.n + '</small></button>').join('') + '</div>' +
     (ok ? '' : '<p class="warn">▶ 至少要押 3 都才算入局，按「上一題」或「重來」修改。</p>') +
     '<button class="go alt" id="send"' + (ok && !sending ? "" : " disabled") + '>' + (sending ? "送出中…" : "▶ 送出預測") + '</button>' +
     (sendMsg ? '<p class="warn">▶ ' + esc(sendMsg) + '</p>' : '') +
@@ -567,24 +572,37 @@ function startGame(){
 }
 
 /* ---------- lobby: one pixel person per bettor ---------- */
-const BODY_A = ["...hhhh......","..hhhhhh.....","..hskskh.....","..ssssss.....","...ssss......","..tttttt.wwww",".ttttttttkyyk",".stttttsskyyk","..tttttt.kyyk","..pppppp.kkkk","..pp..pp.....","..pp..pp.....",".kk....kk...."];
-const BODY_B = BODY_A.slice(0,10).concat(["...pppp......","...pppp......","...kkkk......"]);
-const GIRL_A = ["...hhhh......","..hhhhhh.....",".hhskskhh....",".hhsssshh....",".hh.ssss.hh..",".hhttttt.wwww",".ttttttttkyyk",".stttttsskyyk","..tttttt.kyyk",".ttttttttkkkk","..ss..ss.....","..ss..ss.....",".kk....kk...."];
-const GIRL_B = GIRL_A.slice(0,10).concat(["...ssss......","...ssss......","...kkkk......"]);
-const MIX_A = GIRL_A.slice(0,6).concat(BODY_A.slice(6));
-const MIX_B = MIX_A.slice(0,10).concat(BODY_B.slice(10));
+const LEG_A = ["..pp..pp.....","..pp..pp.....",".kk....kk...."], LEG_B = ["...pppp......","...pppp......","...kkkk......"];
+const BODY_A = ["...hhhh......","..hhhhhh.....","..hskskh.....","..ssssss.....","...ssss......","..tttttt.wwww",".ttttttttkyyk",".stttttsskyyk","..tttttt.kyyk","..pppppp.kkkk"].concat(LEG_A);
+const BODY_B = BODY_A.slice(0,10).concat(LEG_B);
+const GUY = ["..hhhhh......",".hhhhhhh.....","..hksskh.....","..ssssss.....","...ssss......","..ttwwtt.wwww",".tttwwtttkyyk",".sttwwtsskyyk","..ttwwtt.kyyk","..pppppp.kkkk"];
+const HOT = ["...hhhh......","..hhhhhh.....",".hhhhhhhh....",".hhksskhh....",".hhnssnhh....",".hhhsshhhwwww","hhttttthhkyyk","h.ssssssskyyk","..pppppp.kyyk",".ppppppppkkkk"];
+const GAY = [".............","..hhhhhh.....","..hksskh.....","..ssssss.....","...ssss......","..sWWWWs.wwww",".ssWWWWsskyyk",".sWWWWWsskyyk","..WWWWWW.kyyk","..gggggg.kkkk"];
+const COOL = ["...hhhh......","..hhhhhh.....",".hhksskhh....",".hhnssnhh....",".hhhsshhh....","..hLLGLh.wwww","..LLLGLLLkyyk","..sLLGLsskyyk","...LZZL..kyyk","..LLLGLL.kkkk"];
 const DOG_HEAD = ["...ffffff....", "oofffffffoo..", "oofkfffkfoo..", "oofffffffoo..", ".ooffnnffoo..", "..ffwwwwff...", "...ffffff...."];
 const CAT_HEAD = [".f.......f...", ".ff.....ff...", ".fffffffff...", ".ffkfffkff...", "wfffffffffw..", ".ffffnffff...", "..fffffff...."];
-const DOG_A = DOG_HEAD.concat(BODY_A.slice(5)), DOG_B = DOG_HEAD.concat(BODY_B.slice(5));
-const CAT_A = CAT_HEAD.concat(BODY_A.slice(5)), CAT_B = CAT_HEAD.concat(BODY_B.slice(5));
-const LOOKS = [{n:"短髮", A:BODY_A, B:BODY_B}, {n:"長髮洋裝", A:GIRL_A, B:GIRL_B}, {n:"長髮褲裝", A:MIX_A, B:MIX_B}, {n:"狗狗頭套", A:DOG_A, B:DOG_B, fur:"#c68642"}, {n:"貓貓頭套", A:CAT_A, B:CAT_B, fur:"#94b0c2"}];
-function lookOf(nick, av){ return (av >= 0 && av < LOOKS.length) ? av : (hash(nick) >>> 16) % 3; }
+const LOOKS = [
+  {n:"帥哥", A:GUY.concat(LEG_A), B:GUY.concat(LEG_B)},
+  {n:"辣妹", A:HOT.concat(["..ss..ss.....","..ss..ss.....",".kk....kk...."]), B:HOT.concat(["...ssss......","...ssss......","...kkkk......"])},
+  {n:"同志", A:GAY.concat(["..gg..gg.....","..ss..ss.....",".kk....kk...."]), B:GAY.concat(["...gggg......","...ssss......","...kkkk......"]), pal:{h:"#ff77a8"}},
+  {n:"狗狗頭套", A:DOG_HEAD.concat(BODY_A.slice(5)), B:DOG_HEAD.concat(BODY_B.slice(5)), pal:{f:"#c68642"}},
+  {n:"貓貓頭套", A:CAT_HEAD.concat(BODY_A.slice(5)), B:CAT_HEAD.concat(BODY_B.slice(5)), pal:{f:"#94b0c2"}},
+  {n:"帥妹", A:COOL.concat(["..LL..LL.....","..kk..kk.....",".kk....kk...."]), B:COOL.concat(["...LLLL......","...kkkk......","...kkkk......"])}
+];
+function cigRows(rows){
+  let hr = -1; rows.forEach((r,i) => { if (r.slice(7,9) === "ss" && r.slice(9) === "kyyk") hr = i; });
+  return rows.map((r,i) => r.slice(0,9) + (i === hr ? "WWWn" : r.slice(9).replace(/[wky]/g, ".")));
+}
+LOOKS.forEach(L => { L.CA = cigRows(L.A); L.CB = cigRows(L.B); });
+const HUMANS = [0, 1, 2, 5];
+function lookOf(nick, av){ return (av >= 0 && av < LOOKS.length) ? av : HUMANS[(hash(nick) >>> 16) % 4]; }
 const HAIR = ["#0d0e17","#5d275d","#b13e53","#ef7d57","#ffcd75","#94b0c2","#333c57","#73eff7"];
 const SHIRT = ["#b13e53","#38b764","#3b5dc9","#41a6f6","#ffcd75","#ef7d57","#a7f070","#f4f4f4","#5d275d"];
 const SKIN = ["#ffe0bd","#f1c27d","#e0ac69","#c68642"];
 function hash(str){ let h = 2166136261; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-function personSVG(rows, nick, fur){
-  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f: fur || "#c68642", o:"#5d3a1a", n:"#ef7d57"};
+function personSVG(rows, nick, pal){
+  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f:"#c68642", o:"#5d3a1a", n:"#ef7d57", W:"#f4f4f4", g:"#38b764", L:"#2e3047", G:"#7a88a8", Z:"#c2c3c7"};
+  if (pal) Object.assign(col, pal);
   let r = "";
   rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = col[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
   return '<svg class="px" viewBox="0 0 13 ' + rows.length + '" width="39" height="' + rows.length * 3 + '">' + r + '</svg>';
@@ -603,7 +621,7 @@ function syncWalkers(){
   const W = Math.min(window.innerWidth, 512) - 39;
   const depth = names.length > 15 ? 270 : 48;
   walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
-  walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
+  walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; if (w.smoke === undefined) { w.smoke = w.nick === me ? store("pred_smoke") === "1" : (hash(w.nick) >>> 20) % 7 === 0; w.x = w.smoke ? W * (0.72 + Math.random() * 0.28) : Math.random() * W * 0.6; } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
   walkers.sort((a,b) => b.y - a.y);
   if (!poolTimer && all.length > 40) poolTimer = setInterval(() => { if (q === -1) { syncWalkers(); render(); } }, 20000);
 }
@@ -617,28 +635,34 @@ function floorHTML(big){
 }
 function lobbyHTML(){
   const big = walkers.length > 15;
-  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:420px"' : '') + '>' + floorHTML(big) + '<span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:420px"' : '') + '>' + floorHTML(big) + '<div class="smz"><b>🚬 吸菸區</b></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(300 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + '</span>' + '<span class="fa">' + personSVG(LOOKS[w.look].A, w.nick, LOOKS[w.look].fur) + '</span><span class="fb" style="display:none">' + personSVG(LOOKS[w.look].B, w.nick, LOOKS[w.look].fur) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(300 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + '</span>' + (w.smoke ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG(w.smoke ? LOOKS[w.look].CA : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG(w.smoke ? LOOKS[w.look].CB : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
 }
 function tickLobby(t){
   const box = $("lobby");
   if (!box) { lobbyRAF = 0; return; }
   const dt = Math.min(0.05, (t - (lastT || t)) / 1000); lastT = t;
   const W = box.clientWidth - 39;
-  const n = walkers.length;
+  const n = walkers.length, Z = Math.round(box.clientWidth * 0.68);
   if (n > LABN) { labT += dt; if (labT > 5) { labT = 0; labOff = (labOff + LABN) % n; walkers.forEach(w => w.lab = ((w.k - labOff + n) % n) < LABN); } }
   const me = myNick();
   box.querySelectorAll(".walker").forEach(el => {
     const w = walkers[+el.dataset.i]; if (!w) return;
-    if (w.pause > 0) { w.pause -= dt; w.ft += dt; if (w.ft > 0.18) { w.ft = 0; w.frame ^= 1; w.hop = w.frame ? -3 : 0; } }
+    if (w.jt != null) {
+      w.jt += dt; const p = Math.min(1, w.jt / 0.55);
+      w.x = w.jx0 + (w.jx1 - w.jx0) * p; w.y = w.jy0 + (w.jy1 - w.jy0) * p; w.hop = -Math.sin(Math.PI * p) * 34;
+      el.style.bottom = w.y.toFixed(0) + "px"; el.style.zIndex = w.nick === me ? 999 : 10 + Math.round(300 - w.y);
+      if (p >= 1) { w.jt = null; w.hop = 0; w.pause = 1.2; }
+    } else if (w.pause > 0) { w.pause -= dt; w.ft += dt; if (w.ft > 0.18) { w.ft = 0; w.frame ^= 1; w.hop = w.frame ? -3 : 0; } }
     else {
       w.x += w.v * dt;
-      if (w.x < 0) { w.x = 0; w.v = Math.abs(w.v); }
-      if (w.x > W) { w.x = W; w.v = -Math.abs(w.v); }
+      const lo = w.smoke ? Z : 0, hi = w.smoke ? W : Z - 39;
+      if (w.x < lo) { w.x = lo; w.v = Math.abs(w.v); }
+      if (w.x > hi) { w.x = hi; w.v = -Math.abs(w.v); }
       w.ft += dt; if (w.ft > 0.22) { w.ft = 0; w.frame ^= 1; }
       w.hop = 0;
       if (Math.random() < dt * 0.3) w.pause = 0.8 + Math.random() * 2.5;
@@ -650,10 +674,27 @@ function tickLobby(t){
     el.querySelector(".fa").style.display = w.frame ? "none" : "";
     el.querySelector(".fb").style.display = w.frame ? "" : "none";
     const svgs = el.querySelectorAll("svg"); svgs.forEach(sv => sv.style.transform = w.v < 0 ? "scaleX(-1)" : "");
+    const pf = el.querySelector(".puff"); if (pf) pf.style.left = w.v < 0 ? "0px" : "36px";
   });
   lobbyRAF = requestAnimationFrame(tickLobby);
 }
-document.addEventListener("click", e => { const el = e.target.closest && e.target.closest("#lobby .walker"); if (!el) return; const w = walkers[+el.dataset.i]; if (w) w.tap = 4; });
+document.addEventListener("click", e => {
+  if (!e.target.closest) return;
+  const el = e.target.closest("#lobby .walker");
+  if (el && !el.classList.contains("me")) { const w = walkers[+el.dataset.i]; if (w) w.tap = 4; return; }
+  const box = e.target.closest("#lobby"); if (!box) return;
+  const me = myNick(), w = walkers.find(v => v.nick === me);
+  if (!w) { toast("送出預測後，你的角色才會進舞池"); return; }
+  const r = box.getBoundingClientRect(), W = box.clientWidth - 39, Z = Math.round(box.clientWidth * 0.68);
+  const cx = e.clientX - r.left - 19, cy = r.bottom - e.clientY - 20;
+  const smoke = cx + 19 >= Z;
+  w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(smoke ? Z : 0, Math.min(smoke ? W : Z - 39, cx)); w.jy1 = Math.max(4, Math.min(4 + w.d, cy)); w.jt = 0;
+  if (smoke !== !!w.smoke) {
+    w.smoke = smoke; store("pred_smoke", smoke ? "1" : "0"); sfx("coin");
+    toast(smoke ? "🚬 你走進吸菸區了" : "🍺 回舞池喝酒");
+    box.outerHTML = lobbyHTML();
+  }
+});
 function startLobby(){ if (!lobbyRAF) { lastT = 0; lobbyRAF = requestAnimationFrame(tickLobby); } }
 function toast(s){ const el = $("toast"); el.textContent = s; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 1800); }
 
