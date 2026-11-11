@@ -150,7 +150,9 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 @keyframes mooup2{0%{transform:scale(.6);opacity:0}10%{transform:scale(1);opacity:1}100%{opacity:1}}
 #chatbtn{position:fixed;right:14px;bottom:14px;width:54px;height:54px;font-size:26px;background:#ffcd75;border:3px solid #0d0e17;box-shadow:3px 3px 0 #0d0e17;z-index:9000;cursor:pointer;padding:0}
 #chatbtn i{display:none;position:absolute;top:-6px;right:-6px;width:14px;height:14px;background:#b13e53;border:2px solid #f4f4f4;border-radius:50%}
-#chatbtn.new i{display:block}#chatbtn.new{animation:glint 1.6s infinite}
+#chatbtn{animation:chatGlow 1.8s ease-in-out infinite}
+@keyframes chatGlow{0%,100%{box-shadow:3px 3px 0 #0d0e17,0 0 6px 2px rgba(255,205,117,.5);transform:scale(1)}50%{box-shadow:3px 3px 0 #0d0e17,0 0 22px 8px rgba(255,205,117,.95);transform:scale(1.08)}}
+#chatbtn.new i{display:block}#chatbtn.new{animation:chatGlow .8s ease-in-out infinite}
 #chatbox{position:fixed;right:10px;bottom:78px;width:min(92vw,340px);height:min(60vh,440px);background:#1a1c2c;border:3px solid #ffcd75;z-index:9001;display:flex;flex-direction:column;color:#f4f4f4}
 #chatbox .ch-hd{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#0d0e17}
 #chatbox .ch-x{background:none;border:0;color:#f4f4f4;font-size:18px;cursor:pointer}
@@ -381,7 +383,7 @@ function render(){
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
       '<h1>六都預測</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
-      lobbyHTML() + '<p class="lhint">👆 舞池可以點：<b>地板</b>＝移動 · <b>別人</b>＝乾杯 · <b>自己</b>＝改口號 · <b>DJ</b>＝開趴 · <b>牛和樹</b>有彩蛋</p>' +
+      lobbyHTML() + '<p class="lhint">👆 舞池可以點：<b>地板</b>＝移動 · <b>別人</b>＝乾杯 · <b>自己</b>＝改口號 · <b>DJ</b>＝開趴 · <b>右下角 💬</b> 可以聊天</p>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
