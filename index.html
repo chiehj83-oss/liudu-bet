@@ -755,7 +755,7 @@ function tickLobby(t){
   if (n > LABN) { labT += dt; if (labT > 5) { labT = 0; labOff = (labOff + LABN) % n; walkers.forEach(w => w.lab = ((w.k - labOff + n) % n) < LABN); } }
   const me = myNick(), party = t < partyUntil;
   box.classList.toggle("party", party);
-  sayT += dt; if (sayT > 2.6) { sayT = 0; const cand = walkers.filter(w => w.say && !(w.sayT > 0)); if (cand.length) cand[Math.floor(Math.random() * cand.length)].sayT = 4; }
+  sayT += dt; if (sayT > 2.2) { sayT = 0; const pool = walkers.filter(w => !(w.sayT > 0) && w.jt == null); if (pool.length) { const w = pool[Math.floor(Math.random() * pool.length)]; w.cur = w.say && Math.random() < 0.6 ? w.say : idleLine(w); w.sayT = 3.5; } }
   const choppers = walkers.filter(w => w.zone === "tree").length;
   if (choppers) { chopAcc += dt * choppers * 0.25; if (chopAcc >= 1) { chopAcc = 0; const up = treeS.map((s,i) => i).filter(i => !(treeS[i].down > t)); if (up.length) hitTree(up[Math.floor(Math.random() * up.length)], t); } }
   box.querySelectorAll(".tree").forEach((el, i) => { const s = treeS[i]; if (!s) return; el.classList.toggle("down", s.down > t); el.classList.toggle("shake", s.shake > t); });
@@ -781,7 +781,7 @@ function tickLobby(t){
     }
     if (w.tap > 0) w.tap -= dt;
     if (w.cheerT > 0) w.cheerT -= dt; if (w.sayT > 0) w.sayT -= dt;
-    const sb = el.querySelector(".say"); if (sb) { const txt = w.cheerT > 0 ? "🍻 乾杯！" : (w.sayT > 0 ? w.say : ""); if (sb.textContent !== txt) sb.textContent = txt; sb.className = w.cheerT > 0 ? "say ch" : "say"; sb.style.display = txt ? "" : "none"; if (txt) sb.style.transform = w.x < 50 ? "translateX(-15%)" : (w.x > W - 50 ? "translateX(-85%)" : ""); }
+    const sb = el.querySelector(".say"); if (sb) { const txt = w.cheerT > 0 ? "🍻 乾杯！" : (w.sayT > 0 ? (w.cur || w.say) : ""); if (sb.textContent !== txt) sb.textContent = txt; sb.className = w.cheerT > 0 ? "say ch" : "say"; sb.style.display = txt ? "" : "none"; if (txt) sb.style.transform = w.x < 50 ? "translateX(-15%)" : (w.x > W - 50 ? "translateX(-85%)" : ""); }
     const nm = el.querySelector(".nm"); if (nm) { const sh = w.lab || w.tap > 0 || w.nick === me; if ((nm.style.display !== "none") !== sh) nm.style.display = sh ? "" : "none"; }
     el.style.transform = "translate(" + w.x.toFixed(1) + "px," + w.hop + "px)";
     el.querySelector(".fa").style.display = w.frame ? "none" : "";
@@ -840,6 +840,14 @@ function hitTree(i, t, manual){
   s.hp--; s.shake = t + 250; if (manual) sfx("chop");
   if (s.hp <= 0) { s.down = t + 20000; s.hp = 6; if (manual) { sfx("fall"); toast("🌲 碰！一棵樹倒了"); } }
 }
+const IDLE = {
+  all: ["好熱喔", "我是不是喝太多了", "廁所在哪？", "這首我會唱", "明天要上班欸", "誰的外套？", "手機快沒電了", "我只喝一杯", "剛剛誰叫我", "肚子好餓", "有人要鹹酥雞嗎", "你押誰？", "開票還要多久", "等等去吃宵夜", "我沒醉", "這燈好閃", "幫我拍一張", "好想睡", "老闆再來一手", "我錢包呢"],
+  "": ["這首好嗨", "DJ 再一首！", "左腳右腳…", "我不會跳啦"],
+  smoke: ["借個火？", "最後一根了", "戒菸明天再說"],
+  tree: ["這棵好硬…", "手好痠", "我是伐木工"],
+  milk: ["鮮乳讚啦", "喝完長高", "牛好可愛"]
+};
+function idleLine(w){ const z = IDLE[w.zone || ""] || [], a = Math.random() < 0.35 && z.length ? z : IDLE.all; return a[Math.floor(Math.random() * a.length)]; }
 function editSay(){
   const mw = walkers.find(v => v.nick === myNick()); if (!mw) return;
   const d = document.createElement("div"); d.className = "sayed";
@@ -850,7 +858,7 @@ function editSay(){
   d.querySelector(".ok").onclick = async () => {
     const v = inp.value.trim().slice(0, 10);
     try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"say", key: deviceKey(), s: v})}); const j = await r.json();
-      if (j.ok) { mw.say = v; mw.sayT = v ? 4 : 0; toast(v ? "💬 口號已更新" : "已清除口號"); d.remove(); } else toast(j.error || "沒存成功，你要先送出過預測"); }
+      if (j.ok) { mw.say = v; mw.cur = v; mw.sayT = v ? 4 : 0; toast(v ? "💬 口號已更新" : "已清除口號"); d.remove(); } else toast(j.error || "沒存成功，你要先送出過預測"); }
     catch (_) { toast("連線失敗，再試一次"); }
   };
 }
