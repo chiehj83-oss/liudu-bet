@@ -134,6 +134,15 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .yard .cow{cursor:pointer}
 .yard .moo{position:absolute;font-size:14px;font-weight:bold;color:#0d0e17;background:#f4f4f4;border:2px solid #0d0e17;padding:0 5px;z-index:9;animation:mooup 1.4s ease-out forwards}
 @keyframes mooup{0%{transform:translateY(6px);opacity:0}20%{opacity:1}100%{transform:translateY(-16px);opacity:0}}
+.lhint{font-size:12px;color:#94b0c2;text-align:center;margin:6px 0 10px;line-height:1.6}.lhint b{color:#ffcd75;font-weight:normal}
+.djz b,.smz b,.yard b{animation:tagGlint 7s infinite}
+.smz b{animation-delay:1.7s}.yard .z-tree b{animation-delay:3.4s}.yard .z-milk b{animation-delay:5.1s}
+@keyframes tagGlint{0%,86%,100%{background:#0d0e17;color:inherit;box-shadow:none}90%,95%{background:#ffcd75;color:#0d0e17;box-shadow:0 0 10px #ffcd75}}
+.yard .z-milk .cow{animation:glint 7s infinite 5.4s}.yard .z-tree .tree:not(.down):not(.shake){animation:glint 7s infinite 3.7s}
+.djz{animation:zoneGlint 7s infinite}
+@keyframes glint{0%,86%,100%{filter:none}90%,95%{filter:drop-shadow(0 0 3px #ffcd75) drop-shadow(0 0 7px #ffcd75) brightness(1.3)}}
+@keyframes zoneGlint{0%,86%,100%{box-shadow:none}90%,95%{box-shadow:inset 0 0 18px #ffcd75}}
+.walker.me .fa svg,.walker.me .fb svg{animation:glint 4s infinite 2s}
 .sayed{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center}
 .sayed>div{background:#1a1c2c;border:3px solid #ffcd75;padding:16px;width:min(86vw,320px);text-align:center;color:#f4f4f4}
 .sayed .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.sayed .chip{font:inherit;font-size:13px;background:#333c57;color:#f4f4f4;border:2px solid #566c86;padding:3px 8px;cursor:pointer}.sayed .chip.sel{background:#ffcd75;color:#0d0e17;border-color:#ffcd75}
@@ -354,7 +363,7 @@ function render(){
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
       '<h1>六都預測</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
-      lobbyHTML() +
+      lobbyHTML() + '<p class="lhint">👆 舞池可以點：<b>地板</b>＝移動 · <b>別人</b>＝乾杯 · <b>自己</b>＝改口號 · <b>DJ</b>＝開趴 · <b>牛和樹</b>有彩蛋</p>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
