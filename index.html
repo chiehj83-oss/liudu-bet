@@ -710,7 +710,13 @@ function personSVG(rows, nick, pal){
 let walkers = [], lobbyRAF = 0, lastT = 0;
 let poolTimer = 0, labOff = 0, labT = 0, partyUntil = 0, sayT = 0;
 const LABN = 20;
+function applyLines(L){
+  if (!L || typeof L !== "object") return;
+  const put = (arr, v) => { if (Array.isArray(v) && v.length) arr.splice(0, arr.length, ...v.map(String)); };
+  put(IDLE.all, L["通用"]); put(IDLE[""], L["舞池"]); put(IDLE.smoke, L["吸菸區"]); put(IDLE.tree, L["砍樹區"]); put(IDLE.milk, L["鮮乳區"]); put(DJ_LINES, L["DJ"]); put(SAY_PRESETS, L["口號選項"]);
+}
 function syncWalkers(){
+  if (info && info.lines) applyLines(info.lines);
   const raw = (info && Array.isArray(info.nicks)) ? info.nicks : [];
   const avOf = {}, zOf = {}, sayOf = {}, cOf = {}, lcOf = {}; raw.forEach(o => { if (o && typeof o === 'object') { avOf[o.n] = o.a; zOf[o.n] = o.z; sayOf[o.n] = o.s || ''; cOf[o.n] = +o.c || 0; lcOf[o.n] = o.lc || ''; } });
   const all = raw.map(o => (o && typeof o === 'object') ? o.n : o);
