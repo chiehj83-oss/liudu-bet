@@ -145,6 +145,19 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .walker.me .fa svg,.walker.me .fb svg{animation:glint 4s infinite 2s}
 .djz .djsay{position:absolute;top:30px;left:6px;right:6px;text-align:center;font-size:12px;line-height:1.35;color:#0d0e17;background:#ffcd75;border:2px solid #0d0e17;padding:2px 4px;z-index:6;animation:mooup2 4s ease-out}
 @keyframes mooup2{0%{transform:scale(.6);opacity:0}10%{transform:scale(1);opacity:1}100%{opacity:1}}
+#chatbtn{position:fixed;right:14px;bottom:14px;width:54px;height:54px;font-size:26px;background:#ffcd75;border:3px solid #0d0e17;box-shadow:3px 3px 0 #0d0e17;z-index:9000;cursor:pointer;padding:0}
+#chatbtn i{display:none;position:absolute;top:-6px;right:-6px;width:14px;height:14px;background:#b13e53;border:2px solid #f4f4f4;border-radius:50%}
+#chatbtn.new i{display:block}#chatbtn.new{animation:glint 1.6s infinite}
+#chatbox{position:fixed;right:10px;bottom:78px;width:min(92vw,340px);height:min(60vh,440px);background:#1a1c2c;border:3px solid #ffcd75;z-index:9001;display:flex;flex-direction:column;color:#f4f4f4}
+#chatbox .ch-hd{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#0d0e17}
+#chatbox .ch-x{background:none;border:0;color:#f4f4f4;font-size:18px;cursor:pointer}
+#chatbox .ch-note{margin:0;padding:4px 8px;font-size:11px;color:#94b0c2;background:#29366f}
+#chatbox .ch-list{flex:1;overflow-y:auto;padding:6px 8px;font-size:14px;line-height:1.45}
+#chatbox .ch-list p{margin:4px 0;word-break:break-all}#chatbox .ch-list b{color:#73eff7;margin-right:6px;font-weight:normal}
+#chatbox .ch-list p.mine b{color:#ffcd75}#chatbox .ch-empty{color:#566c86;text-align:center;margin-top:30px!important}
+#chatbox .ch-in{display:flex;gap:4px;padding:6px;border-top:2px solid #333c57}
+#chatbox .ch-in input{flex:1;min-width:0;font-size:16px;padding:6px;background:#f4f4f4;color:#0d0e17;border:2px solid #0d0e17}
+#chatbox .ch-send{font:inherit;font-size:14px;background:#38b764;color:#0d0e17;border:2px solid #0d0e17;padding:0 10px;cursor:pointer}
 .sayed{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center}
 .sayed>div{background:#1a1c2c;border:3px solid #ffcd75;padding:16px;width:min(86vw,320px);text-align:center;color:#f4f4f4}
 .sayed .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.sayed .chip{font:inherit;font-size:13px;background:#333c57;color:#f4f4f4;border:2px solid #566c86;padding:3px 8px;cursor:pointer}.sayed .chip.sel{background:#ffcd75;color:#0d0e17;border-color:#ffcd75}
@@ -875,6 +888,47 @@ function editSay(){
     catch (_) { toast("連線失敗，再試一次"); }
   };
 }
+const chat = {open: false, list: [], lastT: 0, seenT: +(store("pred_chatseen") || 0), born: Date.now(), tick: 0, busy: false};
+function initChat(){
+  if ($("chatbtn")) return;
+  document.body.insertAdjacentHTML("beforeend", '<button id="chatbtn" aria-label="聊天室">💬<i></i></button><div id="chatbox" style="display:none"><div class="ch-hd"><b>💬 聊天室</b><button class="ch-x" aria-label="關閉">✕</button></div><p class="ch-note">理性聊天、輕鬆喝酒 🍻 吵架的訊息會被刪除</p><div class="ch-list"><p class="ch-empty">還沒有人說話，來開第一槍！</p></div><div class="ch-in"><input maxlength="50" placeholder="說點什麼…（50 字內）"><button class="ch-send">送出</button></div></div>');
+  const box = $("chatbox"), inp = box.querySelector("input");
+  $("chatbtn").onclick = () => { chat.open = !chat.open; box.style.display = chat.open ? "" : "none"; if (chat.open) { markSeen(); renderChat(); fetchChat(); } };
+  box.querySelector(".ch-x").onclick = () => { chat.open = false; box.style.display = "none"; };
+  box.querySelector(".ch-send").onclick = sendChat;
+  inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) sendChat(); });
+  setTimeout(fetchChat, 2000);
+  setInterval(() => { if (document.hidden) return; chat.tick++; if (chat.open || chat.tick % 4 === 0) fetchChat(); }, 8000);
+}
+function markSeen(){ const last = chat.list[chat.list.length - 1]; if (last) { chat.seenT = last.t; store("pred_chatseen", String(last.t)); } $("chatbtn").classList.remove("new"); }
+function renderChat(){
+  const el = document.querySelector("#chatbox .ch-list"); if (!el) return;
+  const me = myNick();
+  if (!chat.list.length) { el.innerHTML = '<p class="ch-empty">還沒有人說話，來開第一槍！</p>'; return; }
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  el.innerHTML = chat.list.map(c => '<p' + (c.n === me ? ' class="mine"' : '') + '><b>' + esc(c.n) + '</b>' + esc(c.m) + '</p>').join("");
+  if (atBottom || chat.justSent) el.scrollTop = el.scrollHeight; chat.justSent = false;
+}
+function takeChat(list){
+  if (!Array.isArray(list)) return;
+  list.forEach(c => { if (c.t > chat.lastT && c.t > chat.born - 15000) { const w = walkers.find(v => v.nick === c.n); if (w) { w.cur = c.m; w.sayT = 5; } } });
+  chat.list = list; const last = list[list.length - 1];
+  if (last) chat.lastT = Math.max(chat.lastT, last.t);
+  if (chat.open) markSeen(); else if (last && last.t > chat.seenT && last.n !== myNick()) $("chatbtn").classList.add("new");
+  renderChat();
+}
+async function fetchChat(){
+  try { const r = await fetch(API + "?chat=1&t=" + Date.now(), {credentials:"omit"}); const j = await r.json(); if (j && j.ok) takeChat(j.chat); } catch (_) {}
+}
+async function sendChat(){
+  const inp = document.querySelector("#chatbox input"); const m = inp.value.trim(); if (!m || chat.busy) return;
+  chat.busy = true;
+  try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"chat", key: deviceKey(), m})}); const j = await r.json();
+    if (j.ok) { inp.value = ""; chat.justSent = true; takeChat(j.chat); sfx("coin"); } else toast(j.error || "沒送出去，再試一次"); }
+  catch (_) { toast("連線失敗，再試一次"); }
+  chat.busy = false;
+}
+if (document.body) initChat(); else document.addEventListener("DOMContentLoaded", initChat);
 function startLobby(){ if (!lobbyRAF) { lastT = 0; lobbyRAF = requestAnimationFrame(tickLobby); } }
 function toast(s){ const el = $("toast"); el.textContent = s; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 1800); }
 
