@@ -386,7 +386,7 @@ function render(){
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
       '<h1>六都預測</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
-      lobbyHTML() + '<p class="lhint">👆 舞池可以點：<b>地板</b>＝移動 · <b>別人</b>＝乾杯 · <b>自己</b>＝改口號 · <b>DJ</b>＝開趴 · <b>右下角 💬</b> 可以聊天</p>' +
+      lobbyHTML() + '<p class="lhint">👆 舞池可以點：<b>地板</b>＝移動 · <b>別人</b>＝乾杯 · <b>自己</b>＝改口號 · <b>DJ</b>＝開趴 · <b>右下角 💬</b> 可以聊天</p><p style="text-align:center;margin:0 0 14px"><button class="go ghost" id="mychar">🧍 我的角色</button></p>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
@@ -885,11 +885,17 @@ const IDLE = {
   milk: ["鮮乳讚", "喝了會長高", "牛好可愛"]
 };
 function idleLine(w){ const z = IDLE[w.zone || ""] || [], a = Math.random() < 0.35 && z.length ? z : IDLE.all; return a[Math.floor(Math.random() * a.length)]; }
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#mychar")) { if (!walkers.find(v => v.nick === myNick())) toast("送出預測後，就會有你自己的角色"); else editSay(); } });
 function editSay(){
   const mw = walkers.find(v => v.nick === myNick()); if (!mw) return;
   const d = document.createElement("div"); d.className = "sayed";
-  d.innerHTML = '<div><p>✋ 手上拿什麼？</p><div class="chips">' + ITEM_LIST.map(([k, t]) => '<button class="chip ichip' + ((mw.item || "") === k ? ' sel' : '') + '" data-k="' + k + '">' + t + '</button>').join("") + '</div><hr class="sep"><p>💬 我的口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip">' + p + '</button>').join("") + '</div><p><small>或自己寫：</small></p><input maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內"><p><button class="go ok">儲存</button> <button class="go ghost no">取消</button></p></div>';
+  d.innerHTML = '<div><h3 style="margin:0 0 6px">🧍 我的角色</h3><p>👕 造型</p><div class="chips">' + LOOKS.map((L,i) => '<button class="chip lchip' + (mw.look === i ? ' sel' : '') + '" data-i="' + i + '">' + L.n + '</button>').join("") + '</div><hr class="sep"><p>✋ 手上拿什麼？</p><div class="chips">' + ITEM_LIST.map(([k, t]) => '<button class="chip ichip' + ((mw.item || "") === k ? ' sel' : '') + '" data-k="' + k + '">' + t + '</button>').join("") + '</div><hr class="sep"><p>💬 我的口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip">' + p + '</button>').join("") + '</div><p><small>或自己寫：</small></p><input maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內"><p><button class="go ok">儲存</button> <button class="go ghost no">取消</button></p></div>';
   document.body.appendChild(d); const inp = d.querySelector("input");
+  d.querySelectorAll(".lchip").forEach(b => b.onclick = async () => {
+    const i = +b.dataset.i; d.querySelectorAll(".lchip").forEach(x => x.classList.toggle("sel", x === b));
+    store("pred_av", String(i)); mw.look = i; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
+    try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"look", key: deviceKey(), a: i})}); const j = await r.json(); toast(j.ok ? "👕 換好了，大家都看得到" : (j.error || "只有你自己看得到")); } catch (_) {}
+  });
   d.querySelectorAll(".ichip").forEach(b => b.onclick = async () => {
     const k = b.dataset.k; d.querySelectorAll(".ichip").forEach(x => x.classList.toggle("sel", x === b));
     store("pred_item", k); mw.item = k; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
@@ -907,7 +913,7 @@ function editSay(){
 const chat = {open: false, list: [], lastT: 0, seenT: +(store("pred_chatseen") || 0), born: Date.now(), tick: 0, busy: false};
 function initChat(){
   if ($("chatbtn")) return;
-  document.body.insertAdjacentHTML("beforeend", '<button id="chatbtn" aria-label="聊天室">💬<i></i></button><div id="chatbox" style="display:none"><div class="ch-hd"><b>💬 聊天室</b><button class="ch-x" aria-label="關閉">✕</button></div><p class="ch-note">理性聊天、輕鬆喝酒 🍻 吵架的訊息會被刪除</p><div class="ch-list"><p class="ch-empty">還沒有人說話，來開第一槍！</p></div><div class="ch-in"><input maxlength="50" placeholder="說點什麼…（50 字內）"><button class="ch-send">送出</button></div></div>');
+  document.body.insertAdjacentHTML("beforeend", '<button id="chatbtn" aria-label="聊天室">💬<i></i></button><div id="chatbox" style="display:none"><div class="ch-hd"><b>💬 聊天室</b><button class="ch-x" aria-label="關閉">✕</button></div><p class="ch-note">歡迎鬥嘴 🍻 請勿吵架</p><div class="ch-list"><p class="ch-empty">還沒有人說話，來開第一槍！</p></div><div class="ch-in"><input maxlength="50" placeholder="說點什麼…（50 字內）"><button class="ch-send">送出</button></div></div>');
   const box = $("chatbox"), inp = box.querySelector("input");
   $("chatbtn").onclick = () => { chat.open = !chat.open; box.style.display = chat.open ? "" : "none"; if (chat.open) { markSeen(); renderChat(); fetchChat(); } };
   box.querySelector(".ch-x").onclick = () => { chat.open = false; box.style.display = "none"; };
