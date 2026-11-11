@@ -105,7 +105,7 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .lobby .empty{position:absolute;left:0;right:0;top:44px;text-align:center;color:var(--mute);font-size:15px;z-index:3}
 .lobby .tag2{position:absolute;top:6px;left:10px;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);z-index:3}
 .walker{position:absolute;bottom:10px;width:39px;will-change:transform}
-.walker .nm{position:absolute;bottom:44px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
+.walker .nm{position:absolute;bottom:50px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
 .walker.me .nm{color:var(--dark);background:var(--gold)}
 .walker svg{display:block}
 .city2{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 6px;color:var(--gold);font-size:19px}
@@ -472,10 +472,12 @@ function renderBoard(m){
     }).join('') + '</div>';
   }
   if (store("pred_sent") && Date.now() < DEADLINE) h += '<button class="go ghost" id="withdraw" style="border-color:var(--orange);color:var(--orange)">' + (withdrawArmed ? '⚠ 再按一次確認撤回' : '✕ 撤回我的預測') + '</button>' + (withdrawMsg ? '<p class="warn">▶ ' + esc(withdrawMsg) + '</p>' : '');
-  h += '<button class="go ghost" id="reload">↻ 重新整理</button>' +
+  h += '<button class="go alt" id="home">🪩 回舞池</button>' +
+    '<button class="go ghost" id="reload">↻ 重新整理</button>' +
     (Date.now() < DEADLINE ? '<button class="go" id="again">▶ ' + (store("pred_sent") ? '修改我的預測' : '我要預測') + '</button>' : '');
   m.innerHTML = h;
   $("reload").onclick = () => { data = null; render(); loadBoard(); };
+  $("home").onclick = () => { history = []; go(-1, false); };
   if ($("withdraw")) $("withdraw").onclick = withdrawBet;
   if ($("again")) $("again").onclick = () => { history = []; go(-1, false); };
 }
@@ -567,8 +569,8 @@ const GIRL_A = ["...hhhh......","..hhhhhh.....",".hhskskhh....",".hhsssshh....",
 const GIRL_B = GIRL_A.slice(0,10).concat(["...ssss......","...ssss......","...kkkk......"]);
 const MIX_A = GIRL_A.slice(0,6).concat(BODY_A.slice(6));
 const MIX_B = MIX_A.slice(0,10).concat(BODY_B.slice(10));
-const DOG_HEAD = ["..........", ".oo.ff.oo..", ".offffffo..", ".ofkffkfo..", "..ffnnff..."].map(r => r.padEnd(13,"."));
-const CAT_HEAD = ["..f....f...", "..ff..ff...", "..ffffff...", "..fkffkf...", "...fnnf...."].map(r => r.padEnd(13,"."));
+const DOG_HEAD = ["...ffffff....", "oofffffffoo..", "oofkfffkfoo..", "oofffffffoo..", ".ooffnnffoo..", "..ffwwwwff...", "...ffffff...."];
+const CAT_HEAD = [".f.......f...", ".ff.....ff...", ".fffffffff...", ".ffkfffkff...", "wfffffffffw..", ".ffffnffff...", "..fffffff...."];
 const DOG_A = DOG_HEAD.concat(BODY_A.slice(5)), DOG_B = DOG_HEAD.concat(BODY_B.slice(5));
 const CAT_A = CAT_HEAD.concat(BODY_A.slice(5)), CAT_B = CAT_HEAD.concat(BODY_B.slice(5));
 const LOOKS = [{n:"短髮", A:BODY_A, B:BODY_B}, {n:"長髮洋裝", A:GIRL_A, B:GIRL_B}, {n:"長髮褲裝", A:MIX_A, B:MIX_B}, {n:"狗狗頭套", A:DOG_A, B:DOG_B, fur:"#c68642"}, {n:"貓貓頭套", A:CAT_A, B:CAT_B, fur:"#94b0c2"}];
@@ -581,7 +583,7 @@ function personSVG(rows, nick, fur){
   const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f: fur || "#c68642", o:"#5d3a1a", n:"#ef7d57"};
   let r = "";
   rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = col[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
-  return '<svg class="px" viewBox="0 0 13 13" width="39" height="39">' + r + '</svg>';
+  return '<svg class="px" viewBox="0 0 13 ' + rows.length + '" width="39" height="' + rows.length * 3 + '">' + r + '</svg>';
 }
 let walkers = [], lobbyRAF = 0, lastT = 0;
 let poolTimer = 0;
