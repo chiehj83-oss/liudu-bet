@@ -568,8 +568,53 @@ function playStep(i, t){
   if (e % 4 === 0) tone("triangle", 110, t, .08, .5); 
   if (e % 4 === 2) noise(t, .07, .22); else noise(t, .02, .06);
 }
+let partyStyle = "house", pstep = 0, djAudio = null;
+function bus(node){ node.connect(master); }
+function kick(t, v){ const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(42, t + .14); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + .32); o.connect(g); bus(g); o.start(t); o.stop(t + .34); }
+function nz(t, dur, vol, type, freq){
+  const len = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = AC.createBufferSource(), g = AC.createGain(), f = AC.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+  src.buffer = buf; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(f); f.connect(g); bus(g); src.start(t);
+}
+function saw(m, t, dur, vol, cut, lfo, q){
+  const o = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain();
+  o.type = "sawtooth"; o2.type = "square"; o.frequency.value = mtof(m); o2.frequency.value = mtof(m) * 1.005;
+  f.type = "lowpass"; f.frequency.value = cut; f.Q.value = q || 4;
+  g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + dur * 0.85); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+  if (lfo) { const l = AC.createOscillator(), lg = AC.createGain(); l.type = "sine"; l.frequency.value = lfo; lg.gain.value = cut * 0.9; l.connect(lg); lg.connect(f.frequency); l.start(t); l.stop(t + dur + .05); }
+  o.connect(f); o2.connect(f); f.connect(g); bus(g); o.start(t); o2.start(t); o.stop(t + dur + .05); o2.stop(t + dur + .05);
+}
+const HOUSE_ROOT = [45, 41, 48, 43], HOUSE_CH = [[57,60,64],[53,57,60],[55,60,64],[55,59,62]];
+const DUB_ROOT = [38, 38, 41, 36];
+function partyStep(i, t, sx){
+  const bar = Math.floor(i / 16) % 4, e = i % 16;
+  if (partyStyle === "house") {
+    if (e % 4 === 0) kick(t, .9);
+    if (e === 4 || e === 12) { nz(t, .12, .35, "bandpass", 1500); }
+    if (e % 4 === 2) nz(t, .09, .22, "highpass", 7000); else if (e % 2) nz(t, .02, .07, "highpass", 9000);
+    if (e % 4 === 2) saw(HOUSE_ROOT[bar], t, sx * 1.6, .32, 420, 0, 2);
+    if (e === 3 || e === 10) HOUSE_CH[bar].forEach(m => saw(m, t, sx * 1.2, .07, 2200, 0, 1));
+    if (e === 14 && bar === 3) nz(t, sx * 2, .2, "highpass", 3000);
+  } else {
+    if (e === 0 || e === 10) kick(t, 1);
+    if (e === 8) { nz(t, .2, .5, "bandpass", 1800); tone("triangle", 190, t, .12, .4); }
+    if (e % 2 === 0) nz(t, .02, .06, "highpass", 9000);
+    if (e === 0) saw(DUB_ROOT[bar], t, sx * 8, .38, 900, 140 / 60 * 2, 8);
+    if (e === 8) saw(DUB_ROOT[bar] + (bar === 3 ? 3 : 0), t, sx * 8, .38, 1000, bar % 2 ? 140 / 60 * 6 : 140 / 60 * 3, 10);
+    if (e === 0) tone("sine", mtof(DUB_ROOT[bar] - 12), t, sx * 16, .5);
+    if (e === 6 && bar % 2) [74,77].forEach(m => tone("pulse", mtof(m), t, .12, .08, .5));
+  }
+}
 function scheduler(){
   while (nextTime < AC.currentTime + 0.15) {
+    if (performance.now() < partyUntil) {
+      const sx = 60 / (partyStyle === "house" ? 124 : 140) / 4;
+      partyStep(pstep, nextTime, sx); nextTime += sx; pstep = (pstep + 1) % 64;
+      continue;
+    }
+    pstep = 0;
     const swing = (step % 2 === 1) ? EIGHTH * SWING : 0;
     playStep(step, nextTime + swing);
     nextTime += EIGHTH; step = (step + 1) % 64;
@@ -601,7 +646,7 @@ document.addEventListener("pointerdown", firstTouch, true);
 document.addEventListener("keydown", firstTouch, true);
 $("music").onclick = () => {
   document.removeEventListener("pointerdown", firstTouch, true);
-  if (musicOn) { stopMusic(); musicOn = false; } else { musicOn = true; startMusic(); }
+  if (musicOn) { stopMusic(); if (djAudio) djAudio.pause(); musicOn = false; } else { musicOn = true; startMusic(); }
   try { localStorage.setItem("pred_music", musicOn ? "on" : "off"); } catch (_) {}
   setMusicBtn();
 };
@@ -721,7 +766,7 @@ function tickLobby(t){
       w.x = w.jx0 + (w.jx1 - w.jx0) * p; w.y = w.jy0 + (w.jy1 - w.jy0) * p; w.hop = -Math.sin(Math.PI * p) * 34;
       el.style.bottom = w.y.toFixed(0) + "px"; el.style.zIndex = w.nick === me ? 999 : 10 + Math.round(600 - w.y);
       if (p >= 1) { w.jt = null; w.hop = 0; w.pause = 1.2; }
-    } else if (party) { w.ft += dt; if (w.ft > 0.24) { w.ft = 0; w.frame ^= 1; } w.hop = -Math.round(Math.abs(Math.sin(t / 1000 * Math.PI * 2.1)) * 10); }
+    } else if (party) { w.ft += dt; if (w.ft > 0.24) { w.ft = 0; w.frame ^= 1; } w.hop = -Math.round(Math.abs(Math.sin(t / 1000 * Math.PI * (partyStyle === "house" ? 124 : 70) / 60)) * (partyStyle === "house" ? 10 : 16)); }
     else if (w.cheerT > 0) { w.hop = -6; w.frame = 0; }
     else if (w.pause > 0) { w.pause -= dt; w.ft += dt; if (w.ft > 0.18) { w.ft = 0; w.frame ^= 1; w.hop = w.frame ? -3 : 0; } }
     else {
@@ -763,7 +808,16 @@ document.addEventListener("click", e => {
   if (!w) { toast("送出預測後，你的角色才會進舞池"); return; }
   const r = box.getBoundingClientRect(), W = box.clientWidth - 39, Z = Math.round(box.clientWidth * 0.68);
   const cx = e.clientX - r.left - 19, cy = r.bottom - e.clientY - 20;
-  if (cy + 20 >= box.clientHeight - 170 && cx + 19 >= Z) { partyUntil = performance.now() + 15000; toast("🎧 DJ：全場跳起來！"); sfx("coin"); return; }
+  if (cy + 20 >= box.clientHeight - 170 && cx + 19 >= Z) {
+    partyUntil = performance.now() + 30000; pstep = 0; partyStyle = "house";
+    if (musicOn && ensureAudio()) {
+      if (!djAudio) { djAudio = new Audio("dj.mp3"); djAudio.preload = "auto"; djAudio.onended = () => { partyUntil = 0; if (musicOn) startMusic(); }; }
+      try { djAudio.currentTime = 0; } catch (_) {}
+      stopMusic();
+      djAudio.play().catch(() => { startMusic(); });
+    }
+    toast(musicOn ? "🎧 DJ：放歌！全場跳起來！" : "🎧 全場跳起來！打開右上角 ♪ 才聽得到 DJ 的歌");
+    return; }
   const zone = cy + 20 < YARD ? (cx + 19 < box.clientWidth / 2 ? "tree" : "milk") : (cx + 19 >= Z ? "smoke" : null);
   const b = zBounds(zone, box.clientWidth), yb = zY2(zone);
   w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(b[0], Math.min(b[1], cx)); w.jy1 = Math.max(yb[0], Math.min(yb[1], cy)); w.jt = 0;
