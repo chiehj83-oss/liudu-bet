@@ -143,6 +143,8 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 @keyframes glint{0%,86%,100%{filter:none}90%,95%{filter:drop-shadow(0 0 3px #ffcd75) drop-shadow(0 0 7px #ffcd75) brightness(1.3)}}
 @keyframes zoneGlint{0%,86%,100%{box-shadow:none}90%,95%{box-shadow:inset 0 0 18px #ffcd75}}
 .walker.me .fa svg,.walker.me .fb svg{animation:glint 4s infinite 2s}
+.djz .djsay{position:absolute;top:30px;left:6px;right:6px;text-align:center;font-size:12px;line-height:1.35;color:#0d0e17;background:#ffcd75;border:2px solid #0d0e17;padding:2px 4px;z-index:6;animation:mooup2 4s ease-out}
+@keyframes mooup2{0%{transform:scale(.6);opacity:0}10%{transform:scale(1);opacity:1}100%{opacity:1}}
 .sayed{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center}
 .sayed>div{background:#1a1c2c;border:3px solid #ffcd75;padding:16px;width:min(86vw,320px);text-align:center;color:#f4f4f4}
 .sayed .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.sayed .chip{font:inherit;font-size:13px;background:#333c57;color:#f4f4f4;border:2px solid #566c86;padding:3px 8px;cursor:pointer}.sayed .chip.sel{background:#ffcd75;color:#0d0e17;border-color:#ffcd75}
@@ -739,7 +741,7 @@ const COW = '<svg class="px cow" viewBox="0 0 14 10" width="42" height="30">' + 
 const DJ = [["........hhhhhh..........", ".......kkkkkkkk.........", ".......nhkkkkhn.........", ".......nssssssn.........", "........ssnnss..........", "......tttttttttt........", ".....tttttttttttt.......", "....sstttttttttss.......", "dddddddddddddddddddddddd", "dGGGGGddddddddddddGGGGGd", "dGkkkGddBBddnnddddGkkkGd", "dGkykGddddddddddddGkkkGd", "dGkkkGddnnddBBddddGkykGd", "dGGGGGddddddddddddGGGGGd", "dddddddddddddddddddddddd"],["........hhhhhh.....ss...", ".......kkkkkkkk....ss...", ".......nhkkkkhn....tt...", ".......nssssssn...tt....", "........ssnnss...tt.....", "......tttttttttttt......", ".....tttttttttttt.......", "....sstttttttttt........", "dddddddddddddddddddddddd", "dGGGGGddddddddddddGGGGGd", "dGkkkGddnnddBBddddGkykGd", "dGkkyGddddddddddddGkkkGd", "dGkkkGddBBddnnddddGkkkGd", "dGGGGGddddddddddddGGGGGd", "dddddddddddddddddddddddd"]].map((F,i) => '<svg class="px dj dj' + i + '" viewBox="0 0 24 15" width="96" height="60">' + F.map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({h:"#5d275d",k:"#0d0e17",n:"#ff77a8",s:"#f1c27d",t:"#41a6f6",d:"#333c57",G:"#94b0c2",y:"#ffcd75",B:"#73eff7"})[c]+'"/>').join("")).join("") + "</svg>").join("");
 function lobbyHTML(){
   const big = true;
-  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div><div class="yard"><div class="z-tree"><b>🪓 砍樹區</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳區</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div><div class="yard"><div class="z-tree"><b>🪓 砍樹區</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳區</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
@@ -756,6 +758,9 @@ function tickLobby(t){
   const me = myNick(), party = t < partyUntil;
   box.classList.toggle("party", party);
   sayT += dt; if (sayT > 2.2) { sayT = 0; const pool = walkers.filter(w => !(w.sayT > 0) && w.jt == null); if (pool.length) { const w = pool[Math.floor(Math.random() * pool.length)]; w.cur = w.say && Math.random() < 0.6 ? w.say : idleLine(w); w.sayT = 3.5; } }
+  djT += dt; if (djT > djNext) { djT = 0; djNext = 6 + Math.random() * 6; djLine = DJ_LINES[Math.floor(Math.random() * DJ_LINES.length)]; djShow = 4; }
+  if (djShow > 0) djShow -= dt;
+  const dsy = box.querySelector(".djsay"); if (dsy) { if (dsy.textContent !== djLine) dsy.textContent = djLine; dsy.style.display = djShow > 0 ? "" : "none"; }
   const choppers = walkers.filter(w => w.zone === "tree").length;
   if (choppers) { chopAcc += dt * choppers * 0.25; if (chopAcc >= 1) { chopAcc = 0; const up = treeS.map((s,i) => i).filter(i => !(treeS[i].down > t)); if (up.length) hitTree(up[Math.floor(Math.random() * up.length)], t); } }
   box.querySelectorAll(".tree").forEach((el, i) => { const s = treeS[i]; if (!s) return; el.classList.toggle("down", s.down > t); el.classList.toggle("shake", s.shake > t); });
@@ -833,6 +838,8 @@ setInterval(async () => {
   try { const r = await fetch(API, {credentials:"omit"}); const j = await r.json(); if (j && Array.isArray(j.nicks)) { info = j; data = j; syncWalkers(); const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); } } catch (_) {}
 }, 30000);
 const SAY_PRESETS = ["我賭三杯！", "今晚不醉不歸", "投票了沒？", "理性討論 感性喝酒", "開票見真章", "神預言就是我", "我只是來跳舞的", "乾了這杯！"];
+const DJ_LINES = ["如果你是DJ你會愛我嗎？", "小妹你別慌", "這是北部的口音", "這是中部的口音"];
+let djT = 0, djNext = 3, djLine = "", djShow = 0;
 const treeS = [0,1,2].map(() => ({hp: 6, down: 0, shake: 0}));
 let chopAcc = 0;
 function hitTree(i, t, manual){
