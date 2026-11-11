@@ -714,12 +714,20 @@ const ITEM_PAT = {
   boba: {"-6":"...k","-5":"..k.","-4":"WWWW","-3":"cccc","-2":"cccc","-1":"cKcc","0":"KcKK","1":"cKKc"},
   wine: {"-6":"W..W","-5":"WRRW","-4":"WRRW","-3":".WW.","-2":".W..","-1":".W..","0":"WWW.","1":"...."},
   cocktail: {"-5":"Y..y","-4":"QQQQ","-3":".QQ.","-2":"..W.","-1":"..W.","0":".WWW","1":"...."},
-  cash: {"-3":"kkkk","-2":"MMMM","-1":"MyyM","0":"MMMM","1":"kkkk"},
-  basket: {"-3":".OO.","-2":"OkOO","-1":"kkkk","0":"OOkO","1":".OO."}
+  basket: {"-3":".OO.","-2":"OkOO","-1":"kkkk","0":"OOkO","1":".OO."},
+  rose: {"-5":".RR.","-4":"RRkR","-3":".RR.","-2":"..M.","-1":".MM.","0":"..M.","1":"..M."},
+  champ: {"-6":"..Y.","-5":"..k.","-4":".kM.","-3":".MM.","-2":".MY.","-1":".MM.","0":".MM.","1":"...."},
+  drum: {"-4":".DDD","-3":"DDDD","-2":"DDD.","-1":".W..","0":"W...","1":"...."},
+  lolli: {"-6":".PP.","-5":"PWPP","-4":"PPWP","-3":".PP.","-2":"..W.","-1":"..W.","0":"..W.","1":"...."},
+  burger: {"-3":".DD.","-2":"DDDD","-1":"MMMM","0":"KKKK","1":"DDDD"},
+  pizza: {"-4":"DDDD","-3":"RYRY","-2":".YR.","-1":".YY.","0":"..Y.","1":"...."},
+  melon: {"-3":"RkRR","-2":"RRkR","-1":"WWWW","0":"MMMM","1":"...."},
+  taibeer: {"-6":"..Y.","-5":"..M.","-4":".MM.","-3":".WW.","-2":".MM.","-1":".MM.","0":".MM.","1":"...."},
+  cash: {"-5":"MMM.","-4":"MWM.","-3":"MmM.","-2":"MWM.","-1":"MMM.","0":"....","1":"...."}
 };
 LOOKS.forEach(L => Object.keys(ITEM_PAT).forEach(k => { L.P["it_" + k] = [propRows(L.A, ITEM_PAT[k]), propRows(L.B, ITEM_PAT[k])]; }));
 const ITEM_EMO = ITEM_PAT;
-const ITEM_LIST = [["", "🍺 啤酒"], ["boba", "🧋 珍奶"], ["wine", "🍷 紅酒"], ["cocktail", "🍸 調酒"], ["cash", "💵 鈔票"], ["basket", "🏀 籃球"]];
+const ITEM_LIST = [["", "🍺 啤酒"], ["taibeer", "🍺 台啤"], ["boba", "🧋 珍奶"], ["wine", "🍷 紅酒"], ["cocktail", "🍸 調酒"], ["champ", "🍾 香檳"], ["drum", "🍗 雞腿"], ["burger", "🍔 漢堡"], ["pizza", "🍕 披薩"], ["melon", "🍉 西瓜"], ["lolli", "🍭 棒棒糖"], ["rose", "🌹 玫瑰"], ["basket", "🏀 籃球"], ["cash", "💵 鈔票"]];
 const ZONES = ["smoke", "tree", "milk"], ZMSG = {smoke:"🚬 你走進吸菸區了", tree:"🪓 去砍樹囉", milk:"🥛 來一瓶鮮乳"};
 const YD = 170, YARD = 150;
 function zBounds(z, bw){ const W = bw - 39, Z = Math.round(bw * 0.68), H = Math.round(bw / 2);
@@ -733,7 +741,7 @@ const SHIRT = ["#b13e53","#38b764","#3b5dc9","#41a6f6","#ffcd75","#ef7d57","#a7f
 const SKIN = ["#ffe0bd","#f1c27d","#e0ac69","#c68642"];
 function hash(str){ let h = 2166136261; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function personSVG(rows, nick, pal){
-  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f:"#c68642", o:"#5d3a1a", n:"#ef7d57", W:"#f4f4f4", g:"#38b764", L:"#2e3047", G:"#7a88a8", Z:"#c2c3c7", B:"#41a6f6", b:"#29366f", c:"#e0ac69", K:"#3b1f0f", Q:"#a7f070", Y:"#ffcd75", M:"#38b764", O:"#ef7d57"};
+  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f:"#c68642", o:"#5d3a1a", n:"#ef7d57", W:"#f4f4f4", g:"#38b764", L:"#2e3047", G:"#7a88a8", Z:"#c2c3c7", B:"#41a6f6", b:"#29366f", c:"#e0ac69", K:"#3b1f0f", Q:"#a7f070", Y:"#ffcd75", M:"#38b764", O:"#ef7d57", R:"#b13e53", P:"#ff77a8", m:"#257179", D:"#c67c3a"};
   if (pal) Object.assign(col, pal);
   let r = "";
   rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = col[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
