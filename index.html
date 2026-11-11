@@ -124,6 +124,20 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .puff::after{content:"";position:absolute;left:2px;top:0;width:3px;height:3px;background:#94b0c2;animation:puff 2.2s linear infinite;animation-delay:-1.1s}
 @keyframes puff{0%{transform:translate(0,0);opacity:.9}100%{transform:translate(4px,-26px) scale(2);opacity:0}}
 .walker{position:absolute;bottom:10px;width:39px;will-change:transform;cursor:pointer}
+.walker .say{position:absolute;bottom:70px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:#0d0e17;background:#f4f4f4;border:2px solid #0d0e17;padding:1px 6px;line-height:1.3;z-index:5}
+.walker .say::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-3px;border:3px solid transparent;border-top-color:#0d0e17}
+.walker .say.ch{background:#ffcd75;font-weight:bold}
+.lobby.party .floor{animation:hue .8s linear infinite}@keyframes hue{to{filter:hue-rotate(360deg) brightness(1.3)}}
+.yard .tree{cursor:pointer;transform-origin:50% 100%;transition:transform .6s,opacity .6s}
+.yard .tree.down{transform:rotate(86deg);opacity:.55}
+.yard .tree.shake{animation:shk .25s linear}@keyframes shk{25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+.yard .cow{cursor:pointer}
+.yard .moo{position:absolute;font-size:14px;font-weight:bold;color:#0d0e17;background:#f4f4f4;border:2px solid #0d0e17;padding:0 5px;z-index:9;animation:mooup 1.4s ease-out forwards}
+@keyframes mooup{0%{transform:translateY(6px);opacity:0}20%{opacity:1}100%{transform:translateY(-16px);opacity:0}}
+.sayed{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center}
+.sayed>div{background:#1a1c2c;border:3px solid #ffcd75;padding:16px;width:min(86vw,320px);text-align:center;color:#f4f4f4}
+.sayed .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.sayed .chip{font:inherit;font-size:13px;background:#333c57;color:#f4f4f4;border:2px solid #566c86;padding:3px 8px;cursor:pointer}.sayed .chip.sel{background:#ffcd75;color:#0d0e17;border-color:#ffcd75}
+.sayed input{width:100%;font-size:18px;padding:6px;margin:8px 0;box-sizing:border-box}
 .walker .nm{position:absolute;bottom:50px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
 .walker.me{z-index:999 !important}
 .walker.me .nm{color:var(--dark);background:var(--gold);font-size:15px;padding:1px 6px;bottom:54px;box-shadow:0 0 0 2px var(--dark)}
@@ -566,6 +580,9 @@ function sfx(kind){
   const t = AC.currentTime + 0.01;
   if (kind === "coin") { tone("pulse", 988, t, .07, .25, .5); tone("pulse", 1319, t + .07, .22, .25, .5); }
   if (kind === "win") [72,76,79,84,79,84].forEach((m,i) => tone("pulse", mtof(m), t + i * .09, .16, .22, .25));
+  if (kind === "moo") { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(170, t); o.frequency.linearRampToValueAtTime(120, t + .8); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.18, t + .12); g.gain.linearRampToValueAtTime(0, t + .9); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .95); }
+  if (kind === "chop") tone("pulse", 220, t, .05, .3, .5);
+  if (kind === "fall") [60,55,50,43].forEach((m,i) => tone("pulse", mtof(m), t + i * .08, .12, .25, .5));
   if (kind === "err") { tone("pulse", 196, t, .15, .25, .5); tone("pulse", 147, t + .15, .3, .25, .5); }
 }
 function setMusicBtn(){ const b = $("music"); b.textContent = musicOn ? "♪ ON" : "♪ OFF"; b.classList.toggle("on", !!musicOn); }
@@ -635,11 +652,11 @@ function personSVG(rows, nick, pal){
   return '<svg class="px" viewBox="0 0 13 ' + rows.length + '" width="39" height="' + rows.length * 3 + '">' + r + '</svg>';
 }
 let walkers = [], lobbyRAF = 0, lastT = 0;
-let poolTimer = 0, labOff = 0, labT = 0;
+let poolTimer = 0, labOff = 0, labT = 0, partyUntil = 0, sayT = 0;
 const LABN = 20;
 function syncWalkers(){
   const raw = (info && Array.isArray(info.nicks)) ? info.nicks : [];
-  const avOf = {}, zOf = {}; raw.forEach(o => { if (o && typeof o === 'object') { avOf[o.n] = o.a; zOf[o.n] = o.z; } });
+  const avOf = {}, zOf = {}, sayOf = {}, cOf = {}, lcOf = {}; raw.forEach(o => { if (o && typeof o === 'object') { avOf[o.n] = o.a; zOf[o.n] = o.z; sayOf[o.n] = o.s || ''; cOf[o.n] = +o.c || 0; lcOf[o.n] = o.lc || ''; } });
   const all = raw.map(o => (o && typeof o === 'object') ? o.n : o);
   const me = myNick();
   const others = all.filter(n => n !== me);
@@ -649,7 +666,9 @@ function syncWalkers(){
   const depth = 270;
   walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: YD + 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
   walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; const lz = store("pred_zone"), want = (w.nick === me && lz !== null) ? (ZONES.includes(lz) ? lz : null) : (ZONES.includes(zOf[w.nick]) ? zOf[w.nick] : null);
-    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
+    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); w.say = sayOf[w.nick] || ''; w.cheers = Math.max(w.cheers || 0, cOf[w.nick] || 0); });
+  const mine = walkers.find(w => w.nick === me);
+  if (mine) { const seen = +(store("pred_cseen") || 0); if (mine.cheers > seen) { if (seen || mine.cheers) setTimeout(() => toast("🍻 " + (lcOf[me] || "有人") + (mine.cheers - seen > 1 ? " 等人" : "") + "跟你乾杯了 " + (mine.cheers - seen) + " 次！"), 1200); store("pred_cseen", String(mine.cheers)); } }
   walkers.sort((a,b) => b.y - a.y);
   if (!poolTimer && all.length > 40) poolTimer = setInterval(() => { if (q === -1) { syncWalkers(); render(); } }, 20000);
 }
@@ -671,7 +690,7 @@ function lobbyHTML(){
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + '</span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG(w.zone ? LOOKS[w.look].P[w.zone][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG(w.zone ? LOOKS[w.look].P[w.zone][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + '</span><span class="say" style="display:none"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG(w.zone ? LOOKS[w.look].P[w.zone][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG(w.zone ? LOOKS[w.look].P[w.zone][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
 }
 function tickLobby(t){
   const box = $("lobby");
@@ -680,7 +699,12 @@ function tickLobby(t){
   const W = box.clientWidth - 39;
   const n = walkers.length, Z = Math.round(box.clientWidth * 0.68);
   if (n > LABN) { labT += dt; if (labT > 5) { labT = 0; labOff = (labOff + LABN) % n; walkers.forEach(w => w.lab = ((w.k - labOff + n) % n) < LABN); } }
-  const me = myNick();
+  const me = myNick(), party = t < partyUntil;
+  box.classList.toggle("party", party);
+  sayT += dt; if (sayT > 2.6) { sayT = 0; const cand = walkers.filter(w => w.say && !(w.sayT > 0)); if (cand.length) cand[Math.floor(Math.random() * cand.length)].sayT = 4; }
+  const choppers = walkers.filter(w => w.zone === "tree").length;
+  if (choppers) { chopAcc += dt * choppers * 0.25; if (chopAcc >= 1) { chopAcc = 0; const up = treeS.map((s,i) => i).filter(i => !(treeS[i].down > t)); if (up.length) hitTree(up[Math.floor(Math.random() * up.length)], t); } }
+  box.querySelectorAll(".tree").forEach((el, i) => { const s = treeS[i]; if (!s) return; el.classList.toggle("down", s.down > t); el.classList.toggle("shake", s.shake > t); });
   box.querySelectorAll(".walker").forEach(el => {
     const w = walkers[+el.dataset.i]; if (!w) return;
     if (w.jt != null) {
@@ -688,7 +712,9 @@ function tickLobby(t){
       w.x = w.jx0 + (w.jx1 - w.jx0) * p; w.y = w.jy0 + (w.jy1 - w.jy0) * p; w.hop = -Math.sin(Math.PI * p) * 34;
       el.style.bottom = w.y.toFixed(0) + "px"; el.style.zIndex = w.nick === me ? 999 : 10 + Math.round(600 - w.y);
       if (p >= 1) { w.jt = null; w.hop = 0; w.pause = 1.2; }
-    } else if (w.pause > 0) { w.pause -= dt; w.ft += dt; if (w.ft > 0.18) { w.ft = 0; w.frame ^= 1; w.hop = w.frame ? -3 : 0; } }
+    } else if (party) { w.ft += dt; if (w.ft > 0.24) { w.ft = 0; w.frame ^= 1; } w.hop = -Math.round(Math.abs(Math.sin(t / 1000 * Math.PI * 2.1)) * 10); }
+    else if (w.cheerT > 0) { w.hop = -6; w.frame = 0; }
+    else if (w.pause > 0) { w.pause -= dt; w.ft += dt; if (w.ft > 0.18) { w.ft = 0; w.frame ^= 1; w.hop = w.frame ? -3 : 0; } }
     else {
       w.x += w.v * dt;
       const [lo, hi] = zBounds(w.zone, box.clientWidth);
@@ -700,6 +726,8 @@ function tickLobby(t){
       if (Math.random() < dt * 0.08) w.v = -w.v;
     }
     if (w.tap > 0) w.tap -= dt;
+    if (w.cheerT > 0) w.cheerT -= dt; if (w.sayT > 0) w.sayT -= dt;
+    const sb = el.querySelector(".say"); if (sb) { const txt = w.cheerT > 0 ? "🍻 乾杯！" : (w.sayT > 0 ? w.say : ""); if (sb.textContent !== txt) sb.textContent = txt; sb.className = w.cheerT > 0 ? "say ch" : "say"; sb.style.display = txt ? "" : "none"; if (txt) sb.style.transform = w.x < 50 ? "translateX(-15%)" : (w.x > W - 50 ? "translateX(-85%)" : ""); }
     const nm = el.querySelector(".nm"); if (nm) { const sh = w.lab || w.tap > 0 || w.nick === me; if ((nm.style.display !== "none") !== sh) nm.style.display = sh ? "" : "none"; }
     el.style.transform = "translate(" + w.x.toFixed(1) + "px," + w.hop + "px)";
     el.querySelector(".fa").style.display = w.frame ? "none" : "";
@@ -711,14 +739,22 @@ function tickLobby(t){
 }
 document.addEventListener("click", e => {
   if (!e.target.closest) return;
+  const cow = e.target.closest("#lobby .cow");
+  if (cow) { sfx("moo"); const b = document.createElement("span"); b.className = "moo"; b.textContent = "哞～"; b.style.right = cow.style.right || getComputedStyle(cow).right; b.style.bottom = (parseInt(getComputedStyle(cow).bottom) + 30) + "px"; cow.parentNode.appendChild(b); setTimeout(() => b.remove(), 1400); return; }
+  const tr = e.target.closest("#lobby .tree");
+  if (tr) { const i = [...document.querySelectorAll("#lobby .tree")].indexOf(tr); hitTree(i, performance.now(), true); return; }
   const el = e.target.closest("#lobby .walker");
-  if (el && !el.classList.contains("me")) { const w = walkers[+el.dataset.i]; if (w) w.tap = 4; return; }
+  if (el && el.classList.contains("me")) { editSay(); return; }
+  if (el) { const w = walkers[+el.dataset.i]; if (!w) return; w.tap = 4; const mw = walkers.find(v => v.nick === myNick());
+    if (mw) { if (w.cheerT > 0) return; w.cheerT = 1.6; mw.cheerT = 1.6; w.cheers = (w.cheers || 0) + 1; sfx("coin");
+      fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"cheer", key: deviceKey(), to: w.nick})}).catch(() => {}); }
+    return; }
   const box = e.target.closest("#lobby"); if (!box) return;
   const me = myNick(), w = walkers.find(v => v.nick === me);
   if (!w) { toast("送出預測後，你的角色才會進舞池"); return; }
   const r = box.getBoundingClientRect(), W = box.clientWidth - 39, Z = Math.round(box.clientWidth * 0.68);
   const cx = e.clientX - r.left - 19, cy = r.bottom - e.clientY - 20;
-  if (cy + 20 >= box.clientHeight - 170 && cx + 19 >= Z) { toast("🎧 DJ：收到！下一首更嗨"); sfx("coin"); return; }
+  if (cy + 20 >= box.clientHeight - 170 && cx + 19 >= Z) { partyUntil = performance.now() + 15000; toast("🎧 DJ：全場跳起來！"); sfx("coin"); return; }
   const zone = cy + 20 < YARD ? (cx + 19 < box.clientWidth / 2 ? "tree" : "milk") : (cx + 19 >= Z ? "smoke" : null);
   const b = zBounds(zone, box.clientWidth), yb = zY2(zone);
   w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(b[0], Math.min(b[1], cx)); w.jy1 = Math.max(yb[0], Math.min(yb[1], cy)); w.jt = 0;
@@ -733,6 +769,28 @@ setInterval(async () => {
   if (q !== -1 || document.hidden) return;
   try { const r = await fetch(API, {credentials:"omit"}); const j = await r.json(); if (j && Array.isArray(j.nicks)) { info = j; data = j; syncWalkers(); const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); } } catch (_) {}
 }, 30000);
+const SAY_PRESETS = ["我賭三杯！", "今晚不醉不歸", "投票了沒？", "理性討論 感性喝酒", "開票見真章", "神預言就是我", "我只是來跳舞的", "乾了這杯！"];
+const treeS = [0,1,2].map(() => ({hp: 6, down: 0, shake: 0}));
+let chopAcc = 0;
+function hitTree(i, t, manual){
+  const s = treeS[i]; if (!s || s.down > t) return;
+  s.hp--; s.shake = t + 250; if (manual) sfx("chop");
+  if (s.hp <= 0) { s.down = t + 20000; s.hp = 6; if (manual) { sfx("fall"); toast("🌲 碰！一棵樹倒了"); } }
+}
+function editSay(){
+  const mw = walkers.find(v => v.nick === myNick()); if (!mw) return;
+  const d = document.createElement("div"); d.className = "sayed";
+  d.innerHTML = '<div><p>💬 我的口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip">' + p + '</button>').join("") + '</div><p><small>或自己寫：</small></p><input maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內"><p><button class="go ok">儲存</button> <button class="go ghost no">取消</button></p></div>';
+  document.body.appendChild(d); const inp = d.querySelector("input");
+  d.querySelectorAll(".chip").forEach(b => b.onclick = () => { inp.value = b.textContent; d.querySelectorAll(".chip").forEach(x => x.classList.toggle("sel", x === b)); });
+  d.querySelector(".no").onclick = () => d.remove();
+  d.querySelector(".ok").onclick = async () => {
+    const v = inp.value.trim().slice(0, 10);
+    try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"say", key: deviceKey(), s: v})}); const j = await r.json();
+      if (j.ok) { mw.say = v; mw.sayT = v ? 4 : 0; toast(v ? "💬 口號已更新" : "已清除口號"); d.remove(); } else toast(j.error || "沒存成功，你要先送出過預測"); }
+    catch (_) { toast("連線失敗，再試一次"); }
+  };
+}
 function startLobby(){ if (!lobbyRAF) { lastT = 0; lobbyRAF = requestAnimationFrame(tickLobby); } }
 function toast(s){ const el = $("toast"); el.textContent = s; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 1800); }
 
