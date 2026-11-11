@@ -104,7 +104,13 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 @keyframes beam{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
 .lobby .empty{position:absolute;left:0;right:0;top:44px;text-align:center;color:var(--mute);font-size:15px;z-index:3}
 .lobby .tag2{position:absolute;top:6px;left:10px;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);z-index:3}
-.smz{position:absolute;top:0;bottom:150px;right:0;width:32%;background:repeating-linear-gradient(45deg,rgba(86,108,134,.28) 0 6px,rgba(51,60,87,.28) 6px 12px);border-left:3px dashed #566c86;z-index:2}
+.djz{position:absolute;top:0;right:0;width:32%;height:170px;background:radial-gradient(circle at 50% 100%,#5d275d,#1a1c2c 70%);border-left:3px dashed #566c86;border-bottom:3px dashed #566c86;z-index:2;overflow:hidden}
+.djz b{position:absolute;top:6px;right:6px;font-size:11px;color:#ffcd75;background:#0d0e17;padding:1px 5px;border:2px solid #566c86}
+.djz .dj{position:absolute;bottom:6px;left:50%;margin-left:-48px}.djz .dj1{visibility:hidden;animation:djb .9s steps(1) infinite}.djz .dj0{animation:djb .9s steps(1) infinite reverse}
+@keyframes djb{0%{visibility:hidden}50%{visibility:visible}}
+.djz i{position:absolute;bottom:60px;left:30%;font-style:normal;color:#73eff7;font-size:14px;animation:note 2.4s linear infinite}.djz i+i{left:55%;color:#ff77a8;animation-delay:-.8s}.djz i+i+i{left:75%;color:#ffcd75;animation-delay:-1.6s}
+@keyframes note{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-70px) rotate(20deg);opacity:0}}
+.smz{position:absolute;top:170px;bottom:150px;right:0;width:32%;background:repeating-linear-gradient(45deg,rgba(86,108,134,.28) 0 6px,rgba(51,60,87,.28) 6px 12px);border-left:3px dashed #566c86;z-index:2}
 .walker.milky svg{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 5px #73eff7)}
 .yard{position:absolute;left:0;right:0;bottom:0;height:150px;display:flex;border-top:6px solid #566c86;z-index:2}
 .yard>div{position:relative;flex:1}
@@ -614,6 +620,7 @@ const YD = 170, YARD = 150;
 function zBounds(z, bw){ const W = bw - 39, Z = Math.round(bw * 0.68), H = Math.round(bw / 2);
   return z === "smoke" ? [Z, W] : z === "tree" ? [0, H - 45] : z === "milk" ? [H + 6, W] : [0, Z - 39]; }
 function zY(z){ return (z === "tree" || z === "milk") ? [4, 48] : [YD + 4, YD + 274]; }
+function zY2(z){ return z === "smoke" ? [YD + 4, YD + 160] : zY(z); }
 const HUMANS = [0, 1, 2, 5];
 function lookOf(nick, av){ return (av >= 0 && av < LOOKS.length) ? av : HUMANS[(hash(nick) >>> 16) % 4]; }
 const HAIR = ["#0d0e17","#5d275d","#b13e53","#ef7d57","#ffcd75","#94b0c2","#333c57","#73eff7"];
@@ -642,7 +649,7 @@ function syncWalkers(){
   const depth = 270;
   walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: YD + 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
   walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; const lz = store("pred_zone"), want = (w.nick === me && lz !== null) ? (ZONES.includes(lz) ? lz : null) : (ZONES.includes(zOf[w.nick]) ? zOf[w.nick] : null);
-    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
+    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
   walkers.sort((a,b) => b.y - a.y);
   if (!poolTimer && all.length > 40) poolTimer = setInterval(() => { if (q === -1) { syncWalkers(); render(); } }, 20000);
 }
@@ -656,9 +663,10 @@ function floorHTML(big){
 }
 const TREE = '<svg class="px tree" viewBox="0 0 9 12" width="27" height="36">' + ["..ggggg..",".ggGgggg.","gggggGggg","ggGgggggg","gggggggGg",".ggggggg.","..ggggg..","....o....","....o....","...ooo...","....o....","...ooo..."].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({g:"#257179",G:"#38b764",o:"#5d3a1a"})[c]+'"/>').join("")).join("") + '</svg>';
 const COW = '<svg class="px cow" viewBox="0 0 14 10" width="42" height="30">' + ["k..........k..",".kwwwwwwwkkwk.","wwwkkwwwwwwwww","wwkkkwwwwkkwpp","wwwkwwwkkkwwpp",".wwwwwwwkwww..",".wwwwwwwwww...","..w.w...w.w...","..k.k...k.k...","..............".slice(0)].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({w:"#f4f4f4",k:"#0d0e17",p:"#ff9eb0"})[c]+'"/>').join("")).join("") + '</svg>';
+const DJ = [["........hhhhhh..........", ".......kkkkkkkk.........", ".......nhkkkkhn.........", ".......nssssssn.........", "........ssnnss..........", "......tttttttttt........", ".....tttttttttttt.......", "....sstttttttttss.......", "dddddddddddddddddddddddd", "dGGGGGddddddddddddGGGGGd", "dGkkkGddBBddnnddddGkkkGd", "dGkykGddddddddddddGkkkGd", "dGkkkGddnnddBBddddGkykGd", "dGGGGGddddddddddddGGGGGd", "dddddddddddddddddddddddd"],["........hhhhhh.....ss...", ".......kkkkkkkk....ss...", ".......nhkkkkhn....tt...", ".......nssssssn...tt....", "........ssnnss...tt.....", "......tttttttttttt......", ".....tttttttttttt.......", "....sstttttttttt........", "dddddddddddddddddddddddd", "dGGGGGddddddddddddGGGGGd", "dGkkkGddnnddBBddddGkykGd", "dGkkyGddddddddddddGkkkGd", "dGkkkGddBBddnnddddGkkkGd", "dGGGGGddddddddddddGGGGGd", "dddddddddddddddddddddddd"]].map((F,i) => '<svg class="px dj dj' + i + '" viewBox="0 0 24 15" width="96" height="60">' + F.map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({h:"#5d275d",k:"#0d0e17",n:"#ff77a8",s:"#f1c27d",t:"#41a6f6",d:"#333c57",G:"#94b0c2",y:"#ffcd75",B:"#73eff7"})[c]+'"/>').join("")).join("") + "</svg>").join("");
 function lobbyHTML(){
   const big = true;
-  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="smz"><b>🚬 吸菸區</b></div><div class="yard"><div class="z-tree"><b>🪓 砍樹區</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳區</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div><div class="yard"><div class="z-tree"><b>🪓 砍樹區</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳區</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
@@ -710,8 +718,9 @@ document.addEventListener("click", e => {
   if (!w) { toast("送出預測後，你的角色才會進舞池"); return; }
   const r = box.getBoundingClientRect(), W = box.clientWidth - 39, Z = Math.round(box.clientWidth * 0.68);
   const cx = e.clientX - r.left - 19, cy = r.bottom - e.clientY - 20;
+  if (cy + 20 >= box.clientHeight - 170 && cx + 19 >= Z) { toast("🎧 DJ：收到！下一首更嗨"); sfx("coin"); return; }
   const zone = cy + 20 < YARD ? (cx + 19 < box.clientWidth / 2 ? "tree" : "milk") : (cx + 19 >= Z ? "smoke" : null);
-  const b = zBounds(zone, box.clientWidth), yb = zY(zone);
+  const b = zBounds(zone, box.clientWidth), yb = zY2(zone);
   w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(b[0], Math.min(b[1], cx)); w.jy1 = Math.max(yb[0], Math.min(yb[1], cy)); w.jt = 0;
   if (zone !== w.zone) {
     w.zone = zone; store("pred_zone", zone || ""); sfx("coin");
