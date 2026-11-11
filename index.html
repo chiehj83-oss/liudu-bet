@@ -106,7 +106,10 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .lobby .tag2{position:absolute;top:6px;left:10px;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);z-index:3}
 .walker{position:absolute;bottom:10px;width:39px;will-change:transform}
 .walker .nm{position:absolute;bottom:50px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
-.walker.me .nm{color:var(--dark);background:var(--gold)}
+.walker.me{z-index:999 !important}
+.walker.me .nm{color:var(--dark);background:var(--gold);font-size:15px;padding:1px 6px;bottom:54px;box-shadow:0 0 0 2px var(--dark)}
+.walker.me .nm::before{content:"▼ YOU";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);white-space:nowrap;margin-bottom:2px;animation:blink 1s steps(1) infinite}
+tr.me td{background:rgba(255,205,117,.18)}
 .walker svg{display:block}
 .city2{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 6px;color:var(--gold);font-size:19px}
 .city2 small{color:var(--mute);font-size:13px}
@@ -290,7 +293,8 @@ async function loadBoard(){
   if (q === BOARD) render();
 }
 
-let nick = store("pred_nick") || "";
+let nick = store("pred_nick") || store("liudu_nick") || "";
+function myNick(){ return (store("pred_nick") || store("liudu_nick") || "").trim(); }
 let picks = (() => { try { const p = JSON.parse(store("pred_picks")); if (Array.isArray(p) && p.length === 6) return p; } catch (_) {} return CITIES.map(() => ({c:null, n:null})); })();
 const sentBefore = !!store("pred_sent");
 let q = -1, history = [];
@@ -321,7 +325,7 @@ function render(){
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
         '<p class="label">點你的名字：</p><div class="names">' + info.players.map(p => {
-          const mine = p.name === (store("pred_nick") || "");
+          const mine = p.name === myNick();
           return '<button class="namebtn' + (nick === p.name ? " sel" : "") + '" data-name="' + esc(p.name) + '"' + (p.taken && !mine ? " disabled" : "") + '>' + esc(p.name) + '</button>';
         }).join("") + '</div><p class="note" style="margin-top:4px">劃掉的名字已經被登記。名單上沒有你？找主辦人。</p>'
       : '<input id="nick" maxlength="20" placeholder="取個暱稱（會顯示在排行榜）" value="' + esc(nick) + '" autocomplete="nickname"><p class="note" style="margin-top:6px">暱稱會公開顯示，請友善命名。一個裝置一張注單。</p>') +
@@ -450,7 +454,7 @@ function renderBoard(m){
   }
   const winners = Array.isArray(data.winners) ? data.winners : [];
   const revealed = !!data.revealed;
-  const me = (store("pred_nick") || "").trim();
+  const me = myNick();
   const total = data.total || 0;
   let h = '<div class="hero">' + sprite("mega",3,"") + sprite("ballot",4,"") + sprite("mug",3,"") + '</div>' +
     '<h1 style="font-size:34px">' + (revealed ? '神預言榜' : '賭性堅強榜') + '</h1><p class="sub">' + total + ' PLAYERS</p>';
@@ -459,7 +463,7 @@ function renderBoard(m){
   else {
     h += '<p class="note" style="margin-top:0">' + (revealed ? '依猜中都數排名，同分比押中的杯數。' : '開票前依押的總杯數排名，誰最敢押！') + '</p>' +
       '<div class="box tbl"><table style="min-width:0"><thead><tr><th>#</th><th>暱稱</th>' + (revealed ? '<th>猜中</th><th>押中杯數</th>' : '<th>押了幾都</th><th>總杯數</th>') + '</tr></thead><tbody>' +
-      board.map((r,i) => '<tr><td class="n">' + (i + 1) + '</td><td>' + esc(r.nick) + (r.nick === me ? '<span class="tag">我</span>' : '') + '</td>' +
+      board.map((r,i) => '<tr' + (r.nick === me ? ' class="me"' : '') + '><td class="n">' + (i + 1) + '</td><td>' + esc(r.nick) + (r.nick === me ? '<span class="tag">我</span>' : '') + '</td>' +
         (revealed ? '<td class="n hit">' + r.hit + '/' + winners.filter(Boolean).length + '</td><td class="n">' + r.hitCups + '</td>' : '<td class="n">' + r.played + '</td><td class="n">' + r.cups + ' 杯</td>') + '</tr>').join("") +
       '</tbody></table></div>' + (total > board.length ? '<p class="note">只顯示前 ' + board.length + ' 名</p>' : '');
   }
@@ -591,7 +595,7 @@ function syncWalkers(){
   const raw = (info && Array.isArray(info.nicks)) ? info.nicks : [];
   const avOf = {}; raw.forEach(o => { if (o && typeof o === 'object') avOf[o.n] = o.a; });
   const all = raw.map(o => (o && typeof o === 'object') ? o.n : o);
-  const me = (store("pred_nick") || "").trim();
+  const me = myNick();
   const others = all.filter(n => n !== me);
   for (let i = others.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [others[i], others[j]] = [others[j], others[i]]; }
   const names = (me && all.includes(me) ? [me] : []).concat(others).slice(0, 40);
@@ -614,7 +618,7 @@ function lobbyHTML(){
   const big = walkers.length > 15;
   const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:290px"' : '') + '>' + floorHTML(big) + '<span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
-  const me = (store("pred_nick") || "").trim();
+  const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
     '<div class="walker' + (w.nick === me ? " me" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(200 - w.y)) + '">' + (w.lab || w.nick === me ? '<span class="nm">' + esc(w.nick) + '</span>' : '') + '<span class="fa">' + personSVG(LOOKS[w.look].A, w.nick, LOOKS[w.look].fur) + '</span><span class="fb" style="display:none">' + personSVG(LOOKS[w.look].B, w.nick, LOOKS[w.look].fur) + '</span></div>').join("") + '</div>';
