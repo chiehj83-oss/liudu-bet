@@ -104,6 +104,682 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 @keyframes beam{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
 .lobby .empty{position:absolute;left:0;right:0;top:44px;text-align:center;color:var(--mute);font-size:15px;z-index:3}
 .lobby .tag2{position:absolute;top:6px;left:10px;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);z-index:3}
+.walker{position:absolute;bottom:10px;width:39px;will-change:transform;cursor:pointer}
+.walker .nm{position:absolute;bottom:50px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
+.walker.me{z-index:999 !important}
+.walker.me .nm{color:var(--dark);background:var(--gold);font-size:15px;padding:1px 6px;bottom:54px;box-shadow:0 0 0 2px var(--dark)}
+.walker.me .nm::before{content:"▼ YOU";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);white-space:nowrap;margin-bottom:2px;animation:blink 1s steps(1) infinite}
+tr.me td{background:rgba(255,205,117,.18)}
+.walker svg{display:block}
+.city2{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 6px;color:var(--gold);font-size:19px}
+.city2 small{color:var(--mute);font-size:13px}
+.tl{display:grid;grid-template-columns:5.5em 1fr auto;align-items:center;gap:8px;margin:5px 0;font-size:16px}
+.tl .bar{height:14px;background:var(--dark);border:2px solid #566c86}
+.tl .bar i{display:block;height:100%;background:var(--teal)}
+.tl.top .bar i{background:var(--gold)}
+.tl .ct{font-size:13px;color:var(--mute);white-space:nowrap}
+.fav{display:inline-block;background:var(--gold);color:var(--dark);font-size:11px;padding:0 4px;margin-left:4px}
+.sponsor{text-align:center;margin-top:18px;font-size:14px;color:var(--mute)}
+.sponsor b{font-family:"Press Start 2P",monospace;font-size:13px;color:var(--gold);font-weight:normal;letter-spacing:2px;text-shadow:2px 2px 0 var(--red)}
+.howto{border:3px dashed #566c86;padding:10px 12px;margin-top:18px;font-size:15px;line-height:1.6}
+.howto b{color:var(--gold);font-weight:normal}
+.looks{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.lookbtn{background:var(--panel);border:3px solid #566c86;padding:4px 4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;color:var(--mute);font:inherit;font-size:11px}
+.lookbtn.sel{border-color:var(--gold);color:var(--gold)}
+.press{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--gold);text-align:center;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <button class="back" id="back" hidden>◀ 上一題</button>
+    <div class="prog" id="progwrap" hidden></div>
+    <span class="step" id="step"></span>
+    <button class="music" id="music" aria-label="背景音樂開關">♪ OFF</button>
+  </div>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ---------- pixel sprites: each char is a color key ---------- */
+const PAL = {k:"#0d0e17",w:"#f4f4f4",g:"#94b0c2",s:"#566c86",y:"#ffcd75",o:"#ef7d57",r:"#b13e53",l:"#a7f070",t:"#38b764",b:"#3b5dc9",c:"#41a6f6",n:"#29366f",d:"#333c57",m:"#5d275d",f:"#ffe9b0"};
+const SPR = {
+  ballot:[
+    "....kkkkkk......",
+    "....kwwwwk......",
+    "....kwrrwk......",
+    "....kwrwrk......",
+    "....kwrrwk......",
+    "..kkkkwwkkkkkk..",
+    "..kccccwwccccck.",
+    ".kkkkkkkkkkkkkk.",
+    ".kbbbbbbbbbbbbk.",
+    ".kbbbbkkkkbbbbk.",
+    ".kbbbkwwwwkbbbk.",
+    ".kbbbkwyywkbbbk.",
+    ".kbbbkwwwwkbbbk.",
+    ".kbbbbkkkkbbbbk.",
+    ".knnnnnnnnnnnnk.",
+    ".kkkkkkkkkkkkkk."],
+  mug:[
+    "..wwwwwwww....",
+    ".wwwwwwwwww...",
+    ".kkkkkkkkkk...",
+    ".kyyyyyyyyk...",
+    ".kyfyyyyyykkk.",
+    ".kyfyyyyyyk.k.",
+    ".kyyyyyfyyk.k.",
+    ".kyyyyyyyyk.k.",
+    ".kyfyyyyyykkk.",
+    ".kyyyyyfyyk...",
+    ".kyyyyyyyyk...",
+    ".kkkkkkkkkk..."],
+  stamp:[
+    "....kkkkk....",
+    "....koook....",
+    "....koook....",
+    "...kkkkkkk...",
+    "...krrrrrk...",
+    "..kkkkkkkkk..",
+    "..kmmmmmmmk..",
+    "..kkkkkkkkk..",
+    ".............",
+    "...rrrrrrr...",
+    "..rr..r..rr..",
+    "..r.rrrrr.r..",
+    "..rr..r..rr..",
+    "...rrrrrrr..."],
+  mega:[
+    "..........kk..",
+    "........kkwk..",
+    "......kkwwwk..",
+    "kkkkkkwwwwwk..",
+    "kookkwwwwwwk.y",
+    "kookkwwwwwwk..",
+    "kookkwwwwwwky.",
+    "kkkkkkwwwwwk..",
+    "..kk..kkwwwk.y",
+    "..kk....kkwk..",
+    "..kkk.....kk.."],
+  trophy:[
+    "..kkkkkkkkkk..",
+    "kkkyyyyyyyykkk",
+    "kyky fyyyyykyk".replace(" ","y"),
+    "kyky fyyyyykyk".replace(" ","y"),
+    ".kkyfyyyyyykk.",
+    "...kyyyyyyk...",
+    "....kyyyyk....",
+    ".....kyyk.....",
+    ".....kyyk.....",
+    "....kkyykk....",
+    "...koooooook..".slice(0,14),
+    "...kkkkkkkk..."],
+  arrow:[
+    "k...",
+    "kk..",
+    "kyk.",
+    "kyyk",
+    "kyk.",
+    "kk..",
+    "k..."]
+};
+function sprite(name, scale, cls){
+  const rows = SPR[name], h = rows.length, w = Math.max(...rows.map(r => r.length));
+  let rects = "";
+  rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = PAL[row[x]]; if (c) rects += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
+  return '<svg class="px '+(cls||"")+'" viewBox="0 0 '+w+' '+h+'" width="'+w*scale+'" height="'+h*scale+'" aria-hidden="true">'+rects+'</svg>';
+}
+/* skyline per city: simple generic building profiles (height per column) */
+const SKY = {
+  "台北市":[3,3,5,5,4,4,6,6,9,12,16,16,12,9,6,6,4,4,5,5,7,7,3,3],
+  "新北市":[4,4,6,6,6,5,5,7,7,7,9,9,9,6,6,8,8,4,4,6,6,6,3,3],
+  "桃園市":[3,3,3,5,5,4,4,4,7,7,6,6,2,2,3,8,8,8,5,5,4,4,3,3],
+  "台中市":[3,4,4,6,6,6,8,8,10,10,10,7,7,5,5,9,9,6,6,4,4,4,3,3],
+  "台南市":[2,2,4,4,4,6,7,7,6,4,4,3,3,5,5,5,8,9,8,5,5,3,2,2],
+  "高雄市":[3,3,5,5,7,7,9,11,13,15,15,13,11,9,7,7,5,5,6,6,4,4,3,3]
+};
+function skyline(name, scale){
+  const hs = SKY[name] || SKY["台北市"], H = 18, W = hs.length;
+  let r = "";
+  hs.forEach((h,x) => {
+    for (let y = H - h; y < H; y++) {
+      const win = (x % 2 === 1) && (y % 3 === 1) && y < H - 1 && ((x * 7 + y * 3) % 5 !== 0);
+      r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+(win ? "#ffcd75" : (y === H - h ? "#566c86" : "#29366f"))+'"/>';
+    }
+  });
+  return '<svg class="px skyline" viewBox="0 0 '+W+' '+H+'" width="'+W*scale+'" height="'+H*scale+'" aria-hidden="true">'+r+'</svg>';
+}
+
+/* ---------- data ---------- */
+const CITIES = [
+  {name:"台北市", c:[["蔣萬安","國民黨・現任"],["沈伯洋","民進黨"],["郭璽","台灣麻將最大黨"],["蕭文乾","臺灣SoR無法黨"],["唐新民","三勢團結促進聯盟"],["林志成","無黨籍"]]},
+  {name:"新北市", c:[["李四川","國民黨"],["蘇巧慧","民進黨"],["蘇輝湟","無黨籍"]]},
+  {name:"桃園市", c:[["張善政","國民黨・現任"],["黃世杰","民進黨"]]},
+  {name:"台中市", c:[["江啟臣","國民黨"],["何欣純","民進黨"],["洪麗華","司法正義黨"]]},
+  {name:"台南市", c:[["謝龍介","國民黨"],["陳亭妃","民進黨"],["葉人文","無黨籍"],["蕭燐洪","臺灣SoR無法黨"]]},
+  {name:"高雄市", c:[["柯志恩","國民黨"],["賴瑞隆","民進黨"],["張靜","司法改革黨"],["王肇民","無黨籍"],["洪方隆","無黨籍"]]}
+];
+const CUPNOTE = {1:"小試一下",2:"有點把握",3:"穩了"};
+const DEADLINE = new Date("2026-11-28T08:00:00+08:00").getTime();
+const TOTAL = 12;
+const API = "https://script.google.com/macros/s/AKfycby_R7dUzhw-i3gAnE8mFzOC7UmlNIzi11uwE2hI8fMtS9fyZioJVtQ9-L-gVGLGb9SL/exec";
+const BOARD = 99;
+let sending = false, sendMsg = "", data = null, loadErr = "";
+let info = null, infoFailed = false;
+let pass = (() => { try { return localStorage.getItem("pred_pass") || ""; } catch (_) { return ""; } })();
+async function loadInfo(){
+  try { const r = await fetch(API, {credentials:"omit"}); info = await r.json(); data = info; syncWalkers(); }
+  catch (_) { infoFailed = true; }
+  if (q === -1) render();
+}
+
+function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } }
+function deviceKey(){
+  let k = store("pred_key");
+  if (!k || !/^[A-Za-z0-9]{12,64}$/.test(k)) {
+    const a = new Uint8Array(16); crypto.getRandomValues(a);
+    k = [...a].map(x => x.toString(36).padStart(2,"0")).join("").replace(/[^A-Za-z0-9]/g,"").slice(0,24);
+    store("pred_key", k);
+  }
+  return k;
+}
+async function loadBoard(){
+  loadErr = "";
+  try {
+    const r = await fetch(API, {credentials:"omit"});
+    data = await r.json(); info = data; syncWalkers();
+  } catch (_) { loadErr = "讀不到資料，請稍後重新整理。"; }
+  if (q === BOARD) render();
+}
+
+let nick = store("pred_nick") || store("liudu_nick") || "";
+function myNick(){ return (store("pred_nick") || store("liudu_nick") || "").trim(); }
+let picks = (() => { try { const p = JSON.parse(store("pred_picks")); if (Array.isArray(p) && p.length === 6) return p; } catch (_) {} return CITIES.map(() => ({c:null, n:null})); })();
+const sentBefore = !!store("pred_sent");
+let q = -1, history = [];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+$("progwrap").innerHTML = "<i></i>".repeat(TOTAL);
+
+function go(next, push = true){ if (push) history.push(q); q = next; render(); window.scrollTo(0,0); }
+function nextAfter(i){ return (i % 2 === 0 && picks[i/2].c === "不押") ? i + 2 : i + 1; }
+
+function render(){
+  const m = $("main"), inQuiz = q >= 0 && q < TOTAL;
+  $("back").hidden = q < 0;
+  $("progwrap").hidden = q < 0 || q === BOARD;
+  [...$("progwrap").children].forEach((el,i) => el.classList.toggle("on", i < Math.min(q, TOTAL)));
+  $("step").textContent = inQuiz ? String(q + 1).padStart(2,"0") + "/" + TOTAL : (q === BOARD ? "" : q >= TOTAL ? "CLEAR" : "");
+
+  if (q === -1) {
+    const closed = Date.now() >= DEADLINE;
+    m.innerHTML =
+      '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
+      '<h1>六都預測</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
+      '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
+      lobbyHTML() +
+      (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
+      (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
+      (info && info.players && info.players.length ?
+        '<p class="label">點你的名字：</p><div class="names">' + info.players.map(p => {
+          const mine = p.name === myNick();
+          return '<button class="namebtn' + (nick === p.name ? " sel" : "") + '" data-name="' + esc(p.name) + '"' + (p.taken && !mine ? " disabled" : "") + '>' + esc(p.name) + '</button>';
+        }).join("") + '</div><p class="note" style="margin-top:4px">劃掉的名字已經被登記。名單上沒有你？找主辦人。</p>'
+      : '<input id="nick" maxlength="20" placeholder="取個暱稱（會顯示在排行榜）" value="' + esc(nick) + '" autocomplete="nickname"><p class="note" style="margin-top:6px">暱稱會公開顯示，請友善命名。一個裝置一張注單。</p>') +
+      (info && info.needPass ? '<p class="label">群組通關碼：</p><input id="pass" maxlength="30" placeholder="通關碼" value="' + esc(pass) + '">' : '') +
+      '<button class="go" id="start"' + (nick.trim() ? "" : " disabled") + '>▶ START</button>' +
+      (sentBefore ? '<p class="note">你已經送出過預測，重押一次會覆蓋舊的。</p>' : '<p class="press blink">PRESS START</p>'))) +
+      '<button class="linkbtn" id="seeall">看排行榜與大家的預測 ▶</button>' +
+      '<div class="howto"><b>✎ 想改答案？</b> 11/28 早上 8:00 前隨時回來，用同一個裝置重押一次就會覆蓋舊的。<br><b>✕ 不玩了？</b> 到「看排行榜」按「撤回我的預測」。<br><b>👀 開票前</b> 只看得到每都誰最被看好，不公開誰押誰。</div>' +
+      '<details><summary>▶ 遊戲規則</summary><ol>' +
+      '<li>六都各押一位你覺得會當選的人，每都押 1～3 杯，沒把握可以「不押」。至少押 3 都才能上榜。</li>' +
+      '<li>開票夜跟朋友一起對答案：押錯的都，自己喝掉押的杯數，自由心證。</li>' +
+      '<li>開票前看「賭性堅強榜」（押最多杯的人），開票後看「神預言榜」（猜中最多都的人）。</li>' +
+      '<li>11/28 早上 8:00 截止。喝酒不開車，未成年或不喝酒的朋友請用飲料代替。</li>' +
+      '</ol></details>' +
+      '<p class="note">關心政治不一定要針鋒相對。<br>輕鬆押一把、開票夜一起乾杯，不要政治冷漠 🍻<br>候選人順序不代表號次，本站不代表任何立場。</p>' +
+      '<p class="sign">作者：ICEJACK02</p>';
+    const inp = $("nick");
+    if (inp) {
+      inp.addEventListener("input", () => { nick = inp.value; $("start").disabled = !nick.trim(); });
+      inp.addEventListener("keydown", e => { if (e.key === "Enter" && nick.trim()) startGame(); });
+    }
+    document.querySelectorAll(".namebtn").forEach(b => b.onclick = () => { nick = b.dataset.name; sfx("coin"); render(); });
+    const pi = $("pass");
+    if (pi) pi.addEventListener("input", () => { pass = pi.value; try { localStorage.setItem("pred_pass", pass); } catch (_) {} });
+    if ($("start")) $("start").onclick = startGame;
+    startLobby();
+    $("seeall").onclick = openBoard;
+    return;
+  }
+
+  if (inQuiz) {
+    const ci = Math.floor(q / 2), city = CITIES[ci], p = picks[ci];
+    const head = '<div class="cityhead"><p class="city">' + city.name + '</p></div>' + skyline(city.name, 6).replace('class="px skyline"','class="px" style="margin:6px 0 0"');
+    if (q % 2 === 0) {
+      m.innerHTML = head + '<p class="q">' + sprite("stamp",2,"").replace('<svg','<svg style="display:inline-block;vertical-align:-6px;margin-right:8px"') + '誰會當選？</p><div class="opts">' +
+        city.c.map(c => '<button class="opt' + (p.c === c[0] ? " sel" : "") + '" data-c="' + esc(c[0]) + '"><span><span class="cur">▶</span> ' + esc(c[0]) + '</span><small>' + esc(c[1]) + '</small></button>').join("") +
+        '<button class="opt skip' + (p.c === "不押" ? " sel" : "") + '" data-c="不押">這都不押</button></div>';
+    } else {
+      m.innerHTML = head + '<p class="q">押 <span class="pick">' + esc(p.c) + '</span> 幾杯？</p><div class="opts cups">' +
+        [1,2,3].map(n => '<button class="opt' + (p.n === n ? " sel" : "") + '" data-n="' + n + '"><span class="mugs">' + sprite("mug",3,"").repeat(n).replace(/width="42" height="36"/g, n === 3 ? 'width="28" height="24"' : n === 2 ? 'width="35" height="30"' : 'width="42" height="36"') + '</span><span class="num">' + n + '</span><small>' + CUPNOTE[n] + '</small></button>').join("") + '</div>';
+    }
+    return;
+  }
+
+  if (q === BOARD) { renderBoard(m); return; }
+
+  // result
+  const bet = picks.filter(p => p.c && p.c !== "不押");
+  const total = bet.reduce((a,p) => a + p.n, 0), ok = bet.length >= 3;
+  m.innerHTML =
+    '<div class="hero">' + sprite("trophy",5,"bob") + '</div>' +
+    '<h1 style="font-size:32px">' + esc(nick.trim()) + '</h1><p class="sub">STAGE CLEAR · ' + bet.length + ' 都 · ' + total + ' 杯</p>' +
+    '<div class="box">' + CITIES.map((c,i) => {
+      const p = picks[i];
+      return '<div class="row"><span>' + c.name + '</span>' + (p.c === "不押" ? '<span class="dim">不押</span>' : '<span><b>' + esc(p.c) + '</b> ×' + p.n + '</span>') + '</div>';
+    }).join("") + '</div>' +
+    '<p class="label" style="text-align:center">舞池造型（可換）：</p><div class="looks">' + LOOKS.map((L,i) => '<button class="lookbtn' + (myLook() === i ? ' sel' : '') + '" data-look="' + i + '" aria-label="' + L.n + '">' + personSVG(L.A, nick.trim() || "x", L.fur) + '<small>' + L.n + '</small></button>').join('') + '</div>' +
+    (ok ? '' : '<p class="warn">▶ 至少要押 3 都才算入局，按「上一題」或「重來」修改。</p>') +
+    '<button class="go alt" id="send"' + (ok && !sending ? "" : " disabled") + '>' + (sending ? "送出中…" : "▶ 送出預測") + '</button>' +
+    (sendMsg ? '<p class="warn">▶ ' + esc(sendMsg) + '</p>' : '') +
+    '<button class="go ghost" id="redo">↺ 重來</button>' +
+    '<p class="note">截止前想改，重押一次再送出就會覆蓋。</p>';
+  $("redo").onclick = () => { picks = CITIES.map(() => ({c:null, n:null})); history = []; sendMsg = ""; go(0, false); };
+  $("send").onclick = sendBet;
+  document.querySelectorAll(".lookbtn").forEach(b => b.onclick = () => { store("pred_av", b.dataset.look); sfx("coin"); render(); });
+}
+
+function myLook(){ const v = parseInt(store("pred_av"), 10); return lookOf(nick.trim() || "x", isNaN(v) ? -1 : v); }
+async function sendBet(){
+  if (sending) return;
+  if (Date.now() >= DEADLINE) { sendMsg = "已經截止下注了"; return render(); }
+  sending = true; sendMsg = ""; render();
+  const body = JSON.stringify({nick: nick.trim(), key: deviceKey(), pass: pass.trim(), av: myLook(), picks: picks.map(p => (p.c && p.c !== "不押") ? {c:p.c, n:p.n} : {c:"不押"})});
+  try {
+    const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body});
+    const res = await r.json();
+    if (!res.ok) { sfx("err"); throw new Error(res.error || "送出失敗"); }
+    sfx("win");
+    store("pred_nick", nick.trim()); store("pred_picks", JSON.stringify(picks)); store("pred_sent", "1");
+    data = res; info = res; syncWalkers(); sending = false; toast("SAVED! 預測已送出");
+    history = []; go(BOARD, false); return;
+  } catch (err) {
+    sendMsg = (err && err.message && !/fetch|network|JSON/i.test(err.message)) ? err.message : "送出失敗，請檢查網路後再按一次。";
+  }
+  sending = false; render();
+}
+
+let withdrawArmed = false, withdrawMsg = "", withdrawing = false;
+async function withdrawBet(){
+  if (withdrawing) return;
+  if (!withdrawArmed) { withdrawArmed = true; withdrawMsg = ""; render(); setTimeout(() => { if (withdrawArmed) { withdrawArmed = false; if (q === BOARD) render(); } }, 4000); return; }
+  withdrawArmed = false; withdrawing = true; withdrawMsg = "撤回中…"; render();
+  try {
+    const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"delete", key: deviceKey()})});
+    const res = await r.json();
+    if (!res.ok) throw new Error(res.error || "撤回失敗");
+    try { localStorage.removeItem("pred_sent"); localStorage.removeItem("pred_picks"); } catch (_) {}
+    picks = CITIES.map(() => ({c:null, n:null}));
+    data = res; info = res; syncWalkers(); withdrawMsg = ""; toast("已撤回預測"); sfx("err");
+  } catch (err) {
+    withdrawMsg = (err && err.message && !/fetch|network|JSON/i.test(err.message)) ? err.message : "撤回失敗，請檢查網路後再試。";
+  }
+  withdrawing = false; render();
+}
+
+function openBoard(){ data = null; go(BOARD); loadBoard(); }
+
+function settle(bets, winners){
+  const decided = winners.filter(Boolean).length;
+  const rows = bets.filter(b => b.picks.filter(p => p.c !== "不押").length >= 3).map(b => {
+    let hit = 0, pen = 0, tix = 0;
+    const full = b.picks.every(p => p.c !== "不押");
+    b.picks.forEach((p,i) => { if (p.c === "不押" || !winners[i]) return; if (p.c === winners[i]) { hit++; tix += p.n; } else pen += p.n; });
+    return {nick:b.nick, hit, pen, tix, god: decided === 6 && full && hit === 6, zero: decided === 6 && full && hit === 0};
+  });
+  const gods = rows.filter(r => r.god).length;
+  rows.forEach(r => { if (r.zero) r.pen += 1; r.toast = gods - (r.god ? 1 : 0); r.drink = Math.max(0, r.pen - r.tix) + r.toast; });
+  rows.sort((a,b) => b.hit - a.hit || a.drink - b.drink);
+  return {rows, decided, gods};
+}
+
+function renderBoard(m){
+  if (!data) {
+    m.innerHTML = '<div class="hero">' + sprite("ballot",5,"bob") + '</div><p class="lead">' + (loadErr ? esc(loadErr) : 'NOW LOADING<span class="blink">…</span>') + '</p>';
+    return;
+  }
+  const winners = Array.isArray(data.winners) ? data.winners : [];
+  const revealed = !!data.revealed;
+  const me = myNick();
+  const total = data.total || 0;
+  let h = '<div class="hero">' + sprite("mega",3,"") + sprite("ballot",4,"") + sprite("mug",3,"") + '</div>' +
+    '<h1 style="font-size:34px">' + (revealed ? '神預言榜' : '賭性堅強榜') + '</h1><p class="sub">' + total + ' PLAYERS</p>';
+  const board = Array.isArray(data.board) ? data.board : [];
+  if (!total) h += '<p class="lead">還沒有人預測，當第一個吧！</p>';
+  else {
+    h += '<p class="note" style="margin-top:0">' + (revealed ? '依猜中都數排名，同分比押中的杯數。' : '開票前依押的總杯數排名，誰最敢押！') + '</p>' +
+      '<div class="box tbl"><table style="min-width:0"><thead><tr><th>#</th><th>暱稱</th>' + (revealed ? '<th>猜中</th><th>押中杯數</th>' : '<th>押了幾都</th><th>總杯數</th>') + '</tr></thead><tbody>' +
+      board.map((r,i) => '<tr' + (r.nick === me ? ' class="me"' : '') + '><td class="n">' + (i + 1) + '</td><td>' + esc(r.nick) + (r.nick === me ? '<span class="tag">我</span>' : '') + '</td>' +
+        (revealed ? '<td class="n hit">' + r.hit + '/' + winners.filter(Boolean).length + '</td><td class="n">' + r.hitCups + '</td>' : '<td class="n">' + r.played + '</td><td class="n">' + r.cups + ' 杯</td>') + '</tr>').join("") +
+      '</tbody></table></div>' + (total > board.length ? '<p class="note">只顯示前 ' + board.length + ' 名</p>' : '');
+  }
+  if (Array.isArray(data.tally) && total) {
+    h += '<h2>大家最看好誰</h2><div class="box">' + CITIES.map((c,i) => {
+      const rows = (data.tally[i] || []).filter(t => t.votes > 0).sort((a,b) => b.votes - a.votes || b.cups - a.cups);
+      const sum = rows.reduce((a,t) => a + t.votes, 0), maxV = rows.length ? rows[0].votes : 1;
+      return '<div class="city2">' + c.name + '<small>' + sum + ' 人押</small></div>' + (rows.length ? rows.map((t,j) =>
+        '<div class="tl' + (j === 0 ? ' top' : '') + '"><span>' + esc(t.name) + (winners[i] === t.name ? '<span class="fav">當選</span>' : (!winners[i] && j === 0 ? '<span class="fav">最看好</span>' : '')) + '</span><span class="bar"><i style="width:' + Math.round(t.votes / maxV * 100) + '%"></i></span><span class="ct">' + t.votes + ' 人 · ' + t.cups + ' 杯</span></div>').join('') : '<p class="note" style="margin:4px 0">還沒有人押這都</p>');
+    }).join('') + '</div>';
+  }
+  if (store("pred_sent") && Date.now() < DEADLINE) h += '<button class="go ghost" id="withdraw" style="border-color:var(--orange);color:var(--orange)">' + (withdrawArmed ? '⚠ 再按一次確認撤回' : '✕ 撤回我的預測') + '</button>' + (withdrawMsg ? '<p class="warn">▶ ' + esc(withdrawMsg) + '</p>' : '');
+  h += '<button class="go alt" id="home">🪩 回舞池</button>' +
+    '<button class="go ghost" id="reload">↻ 重新整理</button>' +
+    (Date.now() < DEADLINE ? '<button class="go" id="again">▶ ' + (store("pred_sent") ? '修改我的預測' : '我要預測') + '</button>' : '');
+  m.innerHTML = h;
+  $("reload").onclick = () => { data = null; render(); loadBoard(); };
+  $("home").onclick = () => { history = []; go(-1, false); };
+  if ($("withdraw")) $("withdraw").onclick = withdrawBet;
+  if ($("again")) $("again").onclick = () => { history = []; go(-1, false); };
+}
+
+/* ---------- 8bit casino lounge BGM (original, synthesized live) ---------- */
+let AC = null, master = null, musicOn = (() => { try { return localStorage.getItem("pred_music") !== "off"; } catch (_) { return true; } })();
+let seqTimer = null, nextTime = 0, step = 0;
+const BPM = 150, EIGHTH = 60 / BPM / 2, SWING = 0;
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+const ROOT = [48,45,41,43,48,45,41,43];
+const CHORD = [[60,64,67],[57,60,64],[53,57,60],[55,59,62],[60,64,67],[57,60,64],[53,57,60],[55,59,62]];
+const LEAD = [
+  [72,76,79,76,84,79,76,79],[72,76,81,76,84,81,76,72],[77,81,84,81,77,81,84,86],[79,83,86,83,79,null,74,null],
+  [84,null,79,null,76,79,84,88],[81,null,76,null,72,76,81,84],[77,81,84,89,88,84,81,77],[79,null,83,null,86,null,null,null]];
+function ensureAudio(){
+  if (AC) return true;
+  const C = window.AudioContext || window.webkitAudioContext; if (!C) return false;
+  AC = new C(); master = AC.createGain(); master.gain.value = 0.09; master.connect(AC.destination);
+  return true;
+}
+function tone(type, freq, t, dur, vol, duty){
+  const o = AC.createOscillator(), g = AC.createGain();
+  if (type === "pulse") { const real = new Float32Array(32), imag = new Float32Array(32); for (let n = 1; n < 32; n++) imag[n] = 2 / (n * Math.PI) * Math.sin(n * Math.PI * (duty || .25)); o.setPeriodicWave(AC.createPeriodicWave(real, imag)); }
+  else o.type = type;
+  o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .02);
+}
+function noise(t, dur, vol){
+  const len = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const s = AC.createBufferSource(), g = AC.createGain(), f = AC.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 6000;
+  s.buffer = buf; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t);
+}
+function playStep(i, t){
+  const bar = Math.floor(i / 8) % 8, e = i % 8;
+  tone("triangle", mtof(ROOT[bar] + (e % 2 ? 12 : 0)), t, EIGHTH * 0.9, 0.5);
+  if (e % 2 === 1) CHORD[bar].forEach(m => tone("pulse", mtof(m), t, EIGHTH * 0.6, 0.06, .5));
+  const n = LEAD[bar][e]; if (n) tone("pulse", mtof(n), t, EIGHTH * 0.9, 0.15, .25);
+  if (e % 4 === 0) tone("triangle", 110, t, .08, .5); 
+  if (e % 4 === 2) noise(t, .07, .22); else noise(t, .02, .06);
+}
+function scheduler(){
+  while (nextTime < AC.currentTime + 0.15) {
+    const swing = (step % 2 === 1) ? EIGHTH * SWING : 0;
+    playStep(step, nextTime + swing);
+    nextTime += EIGHTH; step = (step + 1) % 64;
+  }
+}
+function startMusic(){
+  if (!ensureAudio()) return;
+  if (AC.state === "suspended") AC.resume();
+  if (seqTimer) return;
+  nextTime = AC.currentTime + 0.05; step = 0;
+  seqTimer = setInterval(scheduler, 25);
+}
+function stopMusic(){ if (seqTimer) { clearInterval(seqTimer); seqTimer = null; } }
+function sfx(kind){
+  if (!musicOn || !ensureAudio()) return;
+  if (AC.state === "suspended") AC.resume();
+  const t = AC.currentTime + 0.01;
+  if (kind === "coin") { tone("pulse", 988, t, .07, .25, .5); tone("pulse", 1319, t + .07, .22, .25, .5); }
+  if (kind === "win") [72,76,79,84,79,84].forEach((m,i) => tone("pulse", mtof(m), t + i * .09, .16, .22, .25));
+  if (kind === "err") { tone("pulse", 196, t, .15, .25, .5); tone("pulse", 147, t + .15, .3, .25, .5); }
+}
+function setMusicBtn(){ const b = $("music"); b.textContent = musicOn ? "♪ ON" : "♪ OFF"; b.classList.toggle("on", !!musicOn); }
+/* browsers block sound until the first tap, so music starts on the first touch anywhere */
+function firstTouch(e){ if (e && e.target && e.target.id === "music") return; document.removeEventListener("pointerdown", firstTouch, true); document.removeEventListener("keydown", firstTouch, true); if (musicOn) startMusic(); setMusicBtn(); }
+document.addEventListener("pointerdown", firstTouch, true);
+document.addEventListener("keydown", firstTouch, true);
+$("music").onclick = () => {
+  document.removeEventListener("pointerdown", firstTouch, true);
+  if (musicOn) { stopMusic(); musicOn = false; } else { musicOn = true; startMusic(); }
+  try { localStorage.setItem("pred_music", musicOn ? "on" : "off"); } catch (_) {}
+  setMusicBtn();
+};
+function startGame(){
+  if (!nick.trim()) return;
+  if (musicOn) startMusic();
+  setMusicBtn(); sfx("coin");
+  go(0);
+}
+
+/* ---------- lobby: one pixel person per bettor ---------- */
+const BODY_A = ["...hhhh......","..hhhhhh.....","..hskskh.....","..ssssss.....","...ssss......","..tttttt.wwww",".ttttttttkyyk",".stttttsskyyk","..tttttt.kyyk","..pppppp.kkkk","..pp..pp.....","..pp..pp.....",".kk....kk...."];
+const BODY_B = BODY_A.slice(0,10).concat(["...pppp......","...pppp......","...kkkk......"]);
+const GIRL_A = ["...hhhh......","..hhhhhh.....",".hhskskhh....",".hhsssshh....",".hh.ssss.hh..",".hhttttt.wwww",".ttttttttkyyk",".stttttsskyyk","..tttttt.kyyk",".ttttttttkkkk","..ss..ss.....","..ss..ss.....",".kk....kk...."];
+const GIRL_B = GIRL_A.slice(0,10).concat(["...ssss......","...ssss......","...kkkk......"]);
+const MIX_A = GIRL_A.slice(0,6).concat(BODY_A.slice(6));
+const MIX_B = MIX_A.slice(0,10).concat(BODY_B.slice(10));
+const DOG_HEAD = ["...ffffff....", "oofffffffoo..", "oofkfffkfoo..", "oofffffffoo..", ".ooffnnffoo..", "..ffwwwwff...", "...ffffff...."];
+const CAT_HEAD = [".f.......f...", ".ff.....ff...", ".fffffffff...", ".ffkfffkff...", "wfffffffffw..", ".ffffnffff...", "..fffffff...."];
+const DOG_A = DOG_HEAD.concat(BODY_A.slice(5)), DOG_B = DOG_HEAD.concat(BODY_B.slice(5));
+const CAT_A = CAT_HEAD.concat(BODY_A.slice(5)), CAT_B = CAT_HEAD.concat(BODY_B.slice(5));
+const LOOKS = [{n:"短髮", A:BODY_A, B:BODY_B}, {n:"長髮洋裝", A:GIRL_A, B:GIRL_B}, {n:"長髮褲裝", A:MIX_A, B:MIX_B}, {n:"狗狗頭套", A:DOG_A, B:DOG_B, fur:"#c68642"}, {n:"貓貓頭套", A:CAT_A, B:CAT_B, fur:"#94b0c2"}];
+function lookOf(nick, av){ return (av >= 0 && av < LOOKS.length) ? av : (hash(nick) >>> 16) % 3; }
+const HAIR = ["#0d0e17","#5d275d","#b13e53","#ef7d57","#ffcd75","#94b0c2","#333c57","#73eff7"];
+const SHIRT = ["#b13e53","#38b764","#3b5dc9","#41a6f6","#ffcd75","#ef7d57","#a7f070","#f4f4f4","#5d275d"];
+const SKIN = ["#ffe0bd","#f1c27d","#e0ac69","#c68642"];
+function hash(str){ let h = 2166136261; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function personSVG(rows, nick, fur){
+  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f: fur || "#c68642", o:"#5d3a1a", n:"#ef7d57"};
+  let r = "";
+  rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = col[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
+  return '<svg class="px" viewBox="0 0 13 ' + rows.length + '" width="39" height="' + rows.length * 3 + '">' + r + '</svg>';
+}
+let walkers = [], lobbyRAF = 0, lastT = 0;
+let poolTimer = 0, labOff = 0, labT = 0;
+const LABN = 20;
+function syncWalkers(){
+  const raw = (info && Array.isArray(info.nicks)) ? info.nicks : [];
+  const avOf = {}; raw.forEach(o => { if (o && typeof o === 'object') avOf[o.n] = o.a; });
+  const all = raw.map(o => (o && typeof o === 'object') ? o.n : o);
+  const me = myNick();
+  const others = all.filter(n => n !== me);
+  for (let i = others.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [others[i], others[j]] = [others[j], others[i]]; }
+  const names = (me && all.includes(me) ? [me] : []).concat(others).slice(0, 40);
+  const W = Math.min(window.innerWidth, 512) - 39;
+  const depth = names.length > 15 ? 270 : 48;
+  walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
+  walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
+  walkers.sort((a,b) => b.y - a.y);
+  if (!poolTimer && all.length > 40) poolTimer = setInterval(() => { if (q === -1) { syncWalkers(); render(); } }, 20000);
+}
+const BALL = ["....kk....","...kggk...","..kgwgsk..",".kgsgwgsk.",".kwgsgsgk.",".kgsgwgsk.","..kgsgsk..","...kggk...","....kk...."];
+function floorHTML(big){
+  let tiles = ""; for (let i = 0; i < (big ? 132 : 36); i++) tiles += '<i style="animation-delay:-' + ((i * 7) % 9 * 0.3).toFixed(1) + 's"></i>';
+  let beams = ""; for (let i = 0; i < 10; i++) beams += '<span class="beam" style="left:' + (8 + i * 9.3) + '%;top:' + (24 + (i * 13) % 50) + 'px;animation-delay:-' + (i * 0.37).toFixed(2) + 's"></span>';
+  const pal = {k:"#0d0e17",g:"#94b0c2",w:"#f4f4f4",s:"#566c86"};
+  let r = ""; BALL.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = pal[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
+  return '<div class="floor"' + (big ? ' style="height:320px;grid-template-rows:repeat(11,1fr)"' : '') + '>' + tiles + '</div>' + beams + '<svg class="px ball" viewBox="0 0 10 9" width="30" height="27" style="top:6px">' + r + '<rect x="4.5" y="-9" width="1" height="9" fill="#566c86"/></svg>';
+}
+function lobbyHTML(){
+  const big = walkers.length > 15;
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:420px"' : '') + '>' + floorHTML(big) + '<span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  if (!info) return head + '</div>';
+  const me = myNick();
+  if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
+  return head + walkers.map((w,i) =>
+    '<div class="walker' + (w.nick === me ? " me" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(300 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + '</span>' + '<span class="fa">' + personSVG(LOOKS[w.look].A, w.nick, LOOKS[w.look].fur) + '</span><span class="fb" style="display:none">' + personSVG(LOOKS[w.look].B, w.nick, LOOKS[w.look].fur) + '</span></div>').join("") + '</div>';
+}
+function tickLobby(t){
+  const box = $("lobby");
+  if (!box) { lobbyRAF = 0; return; }
+  const dt = Math.min(0.05, (t - (lastT || t)) / 1000); lastT = t;
+  const W = box.clientWidth - 39;
+  const n = walkers.length;
+  if (n > LABN) { labT += dt; if (labT > 5) { labT = 0; labOff = (labOff + LABN) % n; walkers.forEach(w => w.lab = ((w.k - labOff + n) % n) < LABN); } }
+  const me = myNick();
+  box.querySelectorAll(".walker").forEach(el => {
+    const w = walkers[+el.dataset.i]; if (!w) return;
+    if (w.pause > 0) { w.pause -= dt; w.ft += dt; if (w.ft > 0.18) { w.ft = 0; w.frame ^= 1; w.hop = w.frame ? -3 : 0; } }
+    else {
+      w.x += w.v * dt;
+      if (w.x < 0) { w.x = 0; w.v = Math.abs(w.v); }
+      if (w.x > W) { w.x = W; w.v = -Math.abs(w.v); }
+      w.ft += dt; if (w.ft > 0.22) { w.ft = 0; w.frame ^= 1; }
+      w.hop = 0;
+      if (Math.random() < dt * 0.3) w.pause = 0.8 + Math.random() * 2.5;
+      if (Math.random() < dt * 0.08) w.v = -w.v;
+    }
+    if (w.tap > 0) w.tap -= dt;
+    const nm = el.querySelector(".nm"); if (nm) { const sh = w.lab || w.tap > 0 || w.nick === me; if ((nm.style.display !== "none") !== sh) nm.style.display = sh ? "" : "none"; }
+    el.style.transform = "translate(" + w.x.toFixed(1) + "px," + w.hop + "px)";
+    el.querySelector(".fa").style.display = w.frame ? "none" : "";
+    el.querySelector(".fb").style.display = w.frame ? "" : "none";
+    const svgs = el.querySelectorAll("svg"); svgs.forEach(sv => sv.style.transform = w.v < 0 ? "scaleX(-1)" : "");
+  });
+  lobbyRAF = requestAnimationFrame(tickLobby);
+}
+document.addEventListener("click", e => { const el = e.target.closest && e.target.closest("#lobby .walker"); if (!el) return; const w = walkers[+el.dataset.i]; if (w) w.tap = 4; });
+function startLobby(){ if (!lobbyRAF) { lastT = 0; lobbyRAF = requestAnimationFrame(tickLobby); } }
+function toast(s){ const el = $("toast"); el.textContent = s; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 1800); }
+
+document.addEventListener("click", e => {
+  const b = e.target.closest(".opt");
+  if (!b || q < 0 || q >= TOTAL) return;
+  const ci = Math.floor(q / 2);
+  if (b.dataset.c) { picks[ci].c = b.dataset.c; if (b.dataset.c === "不押") picks[ci].n = null; }
+  else picks[ci].n = Number(b.dataset.n);
+  b.classList.add("sel");
+  sfx("coin");
+  setTimeout(() => go(Math.min(nextAfter(q), TOTAL)), 180);
+});
+$("back").onclick = () => { q = history.length ? history.pop() : -1; if (q === BOARD && !data) loadBoard(); render(); };
+render();
+setMusicBtn();
+loadInfo();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>六都預測 賭酒大賽 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1c2c; --bg2:#29366f; --panel:#333c57; --ink:#f4f4f4; --mute:#94b0c2;
+  --gold:#ffcd75; --orange:#ef7d57; --red:#b13e53; --green:#a7f070; --teal:#38b764; --dark:#0d0e17;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DotGothic16","Noto Sans TC",monospace;font-size:18px;line-height:1.5;-webkit-tap-highlight-color:transparent;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:100% 4px}
+.app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:14px 16px 28px}
+svg.px{image-rendering:pixelated;shape-rendering:crispEdges;display:block}
+.top{display:flex;align-items:center;gap:10px;min-height:44px}
+.back{background:none;border:0;color:var(--mute);font:inherit;font-size:16px;padding:8px 2px;cursor:pointer}
+.back[hidden]{display:block;visibility:hidden}
+.prog{flex:1;height:14px;background:var(--dark);border:3px solid var(--ink);padding:1px;display:flex;gap:2px}
+.prog[hidden]{display:flex;visibility:hidden}
+.prog i{flex:1;background:transparent}
+.prog i.on{background:var(--green)}
+.step{font-family:"Press Start 2P",monospace;font-size:10px;color:var(--gold);min-width:52px;text-align:right}
+main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 0}
+.hero{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin-bottom:14px}
+.bob{animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.blink{animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+h1{font-family:"DotGothic16",monospace;font-size:46px;line-height:1.1;margin:0;text-align:center;color:var(--gold);text-shadow:4px 4px 0 var(--red)}
+.sub{font-family:"Press Start 2P",monospace;font-size:10px;color:var(--mute);text-align:center;margin:10px 0 20px;letter-spacing:1px}
+.lead{text-align:center;margin:0 0 18px}
+.box{background:var(--panel);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--dark);padding:14px}
+.cityhead{display:flex;align-items:flex-end;gap:12px;margin-bottom:6px}
+.city{font-size:40px;line-height:1;margin:0;color:var(--gold);text-shadow:3px 3px 0 var(--red)}
+.q{font-size:21px;margin:10px 0 18px}
+.q .pick{color:var(--green)}
+.opts{display:grid;gap:10px}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;background:var(--panel);border:4px solid var(--ink);box-shadow:4px 4px 0 var(--dark);color:var(--ink);padding:12px 14px;font:inherit;font-size:21px;cursor:pointer;text-align:left;min-height:58px}
+.opt small{font-size:13px;color:var(--mute)}
+.opt:hover{background:var(--bg2)}
+.opt:active{transform:translate(4px,4px);box-shadow:none}
+.opt .cur{color:var(--gold);visibility:hidden;font-family:"Press Start 2P",monospace;font-size:12px}
+.opt:hover .cur,.opt.sel .cur{visibility:visible}
+.opt.sel{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+.opt.sel small{color:var(--red)}
+.opt.sel .cur{color:var(--red)}
+.opt.skip{background:transparent;border-style:dashed;box-shadow:none;color:var(--mute);font-size:17px}
+.cups{grid-template-columns:repeat(3,1fr)}
+.cups .opt{flex-direction:column;justify-content:flex-end;align-items:center;min-height:150px;padding:10px 4px;gap:6px}
+.cups .opt .num{font-family:"Press Start 2P",monospace;font-size:22px}
+.mugs{display:flex;gap:2px;align-items:flex-end;min-height:48px}
+input{width:100%;background:var(--dark);color:var(--ink);border:4px solid var(--ink);padding:14px;font:inherit;font-size:20px;border-radius:0}
+input::placeholder{color:#566c86}
+input:focus,button:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.go{display:block;width:100%;background:var(--red);color:var(--ink);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--dark);padding:14px;font:inherit;font-size:21px;cursor:pointer;margin-top:16px}
+.go:active{transform:translate(6px,6px);box-shadow:none}
+.go:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:6px 6px 0 var(--dark)}
+.go.alt{background:var(--teal)}
+.go.ghost{background:transparent;box-shadow:none}
+details{margin-top:24px;font-size:16px}
+summary{cursor:pointer;color:var(--gold);list-style:none}
+summary::-webkit-details-marker{display:none}
+details ol{padding-left:22px;margin:10px 0 0} details li{margin:6px 0}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:3px dotted #566c86;font-size:19px}
+.row:last-child{border-bottom:0}
+.row .dim{color:var(--mute)}
+.row b{color:var(--gold);font-weight:normal}
+.warn{color:var(--orange);margin:14px 0 0;font-size:16px}
+.note{font-size:14px;color:var(--mute);margin-top:14px;text-align:center}
+.skyline{margin:22px auto 0;opacity:.9}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--gold);color:var(--dark);border:4px solid var(--dark);padding:10px 16px;font-size:17px;opacity:0;transition:opacity .15s steps(2);pointer-events:none}
+.toast.on{opacity:1}
+textarea{width:100%;height:190px;margin-top:12px;background:var(--dark);color:var(--ink);border:4px solid var(--ink);padding:10px;font:inherit;font-size:16px;border-radius:0}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+th,td{padding:7px 8px;border-bottom:3px dotted #566c86;text-align:left;white-space:nowrap}
+th{color:var(--mute);font-weight:normal;font-size:13px}
+td.n{text-align:right}
+.hit{color:var(--green)} .miss{color:var(--orange)} .dim{color:var(--mute)}
+.tag{display:inline-block;background:var(--gold);color:var(--dark);padding:0 5px;font-size:12px;margin-left:6px}
+h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
+.linkbtn{background:none;border:0;color:var(--gold);font:inherit;font-size:17px;text-decoration:underline;cursor:pointer;display:block;margin:16px auto 0}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:6px}
+.namebtn{background:var(--panel);color:var(--ink);border:4px solid var(--ink);box-shadow:4px 4px 0 var(--dark);font:inherit;font-size:19px;padding:10px 6px;cursor:pointer}
+.namebtn.sel{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+.namebtn:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through;box-shadow:none}
+.label{font-size:15px;color:var(--mute);margin:14px 0 6px}
+.music{background:none;border:3px solid var(--mute);color:var(--mute);font-family:"Press Start 2P",monospace;font-size:10px;padding:6px 7px;cursor:pointer;margin-left:6px}
+.music.on{border-color:var(--green);color:var(--green)}
+.wm{position:fixed;left:50%;top:52%;transform:translate(-50%,-50%) rotate(-18deg);font-family:"Press Start 2P",monospace;font-size:64px;color:rgba(255,205,117,.05);letter-spacing:4px;pointer-events:none;z-index:0;white-space:nowrap;user-select:none}
+.wm[hidden]{display:none}
+.app{position:relative;z-index:1}
+.sign{font-family:"Press Start 2P",monospace;font-size:9px;color:#566c86;text-align:center;margin-top:22px;letter-spacing:2px}
+.lobby{position:relative;height:170px;margin:4px -16px 18px;overflow:hidden;border-top:4px solid var(--ink);border-bottom:4px solid var(--ink);background:#14152a}
+.floor{position:absolute;left:0;right:0;bottom:0;height:78px;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:2px;background:#0d0e17}
+.floor i{animation:disco 2.4s steps(1) infinite;opacity:.85}
+@keyframes disco{0%{background:#b13e53}25%{background:#3b5dc9}50%{background:#38b764}75%{background:#5d275d}}
+.ball{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:2}
+.beam{position:absolute;top:30px;width:3px;height:3px;background:#f4f4f4;box-shadow:0 0 6px #fff;animation:beam 1.6s steps(4) infinite;z-index:1}
+@keyframes beam{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+.lobby .empty{position:absolute;left:0;right:0;top:44px;text-align:center;color:var(--mute);font-size:15px;z-index:3}
+.lobby .tag2{position:absolute;top:6px;left:10px;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);z-index:3}
 .walker{position:absolute;bottom:10px;width:39px;will-change:transform}
 .walker .nm{position:absolute;bottom:50px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
 .walker.me{z-index:999 !important}
