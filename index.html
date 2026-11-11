@@ -710,8 +710,16 @@ function propRows(rows, pat){
 const AXE_UP = {"-3":"..ZZ","-2":".oZZ","-1":".o..","0":"o...","1":"...."}, AXE_DN = {"-1":"....","0":"oooZ","1":"..ZZ"};
 const MILK = {"-6":".BB.","-5":".WW.","-4":"kWWk","-3":"kWWk","-2":"kBBk","-1":"kWWk","0":"kWWk","1":".kk."};
 LOOKS.forEach(L => { L.P = {smoke:[cigRows(L.A), cigRows(L.B)], tree:[propRows(L.A, AXE_UP), propRows(L.B, AXE_DN)], milk:[propRows(L.A, MILK), propRows(L.B, MILK)], none:[propRows(L.A, {}), propRows(L.B, {})]}; });
-const ITEM_EMO = {shrimp:"🦐", crab:"🦀", boba:"🧋", wine:"🍷", cocktail:"🍸", basket:"🏀", tennis:"🎾", cash:"💵"};
-const ITEM_LIST = [["", "🍺 啤酒"], ["shrimp", "🦐 蝦子"], ["crab", "🦀 螃蟹"], ["boba", "🧋 珍奶"], ["wine", "🍷 紅酒"], ["cocktail", "🍸 調酒"], ["basket", "🏀 籃球"], ["tennis", "🎾 網球"], ["cash", "💵 鈔票"]];
+const ITEM_PAT = {
+  boba: {"-6":"...k","-5":"..k.","-4":"WWWW","-3":"cccc","-2":"cccc","-1":"cKcc","0":"KcKK","1":"cKKc"},
+  wine: {"-6":"W..W","-5":"WRRW","-4":"WRRW","-3":".WW.","-2":".W..","-1":".W..","0":"WWW.","1":"...."},
+  cocktail: {"-5":"Y..y","-4":"QQQQ","-3":".QQ.","-2":"..W.","-1":"..W.","0":".WWW","1":"...."},
+  cash: {"-3":"kkkk","-2":"MMMM","-1":"MyyM","0":"MMMM","1":"kkkk"},
+  basket: {"-3":".OO.","-2":"OkOO","-1":"kkkk","0":"OOkO","1":".OO."}
+};
+LOOKS.forEach(L => Object.keys(ITEM_PAT).forEach(k => { L.P["it_" + k] = [propRows(L.A, ITEM_PAT[k]), propRows(L.B, ITEM_PAT[k])]; }));
+const ITEM_EMO = ITEM_PAT;
+const ITEM_LIST = [["", "🍺 啤酒"], ["boba", "🧋 珍奶"], ["wine", "🍷 紅酒"], ["cocktail", "🍸 調酒"], ["cash", "💵 鈔票"], ["basket", "🏀 籃球"]];
 const ZONES = ["smoke", "tree", "milk"], ZMSG = {smoke:"🚬 你走進吸菸區了", tree:"🪓 去砍樹囉", milk:"🥛 來一瓶鮮乳"};
 const YD = 170, YARD = 150;
 function zBounds(z, bw){ const W = bw - 39, Z = Math.round(bw * 0.68), H = Math.round(bw / 2);
@@ -725,7 +733,7 @@ const SHIRT = ["#b13e53","#38b764","#3b5dc9","#41a6f6","#ffcd75","#ef7d57","#a7f
 const SKIN = ["#ffe0bd","#f1c27d","#e0ac69","#c68642"];
 function hash(str){ let h = 2166136261; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function personSVG(rows, nick, pal){
-  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f:"#c68642", o:"#5d3a1a", n:"#ef7d57", W:"#f4f4f4", g:"#38b764", L:"#2e3047", G:"#7a88a8", Z:"#c2c3c7", B:"#41a6f6", b:"#29366f"};
+  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f:"#c68642", o:"#5d3a1a", n:"#ef7d57", W:"#f4f4f4", g:"#38b764", L:"#2e3047", G:"#7a88a8", Z:"#c2c3c7", B:"#41a6f6", b:"#29366f", c:"#e0ac69", K:"#3b1f0f", Q:"#a7f070", Y:"#ffcd75", M:"#38b764", O:"#ef7d57"};
   if (pal) Object.assign(col, pal);
   let r = "";
   rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = col[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
@@ -752,7 +760,7 @@ function syncWalkers(){
   const depth = 270;
   walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: YD + 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
   walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; const lz = store("pred_zone"), want = (w.nick === me && lz !== null) ? (ZONES.includes(lz) ? lz : null) : (ZONES.includes(zOf[w.nick]) ? zOf[w.nick] : null);
-    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); w.say = sayOf[w.nick] || ''; const li = store("pred_item"); w.item = ''; /* 手持道具暫時關閉 */ w.cheers = Math.max(w.cheers || 0, cOf[w.nick] || 0); });
+    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } const lav = store("pred_av"); w.look = (w.nick === me && /^[0-5]$/.test(lav || "")) ? +lav : lookOf(w.nick, avOf[w.nick] ?? -1); w.say = sayOf[w.nick] || ''; const li = store("pred_item"); w.item = (w.nick === me && li !== null) ? (ITEM_EMO[li] ? li : '') : (ITEM_EMO[iOf[w.nick]] ? iOf[w.nick] : ''); w.cheers = Math.max(w.cheers || 0, cOf[w.nick] || 0); });
   const mine = walkers.find(w => w.nick === me);
   if (mine) { const seen = +(store("pred_cseen") || 0); if (mine.cheers > seen) { if (seen || mine.cheers) setTimeout(() => toast("🍻 " + (lcOf[me] || "有人") + (mine.cheers - seen > 1 ? " 等人" : "") + "跟你乾杯了 " + (mine.cheers - seen) + " 次！"), 1200); store("pred_cseen", String(mine.cheers)); } }
   walkers.sort((a,b) => b.y - a.y);
@@ -776,7 +784,7 @@ function lobbyHTML(){
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + '</span><span class="say" style="display:none"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + (!w.zone && w.item ? '<span class="itm' + (w.item === "cocktail" ? ' lemon' : '') + '">' + ITEM_EMO[w.item] + '</span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || "none"][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || "none"][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + '</span><span class="say" style="display:none"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
 }
 function tickLobby(t){
   const box = $("lobby");
@@ -890,7 +898,7 @@ document.addEventListener("click", e => { if (e.target.closest && e.target.close
 function editSay(){
   const mw = walkers.find(v => v.nick === myNick()); if (!mw) return;
   const d = document.createElement("div"); d.className = "sayed";
-  d.innerHTML = '<div><h3 style="margin:0 0 6px">🧍 我的角色</h3><p>👕 造型</p><div class="chips">' + LOOKS.map((L,i) => '<button class="chip lchip' + (mw.look === i ? ' sel' : '') + '" data-i="' + i + '">' + L.n + '</button>').join("") + '</div><hr class="sep"><p>💬 我的口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip">' + p + '</button>').join("") + '</div><p><small>或自己寫：</small></p><input maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內"><p><button class="go ok">儲存</button> <button class="go ghost no">取消</button></p></div>';
+  d.innerHTML = '<div><h3 style="margin:0 0 6px">🧍 我的角色</h3><p>👕 造型</p><div class="chips">' + LOOKS.map((L,i) => '<button class="chip lchip' + (mw.look === i ? ' sel' : '') + '" data-i="' + i + '">' + L.n + '</button>').join("") + '</div><hr class="sep"><p>✋ 手上拿什麼？</p><div class="chips">' + ITEM_LIST.map(([k, t]) => '<button class="chip ichip' + ((mw.item || "") === k ? ' sel' : '') + '" data-k="' + k + '">' + t + '</button>').join("") + '</div><hr class="sep"><p>💬 我的口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip">' + p + '</button>').join("") + '</div><p><small>或自己寫：</small></p><input maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內"><p><button class="go ok">儲存</button> <button class="go ghost no">取消</button></p></div>';
   document.body.appendChild(d); const inp = d.querySelector("input");
   d.querySelectorAll(".lchip").forEach(b => b.onclick = async () => {
     const i = +b.dataset.i; d.querySelectorAll(".lchip").forEach(x => x.classList.toggle("sel", x === b));
