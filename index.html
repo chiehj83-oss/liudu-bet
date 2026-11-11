@@ -163,6 +163,9 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 #chatbox .ch-in{display:flex;gap:4px;padding:6px;border-top:2px solid #333c57}
 #chatbox .ch-in input{flex:1;min-width:0;font-size:16px;padding:6px;background:#f4f4f4;color:#0d0e17;border:2px solid #0d0e17}
 #chatbox .ch-send{font:inherit;font-size:14px;background:#38b764;color:#0d0e17;border:2px solid #0d0e17;padding:0 10px;cursor:pointer}
+.walker .itm{position:absolute;bottom:9px;left:26px;font-size:15px;line-height:1;z-index:3;pointer-events:none}
+.walker .itm.lemon::after{content:"🍋";position:absolute;font-size:8px;top:-4px;right:-5px}
+.sayed hr.sep{border:0;border-top:2px dashed #333c57;margin:12px 0 4px}
 .sayed{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center}
 .sayed>div{background:#1a1c2c;border:3px solid #ffcd75;padding:16px;width:min(86vw,320px);text-align:center;color:#f4f4f4}
 .sayed .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.sayed .chip{font:inherit;font-size:13px;background:#333c57;color:#f4f4f4;border:2px solid #566c86;padding:3px 8px;cursor:pointer}.sayed .chip.sel{background:#ffcd75;color:#0d0e17;border-color:#ffcd75}
@@ -685,7 +688,7 @@ const GUY = ["..hhhhh......",".hhhhhhh.....","..hksskh.....","..ssssss.....","..
 const HOT = ["...hhhh......","..hhhhhh.....",".hhhhhhhh....",".hhksskhh....",".hhnssnhh....",".hhhsshhhwwww","hhttttthhkyyk","h.ssssssskyyk","..pppppp.kyyk",".ppppppppkkkk"];
 const GAY = [".............","..hhhhhh.....","..hksskh.....","..ssssss.....","...ssss......","..sWWWWs.wwww",".ssWWWWsskyyk",".sWWWWWsskyyk","..WWWWWW.kyyk","..gggggg.kkkk"];
 const COOL = ["...hhhh......","..hhhhhh.....",".hhksskhh....",".hhnssnhh....",".hhhsshhh....","..hLLGLh.wwww","..LLLGLLLkyyk","..sLLGLsskyyk","...LZZL..kyyk","..LLLGLL.kkkk"];
-const DOG_HEAD = ["...ffffff....", "oofffffffoo..", "oofkfffkfoo..", "oofffffffoo..", ".ooffnnffoo..", "..ffwwwwff...", "...ffffff...."];
+const DOG_HEAD = [".oo.ffff.oo..", "oooffffffooo.", "oofkffffkfoo.", "oofffwwfffoo.", ".o.fwkkwf.o..", "...fwwnwf....", "....fnnf....."];
 const CAT_HEAD = [".f.......f...", ".ff.....ff...", ".fffffffff...", ".ffkfffkff...", "wfffffffffw..", ".ffffnffff...", "..fffffff...."];
 const LOOKS = [
   {n:"帥哥", A:GUY.concat(LEG_A), B:GUY.concat(LEG_B)},
@@ -705,7 +708,9 @@ function propRows(rows, pat){
 }
 const AXE_UP = {"-3":"..ZZ","-2":".oZZ","-1":".o..","0":"o...","1":"...."}, AXE_DN = {"-1":"....","0":"oooZ","1":"..ZZ"};
 const MILK = {"-6":".BB.","-5":".WW.","-4":"kWWk","-3":"kWWk","-2":"kBBk","-1":"kWWk","0":"kWWk","1":".kk."};
-LOOKS.forEach(L => { L.P = {smoke:[cigRows(L.A), cigRows(L.B)], tree:[propRows(L.A, AXE_UP), propRows(L.B, AXE_DN)], milk:[propRows(L.A, MILK), propRows(L.B, MILK)]}; });
+LOOKS.forEach(L => { L.P = {smoke:[cigRows(L.A), cigRows(L.B)], tree:[propRows(L.A, AXE_UP), propRows(L.B, AXE_DN)], milk:[propRows(L.A, MILK), propRows(L.B, MILK)], none:[propRows(L.A, {}), propRows(L.B, {})]}; });
+const ITEM_EMO = {shrimp:"🦐", crab:"🦀", boba:"🧋", wine:"🍷", cocktail:"🍸", basket:"🏀", tennis:"🎾", cash:"💵"};
+const ITEM_LIST = [["", "🍺 啤酒"], ["shrimp", "🦐 蝦子"], ["crab", "🦀 螃蟹"], ["boba", "🧋 珍奶"], ["wine", "🍷 紅酒"], ["cocktail", "🍸 調酒"], ["basket", "🏀 籃球"], ["tennis", "🎾 網球"], ["cash", "💵 鈔票"]];
 const ZONES = ["smoke", "tree", "milk"], ZMSG = {smoke:"🚬 你走進吸菸區了", tree:"🪓 去砍樹囉", milk:"🥛 來一瓶鮮乳"};
 const YD = 170, YARD = 150;
 function zBounds(z, bw){ const W = bw - 39, Z = Math.round(bw * 0.68), H = Math.round(bw / 2);
@@ -736,7 +741,7 @@ function applyLines(L){
 function syncWalkers(){
   if (info && info.lines) applyLines(info.lines);
   const raw = (info && Array.isArray(info.nicks)) ? info.nicks : [];
-  const avOf = {}, zOf = {}, sayOf = {}, cOf = {}, lcOf = {}; raw.forEach(o => { if (o && typeof o === 'object') { avOf[o.n] = o.a; zOf[o.n] = o.z; sayOf[o.n] = o.s || ''; cOf[o.n] = +o.c || 0; lcOf[o.n] = o.lc || ''; } });
+  const avOf = {}, zOf = {}, sayOf = {}, cOf = {}, lcOf = {}, iOf = {}; raw.forEach(o => { if (o && typeof o === 'object') { avOf[o.n] = o.a; zOf[o.n] = o.z; iOf[o.n] = o.i || ''; sayOf[o.n] = o.s || ''; cOf[o.n] = +o.c || 0; lcOf[o.n] = o.lc || ''; } });
   const all = raw.map(o => (o && typeof o === 'object') ? o.n : o);
   const me = myNick();
   const others = all.filter(n => n !== me);
@@ -746,7 +751,7 @@ function syncWalkers(){
   const depth = 270;
   walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: YD + 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
   walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; const lz = store("pred_zone"), want = (w.nick === me && lz !== null) ? (ZONES.includes(lz) ? lz : null) : (ZONES.includes(zOf[w.nick]) ? zOf[w.nick] : null);
-    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); w.say = sayOf[w.nick] || ''; w.cheers = Math.max(w.cheers || 0, cOf[w.nick] || 0); });
+    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } w.look = lookOf(w.nick, avOf[w.nick] ?? -1); w.say = sayOf[w.nick] || ''; const li = store("pred_item"); w.item = (w.nick === me && li !== null) ? (ITEM_EMO[li] ? li : '') : (ITEM_EMO[iOf[w.nick]] ? iOf[w.nick] : ''); w.cheers = Math.max(w.cheers || 0, cOf[w.nick] || 0); });
   const mine = walkers.find(w => w.nick === me);
   if (mine) { const seen = +(store("pred_cseen") || 0); if (mine.cheers > seen) { if (seen || mine.cheers) setTimeout(() => toast("🍻 " + (lcOf[me] || "有人") + (mine.cheers - seen > 1 ? " 等人" : "") + "跟你乾杯了 " + (mine.cheers - seen) + " 次！"), 1200); store("pred_cseen", String(mine.cheers)); } }
   walkers.sort((a,b) => b.y - a.y);
@@ -770,7 +775,7 @@ function lobbyHTML(){
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + '</span><span class="say" style="display:none"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG(w.zone ? LOOKS[w.look].P[w.zone][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG(w.zone ? LOOKS[w.look].P[w.zone][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm"' + (w.lab || w.nick === me ? '' : ' style="display:none"') + '>' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + '</span><span class="say" style="display:none"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + (!w.zone && w.item ? '<span class="itm' + (w.item === "cocktail" ? ' lemon' : '') + '">' + ITEM_EMO[w.item] + '</span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || "none"][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || "none"][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
 }
 function tickLobby(t){
   const box = $("lobby");
@@ -817,6 +822,7 @@ function tickLobby(t){
     el.querySelector(".fb").style.display = w.frame ? "" : "none";
     const svgs = el.querySelectorAll("svg"); svgs.forEach(sv => sv.style.transform = w.v < 0 ? "scaleX(-1)" : "");
     const pf = el.querySelector(".puff"); if (pf) pf.style.left = w.v < 0 ? "0px" : "36px";
+    const itm = el.querySelector(".itm"); if (itm) itm.style.left = w.v < 0 ? "-6px" : "26px";
   });
   lobbyRAF = requestAnimationFrame(tickLobby);
 }
@@ -882,8 +888,13 @@ function idleLine(w){ const z = IDLE[w.zone || ""] || [], a = Math.random() < 0.
 function editSay(){
   const mw = walkers.find(v => v.nick === myNick()); if (!mw) return;
   const d = document.createElement("div"); d.className = "sayed";
-  d.innerHTML = '<div><p>💬 我的口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip">' + p + '</button>').join("") + '</div><p><small>或自己寫：</small></p><input maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內"><p><button class="go ok">儲存</button> <button class="go ghost no">取消</button></p></div>';
+  d.innerHTML = '<div><p>✋ 手上拿什麼？</p><div class="chips">' + ITEM_LIST.map(([k, t]) => '<button class="chip ichip' + ((mw.item || "") === k ? ' sel' : '') + '" data-k="' + k + '">' + t + '</button>').join("") + '</div><hr class="sep"><p>💬 我的口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip">' + p + '</button>').join("") + '</div><p><small>或自己寫：</small></p><input maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內"><p><button class="go ok">儲存</button> <button class="go ghost no">取消</button></p></div>';
   document.body.appendChild(d); const inp = d.querySelector("input");
+  d.querySelectorAll(".ichip").forEach(b => b.onclick = async () => {
+    const k = b.dataset.k; d.querySelectorAll(".ichip").forEach(x => x.classList.toggle("sel", x === b));
+    store("pred_item", k); mw.item = k; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
+    try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"item", key: deviceKey(), i: k})}); const j = await r.json(); toast(j.ok ? "✋ 換好了，大家都看得到" : (j.error || "只有你自己看得到")); } catch (_) {}
+  });
   d.querySelectorAll(".chip").forEach(b => b.onclick = () => { inp.value = b.textContent; d.querySelectorAll(".chip").forEach(x => x.classList.toggle("sel", x === b)); });
   d.querySelector(".no").onclick = () => d.remove();
   d.querySelector(".ok").onclick = async () => {
