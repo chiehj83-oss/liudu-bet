@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>六都酒注 2026・快速下注</title>
+<title>六都預測 賭酒大賽 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -120,11 +120,13 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .sponsor b{font-family:"Press Start 2P",monospace;font-size:13px;color:var(--gold);font-weight:normal;letter-spacing:2px;text-shadow:2px 2px 0 var(--red)}
 .howto{border:3px dashed #566c86;padding:10px 12px;margin-top:18px;font-size:15px;line-height:1.6}
 .howto b{color:var(--gold);font-weight:normal}
+.looks{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.lookbtn{background:var(--panel);border:3px solid #566c86;padding:4px 4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;color:var(--mute);font:inherit;font-size:11px}
+.lookbtn.sel{border-color:var(--gold);color:var(--gold)}
 .press{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--gold);text-align:center;margin-top:18px}
 </style>
 </head>
 <body>
-<div class="wm" id="wm" aria-hidden="true">ICEJACK</div>
 <div class="app">
   <div class="top">
     <button class="back" id="back" hidden>◀ 上一題</button>
@@ -258,11 +260,11 @@ const CITIES = [
 const CUPNOTE = {1:"小試一下",2:"有點把握",3:"穩了"};
 const DEADLINE = new Date("2026-11-28T08:00:00+08:00").getTime();
 const TOTAL = 12;
-const API = "https://script.google.com/macros/s/AKfycbzVu-3dx_Y5H21-ENjoAvboc0B-DvN6th04IjROIbPWNwjLQcxbw4FpqOOZ2bhioLtWvw/exec";
+const API = "https://script.google.com/macros/s/AKfycby_R7dUzhw-i3gAnE8mFzOC7UmlNIzi11uwE2hI8fMtS9fyZioJVtQ9-L-gVGLGb9SL/exec";
 const BOARD = 99;
 let sending = false, sendMsg = "", data = null, loadErr = "";
 let info = null, infoFailed = false;
-let pass = (() => { try { return localStorage.getItem("liudu_pass") || ""; } catch (_) { return ""; } })();
+let pass = (() => { try { return localStorage.getItem("pred_pass") || ""; } catch (_) { return ""; } })();
 async function loadInfo(){
   try { const r = await fetch(API, {credentials:"omit"}); info = await r.json(); data = info; syncWalkers(); }
   catch (_) { infoFailed = true; }
@@ -271,11 +273,11 @@ async function loadInfo(){
 
 function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } }
 function deviceKey(){
-  let k = store("liudu_key");
+  let k = store("pred_key");
   if (!k || !/^[A-Za-z0-9]{12,64}$/.test(k)) {
     const a = new Uint8Array(16); crypto.getRandomValues(a);
     k = [...a].map(x => x.toString(36).padStart(2,"0")).join("").replace(/[^A-Za-z0-9]/g,"").slice(0,24);
-    store("liudu_key", k);
+    store("pred_key", k);
   }
   return k;
 }
@@ -288,9 +290,9 @@ async function loadBoard(){
   if (q === BOARD) render();
 }
 
-let nick = store("liudu_nick") || "";
-let picks = (() => { try { const p = JSON.parse(store("liudu_picks")); if (Array.isArray(p) && p.length === 6) return p; } catch (_) {} return CITIES.map(() => ({c:null, n:null})); })();
-const sentBefore = !!store("liudu_sent");
+let nick = store("pred_nick") || "";
+let picks = (() => { try { const p = JSON.parse(store("pred_picks")); if (Array.isArray(p) && p.length === 6) return p; } catch (_) {} return CITIES.map(() => ({c:null, n:null})); })();
+const sentBefore = !!store("pred_sent");
 let q = -1, history = [];
 
 const $ = id => document.getElementById(id);
@@ -304,7 +306,6 @@ function nextAfter(i){ return (i % 2 === 0 && picks[i/2].c === "不押") ? i + 2
 function render(){
   const m = $("main"), inQuiz = q >= 0 && q < TOTAL;
   $("back").hidden = q < 0;
-  $("wm").hidden = q !== -1;
   $("progwrap").hidden = q < 0 || q === BOARD;
   [...$("progwrap").children].forEach((el,i) => el.classList.toggle("on", i < Math.min(q, TOTAL)));
   $("step").textContent = inQuiz ? String(q + 1).padStart(2,"0") + "/" + TOTAL : (q === BOARD ? "" : q >= TOTAL ? "CLEAR" : "");
@@ -313,33 +314,30 @@ function render(){
     const closed = Date.now() >= DEADLINE;
     m.innerHTML =
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
-      '<h1>六都酒注</h1><p class="sub">ELECTION 2026 · 11.28</p>' +
-      '<p class="lead">押六都市長，賭注是酒<br>按 12 下就完成</p>' +
+      '<h1>六都預測</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
+      '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
       lobbyHTML() +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
         '<p class="label">點你的名字：</p><div class="names">' + info.players.map(p => {
-          const mine = p.name === (store("liudu_nick") || "");
+          const mine = p.name === (store("pred_nick") || "");
           return '<button class="namebtn' + (nick === p.name ? " sel" : "") + '" data-name="' + esc(p.name) + '"' + (p.taken && !mine ? " disabled" : "") + '>' + esc(p.name) + '</button>';
         }).join("") + '</div><p class="note" style="margin-top:4px">劃掉的名字已經被登記。名單上沒有你？找主辦人。</p>'
-      : '<input id="nick" maxlength="20" placeholder="大家認得出來的名字，例：業務部阿明" value="' + esc(nick) + '" autocomplete="nickname"><p class="note" style="margin-top:6px">請寫群組認得出是誰的名字，認不出來的注單主辦人會刪除。</p>') +
-      (info && info.needPass ? '<p class="label">群組通關碼：</p><input id="pass" maxlength="30" placeholder="跟主辦人要" value="' + esc(pass) + '">' : '') +
+      : '<input id="nick" maxlength="20" placeholder="取個暱稱（會顯示在排行榜）" value="' + esc(nick) + '" autocomplete="nickname"><p class="note" style="margin-top:6px">暱稱會公開顯示，請友善命名。一個裝置一張注單。</p>') +
+      (info && info.needPass ? '<p class="label">群組通關碼：</p><input id="pass" maxlength="30" placeholder="通關碼" value="' + esc(pass) + '">' : '') +
       '<button class="go" id="start"' + (nick.trim() ? "" : " disabled") + '>▶ START</button>' +
-      (sentBefore ? '<p class="note">你已經送出過注單，重押一次會覆蓋舊的。</p>' : '<p class="press blink">PRESS START</p>'))) +
-      '<button class="linkbtn" id="seeall">看大家的下注 ▶</button>' +
-      '<div class="howto"><b>✎ 想改答案？</b> 11/28 早上 8:00 前隨時回來，用同一個裝置重押一次就會覆蓋舊的。<br><b>✕ 不玩了？</b> 到「看大家的下注」按「撤回我的注單」。<br><b>👀 開票前</b> 只看得到每都誰最被看好，誰押誰開票後才公開。</div>' +
+      (sentBefore ? '<p class="note">你已經送出過預測，重押一次會覆蓋舊的。</p>' : '<p class="press blink">PRESS START</p>'))) +
+      '<button class="linkbtn" id="seeall">看排行榜與大家的預測 ▶</button>' +
+      '<div class="howto"><b>✎ 想改答案？</b> 11/28 早上 8:00 前隨時回來，用同一個裝置重押一次就會覆蓋舊的。<br><b>✕ 不玩了？</b> 到「看排行榜」按「撤回我的預測」。<br><b>👀 開票前</b> 只看得到每都誰最被看好，不公開誰押誰。</div>' +
       '<details><summary>▶ 遊戲規則</summary><ol>' +
-      '<li>六都各押一位當選人，每都押 1～3 杯，沒把握可以按「不押」。至少押 3 都才算入局。</li>' +
-      '<li>押錯：喝掉自己在那一都押的杯數。</li>' +
-      '<li>押對：拿到同杯數的「指定券」，可以指定別人喝，或抵銷自己的罰杯。</li>' +
-      '<li>六都全押又全中是「酒神」，其他人各敬一杯；全押又全錯是「槓龜」，加罰一杯。</li>' +
-      '<li>一人一張注單。換名字、換裝置重複下注的，主辦人會整筆刪除。</li>' +
-      '<li>11/28 早上 8:00 截止。可以換無酒精飲料，喝酒不開車。</li>' +
+      '<li>六都各押一位你覺得會當選的人，每都押 1～3 杯，沒把握可以「不押」。至少押 3 都才能上榜。</li>' +
+      '<li>開票夜跟朋友一起對答案：押錯的都，自己喝掉押的杯數，自由心證。</li>' +
+      '<li>開票前看「賭性堅強榜」（押最多杯的人），開票後看「神預言榜」（猜中最多都的人）。</li>' +
+      '<li>11/28 早上 8:00 截止。喝酒不開車，未成年或不喝酒的朋友請用飲料代替。</li>' +
       '</ol></details>' +
-      '<p class="note">⚠ 一人一注，重複下注整筆作廢，大家玩得開心就好。<br>朋友間的小遊戲，只賭飲料，不涉及金錢。<br>候選人順序不代表號次。</p>' +
-      '<p class="sponsor">贊助商 ▸ <b>MARS</b></p>' +
-      '<p class="sign">MADE BY ICEJACK</p>';
+      '<p class="note">關心政治不一定要針鋒相對。<br>輕鬆押一把、開票夜一起乾杯，不要政治冷漠 🍻<br>候選人順序不代表號次，本站不代表任何立場。</p>' +
+      '<p class="sign">作者：ICEJACK02</p>';
     const inp = $("nick");
     if (inp) {
       inp.addEventListener("input", () => { nick = inp.value; $("start").disabled = !nick.trim(); });
@@ -347,7 +345,7 @@ function render(){
     }
     document.querySelectorAll(".namebtn").forEach(b => b.onclick = () => { nick = b.dataset.name; sfx("coin"); render(); });
     const pi = $("pass");
-    if (pi) pi.addEventListener("input", () => { pass = pi.value; try { localStorage.setItem("liudu_pass", pass); } catch (_) {} });
+    if (pi) pi.addEventListener("input", () => { pass = pi.value; try { localStorage.setItem("pred_pass", pass); } catch (_) {} });
     if ($("start")) $("start").onclick = startGame;
     startLobby();
     $("seeall").onclick = openBoard;
@@ -380,27 +378,30 @@ function render(){
       const p = picks[i];
       return '<div class="row"><span>' + c.name + '</span>' + (p.c === "不押" ? '<span class="dim">不押</span>' : '<span><b>' + esc(p.c) + '</b> ×' + p.n + '</span>') + '</div>';
     }).join("") + '</div>' +
+    '<p class="label" style="text-align:center">舞池造型（可換）：</p><div class="looks">' + LOOKS.map((L,i) => '<button class="lookbtn' + (myLook() === i ? ' sel' : '') + '" data-look="' + i + '" aria-label="' + L.n + '">' + personSVG(L.A, nick.trim() || "x", L.fur) + '<small>' + L.n + '</small></button>').join('') + '</div>' +
     (ok ? '' : '<p class="warn">▶ 至少要押 3 都才算入局，按「上一題」或「重來」修改。</p>') +
-    '<button class="go alt" id="send"' + (ok && !sending ? "" : " disabled") + '>' + (sending ? "送出中…" : "▶ 送出注單") + '</button>' +
+    '<button class="go alt" id="send"' + (ok && !sending ? "" : " disabled") + '>' + (sending ? "送出中…" : "▶ 送出預測") + '</button>' +
     (sendMsg ? '<p class="warn">▶ ' + esc(sendMsg) + '</p>' : '') +
     '<button class="go ghost" id="redo">↺ 重來</button>' +
     '<p class="note">截止前想改，重押一次再送出就會覆蓋。</p>';
   $("redo").onclick = () => { picks = CITIES.map(() => ({c:null, n:null})); history = []; sendMsg = ""; go(0, false); };
   $("send").onclick = sendBet;
+  document.querySelectorAll(".lookbtn").forEach(b => b.onclick = () => { store("pred_av", b.dataset.look); sfx("coin"); render(); });
 }
 
+function myLook(){ const v = parseInt(store("pred_av"), 10); return lookOf(nick.trim() || "x", isNaN(v) ? -1 : v); }
 async function sendBet(){
   if (sending) return;
   if (Date.now() >= DEADLINE) { sendMsg = "已經截止下注了"; return render(); }
   sending = true; sendMsg = ""; render();
-  const body = JSON.stringify({nick: nick.trim(), key: deviceKey(), pass: pass.trim(), picks: picks.map(p => (p.c && p.c !== "不押") ? {c:p.c, n:p.n} : {c:"不押"})});
+  const body = JSON.stringify({nick: nick.trim(), key: deviceKey(), pass: pass.trim(), av: myLook(), picks: picks.map(p => (p.c && p.c !== "不押") ? {c:p.c, n:p.n} : {c:"不押"})});
   try {
     const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body});
     const res = await r.json();
     if (!res.ok) { sfx("err"); throw new Error(res.error || "送出失敗"); }
     sfx("win");
-    store("liudu_nick", nick.trim()); store("liudu_picks", JSON.stringify(picks)); store("liudu_sent", "1");
-    data = res; info = res; syncWalkers(); sending = false; toast("SAVED! 注單已送出");
+    store("pred_nick", nick.trim()); store("pred_picks", JSON.stringify(picks)); store("pred_sent", "1");
+    data = res; info = res; syncWalkers(); sending = false; toast("SAVED! 預測已送出");
     history = []; go(BOARD, false); return;
   } catch (err) {
     sendMsg = (err && err.message && !/fetch|network|JSON/i.test(err.message)) ? err.message : "送出失敗，請檢查網路後再按一次。";
@@ -417,9 +418,9 @@ async function withdrawBet(){
     const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"delete", key: deviceKey()})});
     const res = await r.json();
     if (!res.ok) throw new Error(res.error || "撤回失敗");
-    try { localStorage.removeItem("liudu_sent"); localStorage.removeItem("liudu_picks"); } catch (_) {}
+    try { localStorage.removeItem("pred_sent"); localStorage.removeItem("pred_picks"); } catch (_) {}
     picks = CITIES.map(() => ({c:null, n:null}));
-    data = res; info = res; syncWalkers(); withdrawMsg = ""; toast("已撤回注單"); sfx("err");
+    data = res; info = res; syncWalkers(); withdrawMsg = ""; toast("已撤回預測"); sfx("err");
   } catch (err) {
     withdrawMsg = (err && err.message && !/fetch|network|JSON/i.test(err.message)) ? err.message : "撤回失敗，請檢查網路後再試。";
   }
@@ -447,42 +448,32 @@ function renderBoard(m){
     m.innerHTML = '<div class="hero">' + sprite("ballot",5,"bob") + '</div><p class="lead">' + (loadErr ? esc(loadErr) : 'NOW LOADING<span class="blink">…</span>') + '</p>';
     return;
   }
-  const bets = Array.isArray(data.bets) ? data.bets : [], winners = Array.isArray(data.winners) ? data.winners : [];
-  const me = (store("liudu_nick") || "").trim();
+  const winners = Array.isArray(data.winners) ? data.winners : [];
+  const revealed = !!data.revealed;
+  const me = (store("pred_nick") || "").trim();
+  const total = data.total || 0;
   let h = '<div class="hero">' + sprite("mega",3,"") + sprite("ballot",4,"") + sprite("mug",3,"") + '</div>' +
-    '<h1 style="font-size:34px">大家的下注</h1><p class="sub">' + bets.length + ' PLAYERS' + (data.revealed || winners.some(Boolean) ? '' : ' · 誰最被看好') + '</p>';
-  const revealed = !!data.revealed || winners.some(Boolean);
-  if (!bets.length) h += '<p class="lead">還沒有人下注，當第一個吧！</p>';
-  else if (!revealed && Array.isArray(data.tally)) {
-    h += '<p class="note" style="margin-top:0">開票前不公開誰押誰，只看大家最看好誰。</p><div class="box">' + CITIES.map((c,i) => {
+    '<h1 style="font-size:34px">' + (revealed ? '神預言榜' : '賭性堅強榜') + '</h1><p class="sub">' + total + ' PLAYERS</p>';
+  const board = Array.isArray(data.board) ? data.board : [];
+  if (!total) h += '<p class="lead">還沒有人預測，當第一個吧！</p>';
+  else {
+    h += '<p class="note" style="margin-top:0">' + (revealed ? '依猜中都數排名，同分比押中的杯數。' : '開票前依押的總杯數排名，誰最敢押！') + '</p>' +
+      '<div class="box tbl"><table style="min-width:0"><thead><tr><th>#</th><th>暱稱</th>' + (revealed ? '<th>猜中</th><th>押中杯數</th>' : '<th>押了幾都</th><th>總杯數</th>') + '</tr></thead><tbody>' +
+      board.map((r,i) => '<tr><td class="n">' + (i + 1) + '</td><td>' + esc(r.nick) + (r.nick === me ? '<span class="tag">我</span>' : '') + '</td>' +
+        (revealed ? '<td class="n hit">' + r.hit + '/' + winners.filter(Boolean).length + '</td><td class="n">' + r.hitCups + '</td>' : '<td class="n">' + r.played + '</td><td class="n">' + r.cups + ' 杯</td>') + '</tr>').join("") +
+      '</tbody></table></div>' + (total > board.length ? '<p class="note">只顯示前 ' + board.length + ' 名</p>' : '');
+  }
+  if (Array.isArray(data.tally) && total) {
+    h += '<h2>大家最看好誰</h2><div class="box">' + CITIES.map((c,i) => {
       const rows = (data.tally[i] || []).filter(t => t.votes > 0).sort((a,b) => b.votes - a.votes || b.cups - a.cups);
-      const total = rows.reduce((a,t) => a + t.votes, 0);
-      const maxV = rows.length ? rows[0].votes : 1;
-      return '<div class="city2">' + c.name + '<small>' + total + ' 人押</small></div>' + (rows.length ? rows.map((t,j) =>
-        '<div class="tl' + (j === 0 ? ' top' : '') + '"><span>' + esc(t.name) + (j === 0 && (rows.length === 1 || rows[1].votes < t.votes || rows[1].cups < t.cups) ? '<span class="fav">最看好</span>' : '') + '</span><span class="bar"><i style="width:' + Math.round(t.votes / maxV * 100) + '%"></i></span><span class="ct">' + t.votes + ' 人 · ' + t.cups + ' 杯</span></div>').join('') : '<p class="note" style="margin:4px 0">還沒有人押這都</p>');
+      const sum = rows.reduce((a,t) => a + t.votes, 0), maxV = rows.length ? rows[0].votes : 1;
+      return '<div class="city2">' + c.name + '<small>' + sum + ' 人押</small></div>' + (rows.length ? rows.map((t,j) =>
+        '<div class="tl' + (j === 0 ? ' top' : '') + '"><span>' + esc(t.name) + (winners[i] === t.name ? '<span class="fav">當選</span>' : (!winners[i] && j === 0 ? '<span class="fav">最看好</span>' : '')) + '</span><span class="bar"><i style="width:' + Math.round(t.votes / maxV * 100) + '%"></i></span><span class="ct">' + t.votes + ' 人 · ' + t.cups + ' 杯</span></div>').join('') : '<p class="note" style="margin:4px 0">還沒有人押這都</p>');
     }).join('') + '</div>';
   }
-  else if (bets[0] && bets[0].picks) {
-    h += '<div class="box tbl"><table><thead><tr><th>暱稱</th>' + CITIES.map(c => '<th>' + c.name.slice(0,2) + '</th>').join("") + '</tr></thead><tbody>' +
-      bets.map(b => '<tr><td>' + esc(b.nick) + (b.nick === me ? '<span class="tag">我</span>' : '') + '</td>' + b.picks.map((p,i) => {
-        if (p.c === "不押") return '<td class="dim">–</td>';
-        const cls = winners[i] ? (p.c === winners[i] ? "hit" : "miss") : "";
-        return '<td class="' + cls + '">' + esc(p.c) + '×' + p.n + '</td>';
-      }).join("") + '</tr>').join("") + '</tbody></table></div>';
-  }
-  const st = settle(bets.filter(b => b.picks), winners);
-  if (st.decided && revealed) {
-    h += '<h2>' + sprite("trophy",2,"").replace('<svg','<svg style="display:inline-block;vertical-align:-4px;margin-right:8px"') + '結算 ' + (st.decided === 6 ? 'FINAL' : st.decided + '/6') + '</h2>' +
-      '<div class="box tbl"><table><thead><tr><th>暱稱</th><th>中</th><th>罰杯</th><th>指定券</th>' + (st.gods ? '<th>敬酒神</th>' : '') + '<th>至少喝</th></tr></thead><tbody>' +
-      st.rows.map(r => '<tr><td>' + esc(r.nick) + (r.god ? '<span class="tag">酒神</span>' : '') + (r.zero ? '<span class="tag">槓龜</span>' : '') + '</td><td class="n">' + r.hit + '/' + st.decided + '</td><td class="n miss">' + r.pen + '</td><td class="n hit">' + r.tix + '</td>' + (st.gods ? '<td class="n">' + r.toast + '</td>' : '') + '<td class="n">' + r.drink + '</td></tr>').join("") +
-      '</tbody></table></div><p class="note">「至少喝」＝指定券全部拿來抵自己的罰杯。拿去指定別人的話，罰杯照喝。</p>';
-  } else {
-    h += '<p class="note">開票後主辦人填入當選人，這裡會自動結算每個人要喝幾杯。</p>';
-  }
-  const mineListed = store("liudu_sent") && bets.some(b => b.nick === me);
-  if (mineListed && Date.now() < DEADLINE) h += '<button class="go ghost" id="withdraw" style="border-color:var(--orange);color:var(--orange)">' + (withdrawArmed ? '⚠ 再按一次確認撤回' : '✕ 撤回我的注單') + '</button>' + (withdrawMsg ? '<p class="warn">▶ ' + esc(withdrawMsg) + '</p>' : '');
+  if (store("pred_sent") && Date.now() < DEADLINE) h += '<button class="go ghost" id="withdraw" style="border-color:var(--orange);color:var(--orange)">' + (withdrawArmed ? '⚠ 再按一次確認撤回' : '✕ 撤回我的預測') + '</button>' + (withdrawMsg ? '<p class="warn">▶ ' + esc(withdrawMsg) + '</p>' : '');
   h += '<button class="go ghost" id="reload">↻ 重新整理</button>' +
-    (Date.now() < DEADLINE ? '<button class="go" id="again">▶ ' + (store("liudu_sent") ? '修改我的注單' : '我要下注') + '</button>' : '');
+    (Date.now() < DEADLINE ? '<button class="go" id="again">▶ ' + (store("pred_sent") ? '修改我的預測' : '我要預測') + '</button>' : '');
   m.innerHTML = h;
   $("reload").onclick = () => { data = null; render(); loadBoard(); };
   if ($("withdraw")) $("withdraw").onclick = withdrawBet;
@@ -490,15 +481,15 @@ function renderBoard(m){
 }
 
 /* ---------- 8bit casino lounge BGM (original, synthesized live) ---------- */
-let AC = null, master = null, musicOn = (() => { try { return localStorage.getItem("liudu_music") !== "off"; } catch (_) { return true; } })();
+let AC = null, master = null, musicOn = (() => { try { return localStorage.getItem("pred_music") !== "off"; } catch (_) { return true; } })();
 let seqTimer = null, nextTime = 0, step = 0;
-const BPM = 128, EIGHTH = 60 / BPM / 2, SWING = 0.16;
+const BPM = 150, EIGHTH = 60 / BPM / 2, SWING = 0;
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
-const BASS = [[45,48,52,55],[50,54,57,48],[43,47,50,54],[40,44,47,50],[41,45,48,52],[40,44,47,44],[45,52,55,52],[40,47,44,40]];
-const CHORD = [[57,60,64,67],[62,66,69,72],[55,59,62,66],[52,56,59,62],[53,57,60,64],[52,56,59,62],[57,60,64,67],[52,56,59,62]];
+const ROOT = [48,45,41,43,48,45,41,43];
+const CHORD = [[60,64,67],[57,60,64],[53,57,60],[55,59,62],[60,64,67],[57,60,64],[53,57,60],[55,59,62]];
 const LEAD = [
-  [76,null,72,69,67,69,72,76],[78,76,74,72,69,null,66,69],[71,74,78,null,79,78,74,71],[68,71,74,76,74,71,68,null],
-  [69,72,76,81,79,76,72,69],[68,null,71,74,76,74,71,68],[69,72,76,79,81,null,79,76],[80,76,74,71,68,null,64,null]];
+  [72,76,79,76,84,79,76,79],[72,76,81,76,84,81,76,72],[77,81,84,81,77,81,84,86],[79,83,86,83,79,null,74,null],
+  [84,null,79,null,76,79,84,88],[81,null,76,null,72,76,81,84],[77,81,84,89,88,84,81,77],[79,null,83,null,86,null,null,null]];
 function ensureAudio(){
   if (AC) return true;
   const C = window.AudioContext || window.webkitAudioContext; if (!C) return false;
@@ -522,10 +513,11 @@ function noise(t, dur, vol){
 }
 function playStep(i, t){
   const bar = Math.floor(i / 8) % 8, e = i % 8;
-  if (e % 2 === 0) tone("triangle", mtof(BASS[bar][e / 2]), t, EIGHTH * 1.8, 0.55);
-  if (e === 3 || e === 7) CHORD[bar].forEach(m => tone("pulse", mtof(m), t, EIGHTH * 0.8, 0.07, .5));
-  const n = LEAD[bar][e]; if (n) tone("pulse", mtof(n), t, EIGHTH * 1.4, 0.16, .25);
-  if (e === 2 || e === 6) noise(t, .05, .25); else if (e % 2 === 1) noise(t, .02, .08);
+  tone("triangle", mtof(ROOT[bar] + (e % 2 ? 12 : 0)), t, EIGHTH * 0.9, 0.5);
+  if (e % 2 === 1) CHORD[bar].forEach(m => tone("pulse", mtof(m), t, EIGHTH * 0.6, 0.06, .5));
+  const n = LEAD[bar][e]; if (n) tone("pulse", mtof(n), t, EIGHTH * 0.9, 0.15, .25);
+  if (e % 4 === 0) tone("triangle", 110, t, .08, .5); 
+  if (e % 4 === 2) noise(t, .07, .22); else noise(t, .02, .06);
 }
 function scheduler(){
   while (nextTime < AC.currentTime + 0.15) {
@@ -558,7 +550,7 @@ document.addEventListener("keydown", firstTouch, true);
 $("music").onclick = () => {
   document.removeEventListener("pointerdown", firstTouch, true);
   if (musicOn) { stopMusic(); musicOn = false; } else { musicOn = true; startMusic(); }
-  try { localStorage.setItem("liudu_music", musicOn ? "on" : "off"); } catch (_) {}
+  try { localStorage.setItem("pred_music", musicOn ? "on" : "off"); } catch (_) {}
   setMusicBtn();
 };
 function startGame(){
@@ -571,38 +563,59 @@ function startGame(){
 /* ---------- lobby: one pixel person per bettor ---------- */
 const BODY_A = ["...hhhh......","..hhhhhh.....","..hskskh.....","..ssssss.....","...ssss......","..tttttt.wwww",".ttttttttkyyk",".stttttsskyyk","..tttttt.kyyk","..pppppp.kkkk","..pp..pp.....","..pp..pp.....",".kk....kk...."];
 const BODY_B = BODY_A.slice(0,10).concat(["...pppp......","...pppp......","...kkkk......"]);
+const GIRL_A = ["...hhhh......","..hhhhhh.....",".hhskskhh....",".hhsssshh....",".hh.ssss.hh..",".hhttttt.wwww",".ttttttttkyyk",".stttttsskyyk","..tttttt.kyyk",".ttttttttkkkk","..ss..ss.....","..ss..ss.....",".kk....kk...."];
+const GIRL_B = GIRL_A.slice(0,10).concat(["...ssss......","...ssss......","...kkkk......"]);
+const MIX_A = GIRL_A.slice(0,6).concat(BODY_A.slice(6));
+const MIX_B = MIX_A.slice(0,10).concat(BODY_B.slice(10));
+const DOG_HEAD = ["..........", ".oo.ff.oo..", ".offffffo..", ".ofkffkfo..", "..ffnnff..."].map(r => r.padEnd(13,"."));
+const CAT_HEAD = ["..f....f...", "..ff..ff...", "..ffffff...", "..fkffkf...", "...fnnf...."].map(r => r.padEnd(13,"."));
+const DOG_A = DOG_HEAD.concat(BODY_A.slice(5)), DOG_B = DOG_HEAD.concat(BODY_B.slice(5));
+const CAT_A = CAT_HEAD.concat(BODY_A.slice(5)), CAT_B = CAT_HEAD.concat(BODY_B.slice(5));
+const LOOKS = [{n:"短髮", A:BODY_A, B:BODY_B}, {n:"長髮洋裝", A:GIRL_A, B:GIRL_B}, {n:"長髮褲裝", A:MIX_A, B:MIX_B}, {n:"狗狗頭套", A:DOG_A, B:DOG_B, fur:"#c68642"}, {n:"貓貓頭套", A:CAT_A, B:CAT_B, fur:"#94b0c2"}];
+function lookOf(nick, av){ return (av >= 0 && av < LOOKS.length) ? av : (hash(nick) >>> 16) % 3; }
 const HAIR = ["#0d0e17","#5d275d","#b13e53","#ef7d57","#ffcd75","#94b0c2","#333c57","#73eff7"];
 const SHIRT = ["#b13e53","#38b764","#3b5dc9","#41a6f6","#ffcd75","#ef7d57","#a7f070","#f4f4f4","#5d275d"];
 const SKIN = ["#ffe0bd","#f1c27d","#e0ac69","#c68642"];
 function hash(str){ let h = 2166136261; for (const ch of str) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-function personSVG(rows, nick){
-  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75"};
+function personSVG(rows, nick, fur){
+  const h = hash(nick), col = {h: HAIR[h % HAIR.length], s: SKIN[(h >>> 4) % SKIN.length], t: SHIRT[(h >>> 8) % SHIRT.length], p: ["#29366f","#333c57","#0d0e17","#566c86"][(h >>> 12) % 4], k:"#0d0e17", w:"#f4f4f4", y:"#ffcd75", f: fur || "#c68642", o:"#5d3a1a", n:"#ef7d57"};
   let r = "";
   rows.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = col[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
   return '<svg class="px" viewBox="0 0 13 13" width="39" height="39">' + r + '</svg>';
 }
 let walkers = [], lobbyRAF = 0, lastT = 0;
+let poolTimer = 0;
 function syncWalkers(){
-  const names = (info && Array.isArray(info.bets) ? info.bets.map(b => b.nick) : []).slice(0, 40);
-  const W = Math.min(window.innerWidth, 512) - 30;
-  walkers = names.map(n => walkers.find(w => w.nick === n) || {nick:n, x: Math.random() * W, y: 4 + Math.random() * 48, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
+  const raw = (info && Array.isArray(info.nicks)) ? info.nicks : [];
+  const avOf = {}; raw.forEach(o => { if (o && typeof o === 'object') avOf[o.n] = o.a; });
+  const all = raw.map(o => (o && typeof o === 'object') ? o.n : o);
+  const me = (store("pred_nick") || "").trim();
+  const others = all.filter(n => n !== me);
+  for (let i = others.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [others[i], others[j]] = [others[j], others[i]]; }
+  const names = (me && all.includes(me) ? [me] : []).concat(others).slice(0, 40);
+  const W = Math.min(window.innerWidth, 512) - 39;
+  const depth = names.length > 15 ? 150 : 48;
+  walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
+  walkers.forEach(w => { w.lab = names.indexOf(w.nick) < 13; w.look = lookOf(w.nick, avOf[w.nick] ?? -1); });
   walkers.sort((a,b) => b.y - a.y);
+  if (!poolTimer && all.length > 40) poolTimer = setInterval(() => { if (q === -1) { syncWalkers(); render(); } }, 20000);
 }
 const BALL = ["....kk....","...kggk...","..kgwgsk..",".kgsgwgsk.",".kwgsgsgk.",".kgsgwgsk.","..kgsgsk..","...kggk...","....kk...."];
-function floorHTML(){
-  let tiles = ""; for (let i = 0; i < 36; i++) tiles += '<i style="animation-delay:-' + ((i * 7) % 9 * 0.3).toFixed(1) + 's"></i>';
+function floorHTML(big){
+  let tiles = ""; for (let i = 0; i < (big ? 84 : 36); i++) tiles += '<i style="animation-delay:-' + ((i * 7) % 9 * 0.3).toFixed(1) + 's"></i>';
   let beams = ""; for (let i = 0; i < 10; i++) beams += '<span class="beam" style="left:' + (8 + i * 9.3) + '%;top:' + (24 + (i * 13) % 50) + 'px;animation-delay:-' + (i * 0.37).toFixed(2) + 's"></span>';
   const pal = {k:"#0d0e17",g:"#94b0c2",w:"#f4f4f4",s:"#566c86"};
   let r = ""; BALL.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = pal[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
-  return '<div class="floor">' + tiles + '</div>' + beams + '<svg class="px ball" viewBox="0 0 10 9" width="30" height="27" style="top:6px">' + r + '<rect x="4.5" y="-9" width="1" height="9" fill="#566c86"/></svg>';
+  return '<div class="floor"' + (big ? ' style="height:200px;grid-template-rows:repeat(7,1fr)"' : '') + '>' + tiles + '</div>' + beams + '<svg class="px ball" viewBox="0 0 10 9" width="30" height="27" style="top:6px">' + r + '<rect x="4.5" y="-9" width="1" height="9" fill="#566c86"/></svg>';
 }
 function lobbyHTML(){
-  const head = '<div class="lobby" id="lobby">' + floorHTML() + '<span class="tag2">DANCE FLOOR' + (walkers.length ? ' · ' + walkers.length : '') + '</span>';
+  const big = walkers.length > 15;
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:290px"' : '') + '>' + floorHTML(big) + '<span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
-  const me = (store("liudu_nick") || "").trim();
-  if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出注單就能進場跳舞 🍺</div></div>';
+  const me = (store("pred_nick") || "").trim();
+  if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(60 - w.y)) + '"><span class="nm">' + esc(w.nick) + '</span><span class="fa">' + personSVG(BODY_A, w.nick) + '</span><span class="fb" style="display:none">' + personSVG(BODY_B, w.nick) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(200 - w.y)) + '">' + (w.lab || w.nick === me ? '<span class="nm">' + esc(w.nick) + '</span>' : '') + '<span class="fa">' + personSVG(LOOKS[w.look].A, w.nick, LOOKS[w.look].fur) + '</span><span class="fb" style="display:none">' + personSVG(LOOKS[w.look].B, w.nick, LOOKS[w.look].fur) + '</span></div>').join("") + '</div>';
 }
 function tickLobby(t){
   const box = $("lobby");
