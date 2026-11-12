@@ -213,6 +213,7 @@ tr.me td{background:rgba(255,205,117,.18)}
 .lookbtn.sel{border-color:var(--gold);color:var(--gold)}
 .press{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--gold);text-align:center;margin-top:18px}
 .plooks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0}.plook{background:var(--panel);border:3px solid #566c86;padding:4px 2px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;color:var(--mute);font:inherit;font-size:11px}.plook.sel{border-color:var(--gold);color:var(--gold)}.sayed input.pnick,.sayed input.pmotto{width:100%;box-sizing:border-box}.sayed>div{max-height:88vh;overflow-y:auto}
+.toprow{display:flex;gap:12px;align-items:stretch;margin:0 0 12px}.tbtns{flex:0 0 calc(50% - 6px);display:flex;flex-direction:column;gap:10px}.tbtns .go{margin-top:0;flex:1;padding:10px 6px}.toprow .smbb{position:static;flex:1;width:auto;min-width:0;font-size:12px;padding:6px 8px}.toprow .smbb i{font-size:12px}.toprow .smbb p.hd{font-size:11px}
 </style>
 </head>
 <body>
@@ -408,7 +409,7 @@ function render(){
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
       '<h1>六都預測</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
-      '<p style="text-align:center;margin:0 0 10px"><button class="go ghost" id="mychar">🧍 我的角色</button> <button class="go ghost" id="dragonbtn">🎴 射龍門</button></p>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
+      '<div class="toprow"><div class="tbtns"><button class="go ghost" id="mychar">🧍 我的角色</button><button class="go ghost" id="dragonbtn">🎴 射龍門</button></div>' + billboard() + '</div>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
@@ -809,6 +810,7 @@ function floorHTML(big){
 const TREE = '<svg class="px tree" viewBox="0 0 9 12" width="27" height="36">' + ["..ggggg..",".ggGgggg.","gggggGggg","ggGgggggg","gggggggGg",".ggggggg.","..ggggg..","....o....","....o....","...ooo...","....o....","...ooo..."].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({g:"#257179",G:"#38b764",o:"#5d3a1a"})[c]+'"/>').join("")).join("") + '</svg>';
 const COW = '<svg class="px cow" viewBox="0 0 14 10" width="42" height="30">' + ["k..........k..",".kwwwwwwwkkwk.","wwwkkwwwwwwwww","wwkkkwwwwkkwpp","wwwkwwwkkkwwpp",".wwwwwwwkwww..",".wwwwwwwwww...","..w.w...w.w...","..k.k...k.k...","..............".slice(0)].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({w:"#f4f4f4",k:"#0d0e17",p:"#ff9eb0"})[c]+'"/>').join("")).join("") + '</svg>';
 const DJ = [["........hhhhhh..........", ".......kkkkkkkk.........", ".......nhkkkkhn.........", ".......nssssssn.........", "........ssnnss..........", "......tttttttttt........", ".....tttttttttttt.......", "....sstttttttttss.......", "dddddddddddddddddddddddd", "dGGGGGddddddddddddGGGGGd", "dGkkkGddBBddnnddddGkkkGd", "dGkykGddddddddddddGkkkGd", "dGkkkGddnnddBBddddGkykGd", "dGGGGGddddddddddddGGGGGd", "dddddddddddddddddddddddd"],["........hhhhhh.....ss...", ".......kkkkkkkk....ss...", ".......nhkkkkhn....tt...", ".......nssssssn...tt....", "........ssnnss...tt.....", "......tttttttttttt......", ".....tttttttttttt.......", "....sstttttttttt........", "dddddddddddddddddddddddd", "dGGGGGddddddddddddGGGGGd", "dGkkkGddnnddBBddddGkykGd", "dGkkyGddddddddddddGkkkGd", "dGkkkGddBBddnnddddGkkkGd", "dGGGGGddddddddddddGGGGGd", "dddddddddddddddddddddddd"]].map((F,i) => '<svg class="px dj dj' + i + '" viewBox="0 0 24 15" width="96" height="60">' + F.map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({h:"#5d275d",k:"#0d0e17",n:"#ff77a8",s:"#f1c27d",t:"#41a6f6",d:"#333c57",G:"#94b0c2",y:"#ffcd75",B:"#73eff7"})[c]+'"/>').join("")).join("") + "</svg>").join("");
+setInterval(() => { const b = document.querySelector(".toprow .smbb"); if (b) b.outerHTML = billboard(); }, 5000);
 function billboard(){
   const ns = ((info && info.nicks) || []).filter(o => +o.dg !== 0 || +o.dp > 0);
   ns.sort((x, y) => y.dg - x.dg || x.dp - y.dp);
@@ -822,7 +824,7 @@ function billboard(){
 }
 function lobbyHTML(){
   const big = true;
-  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b>' + billboard() + '</div><div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div><div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
