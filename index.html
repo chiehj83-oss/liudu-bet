@@ -780,7 +780,7 @@ function syncWalkers(){
   const depth = 270;
   walkers = names.map(n => walkers.find(w => w.nick === n && w.d === depth) || {nick:n, d:depth, x: Math.random() * W, y: YD + 4 + Math.random() * depth, v: (12 + Math.random() * 18) * (Math.random() < .5 ? -1 : 1), pause: Math.random() * 2, frame: 0, ft: 0, hop: 0});
   walkers.forEach(w => { w.k = names.indexOf(w.nick); w.lab = w.k < LABN; const lz = store("pred_zone"), want = (w.nick === me && lz !== null) ? (ZONES.includes(lz) ? lz : null) : (ZONES.includes(zOf[w.nick]) ? zOf[w.nick] : null);
-    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } const lav = store("pred_av"); w.look = (w.nick === me && /^[0-5]$/.test(lav || "")) ? +lav : lookOf(w.nick, avOf[w.nick] ?? -1); w.hats = Math.max(w.hats || 0, hOf[w.nick] || 0); w.say = sayOf[w.nick] || ''; const li = store("pred_item"); w.item = ''; /* ITEMS_HIDDEN：手持道具暫時隱藏，要恢復就把這行換回原本判斷 */ w.cheers = Math.max(w.cheers || 0, cOf[w.nick] || 0); });
+    if (w.zone === undefined || (w.zone !== want && w.jt == null)) { w.zone = want; const b = zBounds(w.zone, W + 39), yb = zY2(w.zone); w.x = b[0] + Math.random() * (b[1] - b[0]); w.y = yb[0] + Math.random() * (yb[1] - yb[0]); } const lav = store("pred_av"); w.look = (w.nick === me && /^[0-5]$/.test(lav || "")) ? +lav : lookOf(w.nick, avOf[w.nick] ?? -1); w.hats = hOf[w.nick] || 0; w.say = sayOf[w.nick] || ''; const li = store("pred_item"); w.item = ''; /* ITEMS_HIDDEN：手持道具暫時隱藏，要恢復就把這行換回原本判斷 */ w.cheers = Math.max(w.cheers || 0, cOf[w.nick] || 0); });
   const mine = walkers.find(w => w.nick === me);
   if (mine) { const seen = +(store("pred_cseen") || 0); if (mine.cheers > seen) { if (seen || mine.cheers) setTimeout(() => toast("🍻 " + (lcOf[me] || "有人") + (mine.cheers - seen > 1 ? " 等人" : "") + "跟你乾杯了 " + (mine.cheers - seen) + " 次！"), 1200); store("pred_cseen", String(mine.cheers)); } }
   walkers.sort((a,b) => b.y - a.y);
@@ -939,54 +939,61 @@ function openDragon(){
   if (document.querySelector(".dragon")) return;
   const mw = walkers.find(v => v.nick === myNick());
   const d = document.createElement("div"); d.className = "sayed dragon"; document.body.appendChild(d);
+  const bgm = musicOn ? (window.casinoAudio = window.casinoAudio || Object.assign(new Audio("casino.mp3"), {loop: true, volume: 0.6})) : null;
+  if (bgm) { stopMusic(); if (djAudio) djAudio.pause(); try { bgm.currentTime = 0; } catch (_) {} bgm.play().catch(() => { if (musicOn) startMusic(); }); }
   const rs = () => Math.floor(Math.random() * 4);
-  let st = {c: null, h: mw ? (mw.hats || 0) : 0}, pil = null, third = null, bet = 1, busy = false, msg = "洗牌中…";
+  let S = null, pil = null, last = null, third = null, bet = 1, busy = false, msg = "洗牌中…";
   const board = () => {
-    const list = (info && info.nicks || []).map(o => ({n: o.n, h: o.n === (mw && mw.nick) ? st.h : (+o.h || 0)})).filter(o => o.h > 0).sort((a, b) => b.h - a.h).slice(0, 5);
-    return list.length ? '<div class="dboard"><b>🎩 帽子榜</b>' + list.map((o, i) => '<span>' + (i + 1) + '. ' + esc(o.n) + ' ×' + o.h + '</span>').join("") + '</div>' : '<div class="dboard"><b>🎩 帽子榜</b><span>還沒有人戴帽子，搶頭香！</span></div>';
+    const list = (info && info.nicks || []).map(o => ({n: o.n, h: (mw && o.n === mw.nick && S) ? S.h : (+o.h || 0)})).filter(o => o.h > 0).sort((a, b) => b.h - a.h).slice(0, 5);
+    return '<div class="dboard"><b>🎩 帽子榜</b>' + (list.length ? list.map((o, i) => '<span>' + (i + 1) + '. ' + esc(o.n) + ' ×' + o.h + '</span>').join("") : '<span>還沒有人戴帽子，搶頭香！</span>') + '</div>';
   };
   const draw = () => {
-    const gap = pil ? pil[1].r - pil[0].r - 1 : 0, odds = Math.round(gap / 13 * 100);
-    const maxBet = Math.max(1, Math.min(st.c || 1, 5)); if (bet > maxBet) bet = maxBet;
     let body = "";
     if (!mw) body = '<p class="dmsg">送出預測後才能上桌，帽子會戴在你的角色頭上 🎩</p>';
-    else if (st.c === null) body = '<p class="dmsg">' + msg + '</p>';
+    else if (!S) body = '<p class="dmsg">' + msg + '</p>';
     else {
-      body = '<p class="dsub">今天剩 <b>' + st.c + '</b> 杯 · 頭上 <b>' + st.h + '</b> 頂帽子</p>' +
-        (pil ? '<div class="dtable">' + drCard(pil[0]) + '<div class="dmid">' + (third ? drCard(third) : drCard(null, true)) + '</div>' + drCard(pil[1]) + '</div><p class="dodds">中間有 ' + gap + ' 種點數 · 射進機率約 ' + odds + '%</p>' : '') +
-        '<p class="dmsg">' + msg + '</p>' +
-        (st.c > 0 && pil ? (third ? '<p><button class="go dnext">再來一局</button></p>' :
-          '<div class="chips">' + [1,2,3,4,5].filter(n => n <= maxBet).map(n => '<button class="chip dbet' + (n === bet ? ' sel' : '') + '" data-n="' + n + '">押 ' + n + ' 杯</button>').join("") + '</div>' +
-          '<p><button class="go dshoot"' + (busy ? ' disabled' : '') + '>🎯 射！</button> <button class="go ghost dpass">換一副（不押）</button></p>') : '');
+      const left = S.rounds - S.used, shown = pil || last;
+      body = '<p class="dsub">今天第 <b>' + S.used + '/' + S.rounds + '</b> 局 · 頭上 <b>' + S.h + '</b> 頂帽子</p>';
+      if (shown) { const gap = shown[1].r - shown[0].r - 1;
+        body += '<div class="dtable">' + drCard(shown[0]) + '<div class="dmid">' + (third && !pil ? drCard(third) : drCard(null, true)) + '</div>' + drCard(shown[1]) + '</div><p class="dodds">中間有 ' + gap + ' 種點數 · 射進機率約 ' + Math.round(gap / 13 * 100) + '%</p>'; }
+      body += '<p class="dmsg">' + msg + '</p>';
+      if (pil) body += '<div class="chips">' + [1, 2, 3].filter(n => n <= S.maxBet).map(n => '<button class="chip dbet' + (n === bet ? ' sel' : '') + '" data-n="' + n + '">押 ' + n + ' 枚 🪙</button>').join("") + '</div>' +
+        '<p><button class="go dshoot">🎯 射！</button> <button class="go ghost dpass"' + (S.rd >= S.redeals ? ' disabled' : '') + '>換牌（剩 ' + (S.redeals - S.rd) + ' 次）</button></p>';
+      else if (left > 0) body += '<p><button class="go dnew">' + (S.used ? '下一局' : '開始第一局') + '（第 ' + (S.used + 1) + '/' + S.rounds + ' 局）</button></p>';
+      else body += '<p class="dmsg">🌙 今天 5 局打完了，明天再來疊帽子！</p>';
     }
     d.innerHTML = '<div><h3 style="margin:0 0 4px">🎴 射龍門</h3>' + body + board() +
-      '<p><button class="go ghost dclose">離開賭桌</button></p><p class="drule">規則：每天 10 杯。射進→杯數不扣，戴上押注數量的帽子 🎩；沒射進→扣押的杯數；撞柱（同點）→扣兩倍。杯數用完就收桌，帽子會一直疊在角色頭上，比誰戴最高！</p></div>';
+      '<p><button class="go ghost dclose">離開賭桌</button></p><p class="drule">規則：每天 5 局，每局最多換牌 5 次，抽不到好牌就是天意。每局押 1～3 枚金幣：射進→戴上同樣數量的帽子 🎩；沒射進→扣同樣數量的帽子；撞柱（同點）→扣兩倍，最少扣到 0。帽子會一直疊在角色頭上，比誰戴最高！</p></div>';
+    if (busy) d.querySelectorAll("button:not(.dclose)").forEach(b => b.disabled = true);
     d.querySelectorAll(".dbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; draw(); });
     const q = sel => d.querySelector(sel);
-    q(".dclose").onclick = () => d.remove();
-    if (q(".dpass")) q(".dpass").onclick = deal;
-    if (q(".dnext")) q(".dnext").onclick = deal;
-    if (q(".dshoot")) q(".dshoot").onclick = shoot;
+    q(".dclose").onclick = () => { d.remove(); if (bgm) { bgm.pause(); if (musicOn) startMusic(); } };
+    if (q(".dnew")) q(".dnew").onclick = () => act("new");
+    if (q(".dpass")) q(".dpass").onclick = () => act("redeal");
+    if (q(".dshoot")) q(".dshoot").onclick = () => act("shoot");
   };
-  const deal = async () => {
-    if (busy) return; busy = true; third = null; msg = "洗牌中…"; draw();
-    try { const j = await drCall("deal"); if (j.ok) { st.c = j.c; st.h = j.h; pil = j.pil ? j.pil.map(r => ({r, s: rs()})) : null; msg = pil ? "押幾杯？射進就戴上同樣數量的帽子！" : "🍺 今天的 10 杯喝完了，明天再來疊帽子！"; } else msg = j.error || "出了點問題，再試一次"; }
-    catch (_) { msg = "連線失敗，再試一次"; }
-    busy = false; draw();
-  };
-  const shoot = async () => {
-    if (busy) return; busy = true; msg = "🎯 射……"; draw();
-    try { const j = await drCall("shoot", bet);
-      if (j.ok) { third = {r: j.t, s: rs()}; st.c = j.c; st.h = j.h;
-        if (j.res === "in") { msg = "🎯 射進！戴上 <b>" + bet + "</b> 頂帽子 🎩"; sfx("coin"); }
-        else if (j.res === "post") { msg = "💥 撞柱！罰 <b>" + (bet * 2) + "</b> 杯，乾了吧"; sfx("err"); }
-        else { msg = "😵 沒射進，<b>-" + bet + "</b> 杯"; sfx("err"); }
-        if (mw) { mw.hats = j.h; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); }
-      } else { msg = j.error || "出了點問題"; }
+  const act = async (a) => {
+    if (busy) return; busy = true; const prev = pil;
+    if (a === "new") { third = null; last = null; msg = "發牌中…"; } else if (a === "redeal") msg = "換牌中…"; else if (a === "shoot") msg = "🎯 射……";
+    draw();
+    try {
+      const j = await drCall(a, bet);
+      if (j.ok) {
+        S = j; pil = j.pil ? j.pil.map(r => ({r, s: rs()})) : null;
+        if (j.error) msg = j.error;
+        else if (a === "shoot" && j.res) {
+          last = prev; third = {r: j.t, s: rs()};
+          msg = j.res === "in" ? "🎯 射進！戴上 <b>" + bet + "</b> 頂帽子 🎩" : j.res === "post" ? "💥 撞柱！扣 <b>" + (bet * 2) + "</b> 頂帽子" : "😵 沒射進，扣 <b>" + bet + "</b> 頂帽子";
+          sfx(j.res === "in" ? "coin" : "err");
+          if (mw) { mw.hats = j.h; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); }
+        }
+        else if (pil) msg = a === "redeal" ? "換了一副，這局還能換 " + (S.redeals - S.rd) + " 次" : "押幾枚金幣？射進就戴上同樣數量的帽子！";
+        else if (a === "open") msg = S.used >= S.rounds ? "" : "準備好就開局吧！";
+      } else msg = j.error || "出了點問題，再試一次";
     } catch (_) { msg = "連線失敗，再試一次"; }
     busy = false; draw();
   };
-  if (mw) deal(); else draw();
+  if (mw) act("open"); else draw();
 }
 function editSay(){
   const mw = walkers.find(v => v.nick === myNick()); if (!mw) return;
