@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>六都預測 賭酒大賽 2026</title>
+<title>開票預測酒吧 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -99,7 +99,9 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .floor{position:absolute;left:0;right:0;bottom:0;height:78px;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:2px;background:#0d0e17}
 .floor i{animation:disco 2.4s steps(1) infinite;opacity:.85}
 @keyframes disco{0%{background:#b13e53}25%{background:#3b5dc9}50%{background:#38b764}75%{background:#5d275d}}
-.ball{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:2}
+.ball{position:absolute;left:calc(50% - 15px);top:0;z-index:2;overflow:visible;transform-origin:50% 0;transition:top .9s ease-out,scale .9s ease-out}
+.lobby.party .ball{top:58px!important;scale:3.2;z-index:800;filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px #73eff7);animation:ballspin 1.3s linear infinite}
+@keyframes ballspin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
 .beam{position:absolute;top:30px;width:3px;height:3px;background:#f4f4f4;box-shadow:0 0 6px #fff;animation:beam 1.6s steps(4) infinite;z-index:1}
 @keyframes beam{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
 .lobby .empty{position:absolute;left:0;right:0;top:44px;text-align:center;color:var(--mute);font-size:15px;z-index:3}
@@ -222,6 +224,10 @@ tr.me td{background:rgba(255,205,117,.18)}
 .bsign i{position:absolute;width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 5px 2px #ffcd75,0 0 10px 3px rgba(255,205,117,.6);animation:bulb 1s steps(1) infinite}
 .bsign i.o{animation-delay:.5s}
 @keyframes bulb{0%{opacity:1}50%{opacity:.25;box-shadow:none}}
+.toprow .smbb{cursor:pointer}.smbb p.more{justify-content:center;color:#ffcd75;font-size:10px;margin-top:2px;border-top:1px dashed #566c86}.smbb.full{position:static;width:auto;font-size:14px;line-height:1.7;padding:6px 8px;max-height:55vh;overflow-y:auto;box-shadow:none}.smbb.full p.hd{font-size:12px}.smbb.full em{width:4em}.smbb.full tt{width:3em}
+h1.neon{display:table;margin:6px auto 0;padding:8px 16px 10px;font-size:38px;letter-spacing:3px;color:#fff;border:3px solid #ff9ec4;border-radius:14px;text-shadow:0 0 4px #fff,0 0 10px #ff77a8,0 0 22px #ff77a8,0 0 40px #ff2d95;box-shadow:0 0 8px #ff77a8,0 0 22px rgba(255,45,149,.65),inset 0 0 8px #ff77a8,inset 0 0 18px rgba(255,45,149,.4);animation:neon 5s infinite}
+@keyframes neon{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.5}}
+@media(max-width:420px){h1.neon{font-size:30px;letter-spacing:2px}}
 </style>
 </head>
 <body>
@@ -415,7 +421,7 @@ function render(){
     const closed = Date.now() >= DEADLINE;
     m.innerHTML =
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
-      '<h1>六都預測</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
+      '<h1 class="neon">開票預測酒吧</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
       '<div class="toprow"><div class="tbtns"><button class="go ghost" id="mychar">🧍 我的角色</button><button class="go ghost" id="dragonbtn">🎴 射龍門</button></div>' + billboard() + '</div>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
@@ -828,17 +834,30 @@ function bunnyStage(){
   bulbs += '<i class="o" style="left:2px;top:20px"></i><i style="right:2px;top:20px"></i>';
   return '<div class="bstage"><div class="bsign">' + bulbs + '<b>' + esc(t) + '</b></div><div class="bunny">' + personSVG(BUNNY, "bunny", {h:"#8a4b2a", P:"#ff77a8"}) + '</div><div class="plat"></div></div>';
 }
-function billboard(){
-  const ns = ((info && info.nicks) || []).filter(o => +o.dg !== 0 || +o.dp > 0);
-  ns.sort((x, y) => y.dg - x.dg || x.dp - y.dp);
+function rankRows(full){
+  const ns = ((info && info.nicks) || []).filter(o => +o.dg !== 0 || +o.dp > 0 || (full && +o.h !== 0));
+  ns.sort((x, y) => y.dg - x.dg || x.dp - y.dp || y.h - x.h);
   const maxp = Math.max(0, ...ns.map(o => +o.dp || 0));
   let rank = 0;
-  const rows = ns.slice(0, 6).map(o => {
+  return (full ? ns : ns.slice(0, 6)).map(o => {
     const bad = maxp > 0 && +o.dp === maxp, md = (+o.dg > 0 && rank < 3) ? ['🥇', '🥈', '🥉'][rank++] + ' ' : '';
-    return '<p' + (bad ? ' class="bad"' : '') + '><span>' + (bad ? '💀 ' : md) + esc(o.n) + '</span><em>' + (o.dg > 0 ? '+' : '') + o.dg + '🎩</em><tt>' + (o.dp ? '×' + o.dp : '-') + '</tt></p>';
+    return '<p' + (bad ? ' class="bad"' : '') + '><span>' + (bad ? '💀 ' : md) + esc(o.n) + '</span><em>' + (o.dg > 0 ? '+' : '') + o.dg + '🎩</em><tt>' + (o.dp ? '×' + o.dp : '-') + '</tt>' + (full ? '<tt class="tot">' + o.h + '</tt>' : '') + '</p>';
   }).join('');
-  return '<div class="smbb"><i>🎴 射龍門 今日戰報</i>' + (rows ? '<p class="hd"><span>玩家</span><em>帽數</em><tt>撞柱</tt></p>' + rows : '<p><span>今天還沒人玩</span></p>') + '</div>';
 }
+function billboard(){
+  const rows = rankRows(false);
+  return '<div class="smbb" title="點我看完整排行"><i>🎴 射龍門 今日戰報</i>' + (rows ? '<p class="hd"><span>玩家</span><em>帽數</em><tt>撞柱</tt></p>' + rows : '<p><span>今天還沒人玩</span></p>') + '<p class="more"><span>▸ 點我看完整排行</span></p></div>';
+}
+function openRank(){
+  const rows = rankRows(true);
+  const d = document.createElement("div"); d.className = "sayed";
+  d.innerHTML = '<div><h3 style="margin:0 0 6px">🎴 射龍門 完整排行</h3><div class="smbb full">' + (rows ? '<p class="hd"><span>玩家</span><em>今日</em><tt>撞柱</tt><tt class="tot">總帽</tt></p>' + rows : '<p><span>還沒有人玩過</span></p>') + '</div><p><small>今日＝今天贏的減輸的帽子；💀＝今天撞柱最多；總帽＝頭上累積的帽子</small></p><p><button class="go ghost no">關閉</button></p></div>';
+  document.body.appendChild(d);
+  d.querySelector(".no").onclick = () => d.remove();
+  d.onclick = e => { if (e.target === d) d.remove(); };
+}
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest(".toprow .smbb")) openRank(); });
+function stageLo(w, y){ return (!w.zone && info && info.notice && (y === undefined ? w.y : y) < 292) ? 158 : 0; }
 function lobbyHTML(){
   const big = true;
   const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div>' + bunnyStage() + '<div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
@@ -888,6 +907,7 @@ function tickLobby(t){
     if (w.cheerT > 0) w.cheerT -= dt; if (w.sayT > 0) w.sayT -= dt;
     const sb = el.querySelector(".say"); if (sb) { const txt = w.cheerT > 0 ? "🍻 乾杯！" : (w.sayT > 0 ? (w.cur || w.say) : ""); if (sb.textContent !== txt) sb.textContent = txt; sb.className = w.cheerT > 0 ? "say ch" : "say"; sb.style.display = txt ? "" : "none"; if (txt) sb.style.transform = w.x < 50 ? "translateX(-15%)" : (w.x > W - 50 ? "translateX(-85%)" : ""); }
     const nm = el.querySelector(".nm"); if (nm) { const sh = w.lab || w.tap > 0 || w.nick === me; if ((nm.style.display !== "none") !== sh) nm.style.display = sh ? "" : "none"; }
+    if (w.jt == null) { const sl = stageLo(w); if (w.x < sl) { w.x = sl; w.v = Math.abs(w.v); } }
     el.style.transform = "translate(" + w.x.toFixed(1) + "px," + w.hop + "px)";
     el.querySelector(".fa").style.display = w.frame ? "none" : "";
     el.querySelector(".fb").style.display = w.frame ? "" : "none";
@@ -928,6 +948,7 @@ document.addEventListener("click", e => {
   const zone = cy + 20 < YARD ? (cx + 19 < box.clientWidth / 2 ? "tree" : "milk") : (cx + 19 >= Z ? "smoke" : null);
   const b = zBounds(zone, box.clientWidth), yb = zY2(zone);
   w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(b[0], Math.min(b[1], cx)); w.jy1 = Math.max(yb[0], Math.min(yb[1], cy)); w.jt = 0;
+  if (zone === null && w.jx1 < stageLo({zone: null}, w.jy1)) w.jx1 = 158;
   if (zone !== w.zone) {
     w.zone = zone; store("pred_zone", zone || ""); sfx("coin");
     fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"zone", key: deviceKey(), z: zone || ""})}).catch(() => {});
