@@ -150,7 +150,7 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .smbb{position:absolute;right:4px;bottom:4px;width:150px;background:rgba(13,14,23,.88);border:2px solid #ffcd75;padding:3px 5px;font-size:10px;line-height:1.5;color:#f4f4f4;box-shadow:0 0 8px rgba(255,205,117,.35)}
 .smbb i{display:block;font-style:normal;color:#ffcd75;font-size:10px;border-bottom:1px dashed #566c86;margin-bottom:2px;text-align:center}
 .smbb p{margin:0;display:flex;justify-content:space-between;gap:6px}.smbb span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.smbb em{flex:none;font-style:normal;color:#ffcd75;text-align:right}
-.smbb p.bad{color:#ff77a8;margin-top:2px;padding-top:2px;border-top:1px dashed #566c86}.smbb p.bad em{color:#ff77a8}
+.smbb p.bad{color:#ff77a8}.smbb p.bad em,.smbb p.bad b{color:#ff77a8}.smbb em{width:3.1em}.smbb b{flex:none;width:2.1em;text-align:right;font-weight:normal;color:#94b0c2}.smbb p.hd{color:#94b0c2;font-size:9px}.smbb p.hd em{color:#94b0c2}.smbb span{flex:1}
 @keyframes glint{0%,86%,100%{filter:none}90%,95%{filter:drop-shadow(0 0 3px #ffcd75) drop-shadow(0 0 7px #ffcd75) brightness(1.3)}}
 @keyframes zoneGlint{0%,86%,100%{box-shadow:none}90%,95%{box-shadow:inset 0 0 18px #ffcd75}}
 .walker.me .fa svg,.walker.me .fb svg{animation:glint 4s infinite 2s}
@@ -810,11 +810,15 @@ const TREE = '<svg class="px tree" viewBox="0 0 9 12" width="27" height="36">' +
 const COW = '<svg class="px cow" viewBox="0 0 14 10" width="42" height="30">' + ["k..........k..",".kwwwwwwwkkwk.","wwwkkwwwwwwwww","wwkkkwwwwkkwpp","wwwkwwwkkkwwpp",".wwwwwwwkwww..",".wwwwwwwwww...","..w.w...w.w...","..k.k...k.k...","..............".slice(0)].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({w:"#f4f4f4",k:"#0d0e17",p:"#ff9eb0"})[c]+'"/>').join("")).join("") + '</svg>';
 const DJ = [["........hhhhhh..........", ".......kkkkkkkk.........", ".......nhkkkkhn.........", ".......nssssssn.........", "........ssnnss..........", "......tttttttttt........", ".....tttttttttttt.......", "....sstttttttttss.......", "dddddddddddddddddddddddd", "dGGGGGddddddddddddGGGGGd", "dGkkkGddBBddnnddddGkkkGd", "dGkykGddddddddddddGkkkGd", "dGkkkGddnnddBBddddGkykGd", "dGGGGGddddddddddddGGGGGd", "dddddddddddddddddddddddd"],["........hhhhhh.....ss...", ".......kkkkkkkk....ss...", ".......nhkkkkhn....tt...", ".......nssssssn...tt....", "........ssnnss...tt.....", "......tttttttttttt......", ".....tttttttttttt.......", "....sstttttttttt........", "dddddddddddddddddddddddd", "dGGGGGddddddddddddGGGGGd", "dGkkkGddnnddBBddddGkykGd", "dGkkyGddddddddddddGkkkGd", "dGkkkGddBBddnnddddGkkkGd", "dGGGGGddddddddddddGGGGGd", "dddddddddddddddddddddddd"]].map((F,i) => '<svg class="px dj dj' + i + '" viewBox="0 0 24 15" width="96" height="60">' + F.map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({h:"#5d275d",k:"#0d0e17",n:"#ff77a8",s:"#f1c27d",t:"#41a6f6",d:"#333c57",G:"#94b0c2",y:"#ffcd75",B:"#73eff7"})[c]+'"/>').join("")).join("") + "</svg>").join("");
 function billboard(){
-  const ns = (info && info.nicks) || [];
-  const top = ns.filter(o => +o.dg > 0).sort((a, b) => b.dg - a.dg).slice(0, 3);
-  const bad = ns.filter(o => +o.dp > 0).sort((a, b) => b.dp - a.dp)[0];
-  const row = (l, r, c) => '<p' + (c ? ' class="' + c + '"' : '') + '><span>' + l + '</span><em>' + r + '</em></p>';
-  return '<div class="smbb"><i>🎴 射龍門 今日戰報</i>' + (top.length ? top.map((o, i) => row(['🥇', '🥈', '🥉'][i] + ' ' + esc(o.n), '+' + o.dg + '🎩')).join('') : '<p><span>今天還沒人射進</span></p>') + row('💀 衰鬼 ' + (bad ? esc(bad.n) : '從缺'), bad ? '撞柱×' + bad.dp : '', 'bad') + '</div>';
+  const ns = ((info && info.nicks) || []).filter(o => +o.dg !== 0 || +o.dp > 0);
+  ns.sort((x, y) => y.dg - x.dg || x.dp - y.dp);
+  const maxp = Math.max(0, ...ns.map(o => +o.dp || 0));
+  let rank = 0;
+  const rows = ns.slice(0, 6).map(o => {
+    const bad = maxp > 0 && +o.dp === maxp, md = (+o.dg > 0 && rank < 3) ? ['🥇', '🥈', '🥉'][rank++] + ' ' : '';
+    return '<p' + (bad ? ' class="bad"' : '') + '><span>' + (bad ? '💀 ' : md) + esc(o.n) + '</span><em>' + (o.dg > 0 ? '+' : '') + o.dg + '🎩</em><b>' + (o.dp ? '×' + o.dp : '-') + '</b></p>';
+  }).join('');
+  return '<div class="smbb"><i>🎴 射龍門 今日戰報</i>' + (rows ? '<p class="hd"><span>玩家</span><em>帽數</em><b>撞柱</b></p>' + rows : '<p><span>今天還沒人玩</span></p>') + '</div>';
 }
 function lobbyHTML(){
   const big = true;
