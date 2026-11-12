@@ -167,6 +167,14 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .walker .itm.lemon::after{content:"🍋";position:absolute;font-size:8px;top:-4px;right:-5px}
 .sayed hr.sep{border:0;border-top:2px dashed #333c57;margin:12px 0 4px}
 .lhint p{margin:0 0 4px}.lhint ul{list-style:none;padding:0;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;max-width:300px;text-align:left}.lhint li b{display:inline-block;min-width:5.2em}.lhint li:last-child{grid-column:1/-1;text-align:center}.lhint li:last-child b{min-width:0;margin-right:6px}
+.dragon .dsub{margin:0 0 8px;font-size:13px;color:#94b0c2}.dragon .dsub b{color:#ffcd75}
+.dtable{display:flex;justify-content:center;align-items:center;gap:10px;margin:8px 0}
+.dcard{width:54px;height:76px;background:#f4f4f4;color:#0d0e17;border:3px solid #0d0e17;box-shadow:3px 3px 0 #0d0e17;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.dcard b{font-size:22px}.dcard i{font-style:normal;font-size:20px}.dcard.red{color:#b13e53}
+.dcard.back{background:repeating-linear-gradient(45deg,#b13e53 0 6px,#5d275d 6px 12px);color:#ffcd75;font-size:26px;font-weight:bold}
+.dmid .dcard{transform:translateY(-6px) scale(1.08)}
+.dragon .dodds{font-size:12px;color:#94b0c2;margin:4px 0}.dragon .dmsg{font-size:15px;margin:8px 0}.dragon .dmsg b{color:#ffcd75}
+.dragon .drule{font-size:11px;color:#566c86;margin:10px 0 0;line-height:1.5}
 .sayed{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center}
 .sayed>div{background:#1a1c2c;border:3px solid #ffcd75;padding:16px;width:min(86vw,320px);text-align:center;color:#f4f4f4}
 .sayed .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.sayed .chip{font:inherit;font-size:13px;background:#333c57;color:#f4f4f4;border:2px solid #566c86;padding:3px 8px;cursor:pointer}.sayed .chip.sel{background:#ffcd75;color:#0d0e17;border-color:#ffcd75}
@@ -388,7 +396,7 @@ function render(){
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
       '<h1>六都預測</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
-      '<p style="text-align:center;margin:0 0 10px"><button class="go ghost" id="mychar">🧍 我的角色</button></p>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
+      '<p style="text-align:center;margin:0 0 10px"><button class="go ghost" id="mychar">🧍 我的角色</button> <button class="go ghost" id="dragonbtn">🎴 射龍門</button></p>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
@@ -903,7 +911,55 @@ const IDLE = {
   milk: ["鮮乳讚", "喝了會長高", "牛好可愛"]
 };
 function idleLine(w){ const z = IDLE[w.zone || ""] || [], a = Math.random() < 0.35 && z.length ? z : IDLE.all; return a[Math.floor(Math.random() * a.length)]; }
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#dragonbtn")) openDragon(); });
 document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#mychar")) { if (!walkers.find(v => v.nick === myNick())) toast("送出預測後，就會有你自己的角色"); else editSay(); } });
+const DR_RANK = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"], DR_SUIT = ["♠", "♥", "♦", "♣"];
+function drState(){
+  const today = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+  let st = null; try { st = JSON.parse(store("pred_dragon") || "null"); } catch (_) {}
+  if (!st || st.d !== today) st = {d: today, c: 10, win: 0, lose: 0, max: st && st.max || 10};
+  return st;
+}
+function drSave(st){ st.max = Math.max(st.max || 0, st.c); store("pred_dragon", JSON.stringify(st)); }
+function drCard(c, hide){
+  if (hide) return '<div class="dcard back">?</div>';
+  return '<div class="dcard' + (c.s === 1 || c.s === 2 ? ' red' : '') + '"><b>' + DR_RANK[c.r] + '</b><i>' + DR_SUIT[c.s] + '</i></div>';
+}
+function drDeal(){ const r = () => ({r: 1 + Math.floor(Math.random() * 13), s: Math.floor(Math.random() * 4)}); let a, b; do { a = r(); b = r(); } while (Math.abs(a.r - b.r) < 2); if (a.r > b.r) [a, b] = [b, a]; return [a, b]; }
+function openDragon(){
+  if (document.querySelector(".dragon")) return;
+  const d = document.createElement("div"); d.className = "sayed dragon";
+  document.body.appendChild(d);
+  let st = drState(), pil = drDeal(), third = null, bet = 1, busy = false, msg = "押幾杯？第三張落在兩柱<b>中間</b>就贏！";
+  const draw = () => {
+    const gap = pil[1].r - pil[0].r - 1, odds = Math.round(gap / 13 * 100);
+    const maxBet = Math.max(1, Math.min(st.c, 5));
+    if (bet > maxBet) bet = maxBet;
+    d.innerHTML = '<div><h3 style="margin:0 0 4px">🎴 射龍門</h3><p class="dsub">今天剩 <b>' + st.c + '</b> 杯 · 射進 ' + st.win + ' 次 · 失手 ' + st.lose + ' 次</p>' +
+      '<div class="dtable">' + drCard(pil[0]) + '<div class="dmid">' + (third ? drCard(third) : drCard(null, true)) + '</div>' + drCard(pil[1]) + '</div>' +
+      '<p class="dodds">中間有 ' + gap + ' 種點數 · 射進機率約 ' + odds + '%</p>' +
+      '<p class="dmsg">' + msg + '</p>' +
+      (st.c > 0 ? (third ? '<p><button class="go dnext">再來一局</button></p>' :
+        '<div class="chips">' + [1,2,3,4,5].filter(n => n <= maxBet).map(n => '<button class="chip dbet' + (n === bet ? ' sel' : '') + '" data-n="' + n + '">' + n + ' 杯</button>').join("") + '</div>' +
+        '<p><button class="go dshoot">🎯 射！</button> <button class="go ghost dpass">換一副（不押）</button></p>')
+        : '<p class="dmsg">🍺 今天的杯數喝完了，明天再來！</p>') +
+      '<p><button class="go ghost dclose">離開賭桌</button></p><p class="drule">規則：射進贏押的杯數；落在外面輸押的杯數；撞柱（跟柱子同點）罰兩倍。輸的杯數自由心證，自己乾 🍻</p></div>';
+    d.querySelectorAll(".dbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; draw(); });
+    const q = sel => d.querySelector(sel);
+    if (q(".dclose")) q(".dclose").onclick = () => d.remove();
+    if (q(".dpass")) q(".dpass").onclick = () => { pil = drDeal(); msg = "換了一副新的門柱"; draw(); };
+    if (q(".dnext")) q(".dnext").onclick = () => { pil = drDeal(); third = null; msg = "押幾杯？第三張落在兩柱<b>中間</b>就贏！"; draw(); };
+    if (q(".dshoot")) q(".dshoot").onclick = () => {
+      if (busy) return; busy = true;
+      third = {r: 1 + Math.floor(Math.random() * 13), s: Math.floor(Math.random() * 4)};
+      if (third.r > pil[0].r && third.r < pil[1].r) { st.c += bet; st.win++; msg = "🎯 射進！<b>+" + bet + " 杯</b>"; sfx("coin"); }
+      else if (third.r === pil[0].r || third.r === pil[1].r) { const p = Math.min(st.c, bet * 2); st.c -= p; st.lose++; msg = "💥 撞柱！罰 <b>" + p + " 杯</b>，乾了吧"; sfx("err"); }
+      else { st.c -= bet; st.lose++; msg = "😵 沒射進，<b>-" + bet + " 杯</b>"; sfx("err"); }
+      drSave(st); busy = false; draw();
+    };
+  };
+  draw();
+}
 function editSay(){
   const mw = walkers.find(v => v.nick === myNick()); if (!mw) return;
   const d = document.createElement("div"); d.className = "sayed";
