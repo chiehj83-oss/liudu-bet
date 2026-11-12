@@ -917,15 +917,15 @@ function idleLine(w){ const z = IDLE[w.zone || ""] || [], a = Math.random() < 0.
 document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#dragonbtn")) openDragon(); });
 document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#mychar")) { if (!walkers.find(v => v.nick === myNick())) toast("送出預測後，就會有你自己的角色"); else editSay(); } });
 const DR_RANK = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"], DR_SUIT = ["♠", "♥", "♦", "♣"];
-const HAT_COL = ["#b13e53", "#41a6f6", "#38b764", "#ffcd75", "#ff77a8", "#ef7d57", "#73eff7", "#5d275d"];
-const HAT_ROWS = ["..kkkkk..", "..kCCCk..", "..kWWWk..", "kkkkkkkkk"];
-function hatSVG(i){ const C = HAT_COL[i % HAT_COL.length]; return '<svg class="px" viewBox="0 0 9 4" width="27" height="12" style="bottom:' + (i * 6) + 'px">' + HAT_ROWS.map((r, y) => r.split("").map((c, x) => c === "." ? "" : '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + (c === "C" ? C : c === "W" ? "#f4f4f4" : "#0d0e17") + '"/>').join("")).join("") + '</svg>'; }
-function hatH(w){ return w.hats ? 6 * Math.min(w.hats, 12) + 8 : 0; }
+const HAT_COL = ["#41a6f6", "#38b764", "#ffcd75", "#ff77a8", "#ef7d57", "#73eff7", "#5d275d", "#94b0c2"];
+const HAT_ROWS = ["...CCCCC...", "..CCCCCCC..", "..BBBBBBB..", "C.CCCCCCC.C", ".CCCCCCCCC."], HAT_STAR = {"0,5": 1, "1,4": 1, "1,5": 1, "1,6": 1};
+function hatSVG(i, top){ const C = top ? "#b13e53" : HAT_COL[i % HAT_COL.length]; return '<svg class="px" viewBox="0 0 11 5" width="33" height="15" style="left:3px;bottom:' + (i * 9) + 'px;filter:drop-shadow(0 1px 0 #0d0e17)">' + HAT_ROWS.map((r, y) => r.split("").map((c, x) => c === "." ? "" : '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + (top && HAT_STAR[y + "," + x] ? "#ffcd75" : c === "B" ? "#5d3a1a" : C) + '"/>').join("")).join("") + '</svg>'; }
+function hatH(w){ return w.hats ? 9 * Math.min(w.hats, 10) + 10 : 0; }
 function hatsHTML(w){
   if (!w.hats) return "";
-  const n = Math.min(w.hats, 12), top = LOOKS[w.look].A.length * 3 - 4;
-  let h = ""; for (let i = 0; i < n; i++) h += hatSVG(i);
-  return '<span class="hats" style="bottom:' + top + 'px">' + h + (w.hats > 12 ? '<em style="bottom:' + (n * 6 + 10) + 'px">×' + w.hats + '</em>' : '') + '</span>';
+  const n = Math.min(w.hats, 10), top = LOOKS[w.look].A.length * 3 - 5;
+  let h = ""; for (let i = 0; i < n; i++) h += hatSVG(i, i === n - 1);
+  return '<span class="hats" style="bottom:' + top + 'px">' + h + (w.hats > 10 ? '<em style="bottom:' + (n * 9 + 8) + 'px">×' + w.hats + '</em>' : '') + '</span>';
 }
 function drCard(c, hide){
   if (hide) return '<div class="dcard back">?</div>';
