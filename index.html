@@ -212,6 +212,7 @@ tr.me td{background:rgba(255,205,117,.18)}
 .lookbtn{background:var(--panel);border:3px solid #566c86;padding:4px 4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;color:var(--mute);font:inherit;font-size:11px}
 .lookbtn.sel{border-color:var(--gold);color:var(--gold)}
 .press{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--gold);text-align:center;margin-top:18px}
+.plooks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0}.plook{background:var(--panel);border:3px solid #566c86;padding:4px 2px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;color:var(--mute);font:inherit;font-size:11px}.plook.sel{border-color:var(--gold);color:var(--gold)}.sayed input.pnick,.sayed input.pmotto{width:100%;box-sizing:border-box}.sayed>div{max-height:88vh;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -380,7 +381,7 @@ async function loadBoard(){
   if (q === BOARD) render();
 }
 
-let nick = store("pred_nick") || store("liudu_nick") || "";
+let nick = (v => /^訪客\d+$/.test(v) ? "" : v)(store("pred_nick") || store("liudu_nick") || "");
 function myNick(){ return (store("pred_nick") || store("liudu_nick") || "").trim(); }
 let picks = (() => { try { const p = JSON.parse(store("pred_picks")); if (Array.isArray(p) && p.length === 6) return p; } catch (_) {} return CITIES.map(() => ({c:null, n:null})); })();
 const sentBefore = !!store("pred_sent");
@@ -469,7 +470,7 @@ function render(){
       const p = picks[i];
       return '<div class="row"><span>' + c.name + '</span>' + (p.c === "不押" ? '<span class="dim">不押</span>' : '<span><b>' + esc(p.c) + '</b> ×' + p.n + '</span>') + '</div>';
     }).join("") + '</div>' +
-    '<p class="label" style="text-align:center">舞池造型（可換）：</p><div class="looks">' + LOOKS.map((L,i) => '<button class="lookbtn' + (myLook() === i ? ' sel' : '') + '" data-look="' + i + '" aria-label="' + L.n + '">' + personSVG(L.A, nick.trim() || "x", L.pal) + '<small>' + L.n + '</small></button>').join('') + '</div>' +
+    
     (ok ? '' : '<p class="warn">▶ 至少要押 3 都才算入局，按「上一題」或「重來」修改。</p>') +
     '<button class="go alt" id="send"' + (ok && !sending ? "" : " disabled") + '>' + (sending ? "送出中…" : "▶ 送出預測") + '</button>' +
     (sendMsg ? '<p class="warn">▶ ' + esc(sendMsg) + '</p>' : '') +
@@ -715,10 +716,12 @@ const CAT_HEAD = [".f.......f...", ".ff.....ff...", ".fffffffff...", ".ffkfffkff
 const LOOKS = [
   {n:"帥哥", A:GUY.concat(LEG_A), B:GUY.concat(LEG_B)},
   {n:"辣妹", A:HOT.concat(["..ss..ss.....","..ss..ss.....",".kk....kk...."]), B:HOT.concat(["...ssss......","...ssss......","...kkkk......"])},
-  {n:"同志", A:GAY.concat(["..gg..gg.....","..ss..ss.....",".kk....kk...."]), B:GAY.concat(["...gggg......","...ssss......","...kkkk......"]), pal:{h:"#ff77a8"}},
-  {n:"狗狗頭套", A:DOG_HEAD.concat(BODY_A.slice(5)), B:DOG_HEAD.concat(BODY_B.slice(5)), pal:{f:"#c68642"}},
-  {n:"貓貓頭套", A:CAT_HEAD.concat(BODY_A.slice(5)), B:CAT_HEAD.concat(BODY_B.slice(5)), pal:{f:"#94b0c2"}},
-  {n:"帥妹", A:COOL.concat(["..LL..LL.....","..kk..kk.....",".kk....kk...."]), B:COOL.concat(["...LLLL......","...kkkk......","...kkkk......"])}
+  {n:"眼鏡大叔", A:["..hhhhh......", ".hhhhhhh.....", "..kwkkwk.....", "..hssssh.....", "..hhhhhh.....", "..tthhtt.wwww", ".ttttttttkyyk", ".stttttsskyyk", "..tttttt.kyyk", "..pppppp.kkkk"].concat(["..pp..pp.....", "..pp..pp.....", ".kk....kk...."]), B:["..hhhhh......", ".hhhhhhh.....", "..kwkkwk.....", "..hssssh.....", "..hhhhhh.....", "..tthhtt.wwww", ".ttttttttkyyk", ".stttttsskyyk", "..tttttt.kyyk", "..pppppp.kkkk"].concat(["...pppp......", "...pppp......", "...kkkk......"])},
+  {n:"綠怪獸", A:["..sssss......", ".sssssss.....", ".sksssks.....", ".sssssss.....", ".sWkWkWs.....", ".sssssss.wwww", "ssssssssskyyk", "ss.sss.sskyyk", "..ssssss.kyyk", "..oooooo.kkkk"].concat(["..ss..ss.....", "..ss..ss.....", ".kk....kk...."]), B:["..sssss......", ".sssssss.....", ".sksssks.....", ".sssssss.....", ".sWkWkWs.....", ".sssssss.wwww", "ssssssssskyyk", "ss.sss.sskyyk", "..ssssss.kyyk", "..oooooo.kkkk"].concat(["...ssss......", "...ssss......", "...kkkk......"]), pal:{"s": "#5ba041", "o": "#5d3a1a"}},
+  {n:"白鬍子仙人", A:["..ZZZZZ......", ".ZZZZZZZ.....", ".ZkssskZ.....", ".ZsZZZsZ.....", ".ZZZZZZZ.....", "..ZZZZZ..wwww", ".LLZZZLLLkyyk", ".sLLZLLsskyyk", ".LLLLLLL.kyyk", ".LLLLLLL.kkkk"].concat([".LLLLLLL.....", ".LLLLLLL.....", "..kk..kk....."]), B:["..ZZZZZ......", ".ZZZZZZZ.....", ".ZkssskZ.....", ".ZsZZZsZ.....", ".ZZZZZZZ.....", "..ZZZZZ..wwww", ".LLZZZLLLkyyk", ".sLLZLLsskyyk", ".LLLLLLL.kyyk", ".LLLLLLL.kkkk"].concat([".LLLLLLL.....", ".LLLLLLL.....", "...kkkk......"]), pal:{"L": "#5a4a7a"}},
+  {n:"運動妹", A:["..hhhhhh.....", ".RRRRRRRR....", "..hksskhhh...", "..ssssss.h...", "...ssss......", "..sPPPPs.wwww", ".sPPPPPPskyyk", ".s.PPPPsskyyk", "...RRRR..kyyk", "..RRRRRR.kkkk"].concat(["..ss..ss.....", "..WW..WW.....", ".kk....kk...."]), B:["..hhhhhh.....", ".RRRRRRRR....", "..hksskhhh...", "..ssssss.h...", "...ssss......", "..sPPPPs.wwww", ".sPPPPPPskyyk", ".s.PPPPsskyyk", "...RRRR..kyyk", "..RRRRRR.kkkk"].concat(["...ssss......", "...WWWW......", "...kkkk......"])},
+  {n:"南瓜頭", A:["....MM.......", ".OOOOOOO.....", "OOkOOOkOO....", "OOOOOOOOO....", "OkOkOkOkO....", ".OOOOOOO.wwww", ".mmmmmmmmkyyk", ".smmmmmsskyyk", "..mmmmmm.kyyk", "..pppppp.kkkk"].concat(["..pp..pp.....", "..pp..pp.....", ".kk....kk...."]), B:["....MM.......", ".OOOOOOO.....", "OOkOOOkOO....", "OOOOOOOOO....", "OkOkOkOkO....", ".OOOOOOO.wwww", ".mmmmmmmmkyyk", ".smmmmmsskyyk", "..mmmmmm.kyyk", "..pppppp.kkkk"].concat(["...pppp......", "...pppp......", "...kkkk......"]), pal:{"O": "#ef7d57", "m": "#257179"}},
+  {n:"機器人", A:["....Y........", "..LLLLLL.....", "..LYLLYL.....", "..LLLLLL.....", "..LkYYkL.....", "...ZZZZ..wwww", ".sLLLLLL.kyyk", ".sLLRMLsskyyk", "..LLLLLL.kyyk", "..ZZZZZZ.kkkk"].concat(["..ZZ..ZZ.....", "..ZZ..ZZ.....", ".LL....LL...."]), B:["....Y........", "..LLLLLL.....", "..LYLLYL.....", "..LLLLLL.....", "..LkYYkL.....", "...ZZZZ..wwww", ".sLLLLLL.kyyk", ".sLLRMLsskyyk", "..LLLLLL.kyyk", "..ZZZZZZ.kkkk"].concat(["...ZZZZ......", "...ZZZZ......", "...LLLL......"]), pal:{"s": "#7a88a8", "L": "#333c57", "Z": "#94b0c2"}}
 ];
 function cigRows(rows){
   let hr = -1; rows.forEach((r,i) => { if (r.slice(7,9) === "ss" && r.slice(9) === "kyyk") hr = i; });
@@ -932,7 +935,7 @@ const IDLE = {
 };
 function idleLine(w){ const z = IDLE[w.zone || ""] || [], a = Math.random() < 0.35 && z.length ? z : IDLE.all; return a[Math.floor(Math.random() * a.length)]; }
 document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#dragonbtn")) openDragon(); });
-document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#mychar")) { if (!walkers.find(v => v.nick === myNick())) toast("送出預測後，就會有你自己的角色"); else editSay(); } });
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#mychar")) editSay(); });
 const DR_RANK = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"], DR_SUIT = ["♠", "♥", "♦", "♣"];
 const HAT_COL = ["#41a6f6", "#38b764", "#ffcd75", "#ff77a8", "#ef7d57", "#73eff7", "#5d275d", "#94b0c2"];
 const HAT_ROWS = ["...CCCCC...", "..CCCCCCC..", "..BBBBBBB..", "C.CCCCCCC.C", ".CCCCCCCCC."], HAT_STAR = {"0,5": 1, "1,4": 1, "1,5": 1, "1,6": 1};
@@ -1013,32 +1016,51 @@ function openDragon(){
   if (mw) act("open"); else draw();
 }
 function editSay(){
-  const mw = walkers.find(v => v.nick === myNick()); if (!mw) return;
+  const me = myNick(), mw = walkers.find(v => v.nick === me);
   const d = document.createElement("div"); d.className = "sayed";
-  d.innerHTML = '<div><h3 style="margin:0 0 6px">🧍 我的角色</h3><p>👕 造型</p><div class="chips">' + LOOKS.map((L,i) => '<button class="chip lchip' + (mw.look === i ? ' sel' : '') + '" data-i="' + i + '">' + L.n + '</button>').join("") + '</div><hr class="sep"><p>💬 我的口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip">' + p + '</button>').join("") + '</div><p><small>或自己寫：</small></p><input maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內"><p><button class="go ok">儲存</button> <button class="go ghost no">取消</button></p></div>';
-  document.body.appendChild(d); const inp = d.querySelector("input");
-  d.querySelectorAll(".lchip").forEach(b => b.onclick = async () => {
-    const i = +b.dataset.i; d.querySelectorAll(".lchip").forEach(x => x.classList.toggle("sel", x === b));
-    store("pred_av", String(i)); mw.look = i; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
-    try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"look", key: deviceKey(), a: i})}); const j = await r.json(); toast(j.ok ? "👕 換好了，大家都看得到" : (j.error || "只有你自己看得到")); } catch (_) {}
-  });
-  d.querySelectorAll(".ichip").forEach(b => b.onclick = async () => {
-    const k = b.dataset.k; d.querySelectorAll(".ichip").forEach(x => x.classList.toggle("sel", x === b));
-    store("pred_item", k); mw.item = k;
-    if (mw.zone) { mw.zone = null; store("pred_zone", ""); const bx = $("lobby"); if (bx) { const b2 = zBounds(null, bx.clientWidth), y2 = zY(null); mw.x = b2[0] + Math.random() * (b2[1] - b2[0]); mw.y = y2[0] + Math.random() * (y2[1] - y2[0]); }
-      fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"zone", key: deviceKey(), z: ""})}).catch(() => {}); }
-    const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
-    try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"item", key: deviceKey(), i: k})}); const j = await r.json(); toast(j.ok ? "✋ 換好了！已回到舞池拿著它" : ((j.error || "後台沒存到") + "（目前只有你自己看得到）")); } catch (_) {}
-  });
-  d.querySelectorAll(".chip").forEach(b => b.onclick = () => { inp.value = b.textContent; d.querySelectorAll(".chip").forEach(x => x.classList.toggle("sel", x === b)); });
+  if (!mw) {
+    d.innerHTML = '<div><h3 style="margin:0 0 6px">🧍 我的角色</h3><p>你還沒有角色。<br>可以先用<b>訪客</b>身分進舞池玩，不用投票；之後送出預測，就會換成你自己取的名字。</p><p><button class="go ok">👤 訪客加入</button> <button class="go ghost no">取消</button></p><p class="pmsg"><small></small></p></div>';
+    document.body.appendChild(d);
+    d.querySelector(".no").onclick = () => d.remove();
+    d.querySelector(".ok").onclick = async () => {
+      const b = d.querySelector(".ok"); b.disabled = true; b.textContent = "加入中…";
+      try {
+        const j = await postJ({action: "profile", key: deviceKey(), a: myLook()});
+        if (!j.ok) throw new Error(j.error || "加入失敗");
+        store("pred_nick", j.nick); await loadBoard(); d.remove(); toast("👋 歡迎 " + j.nick + "！"); sfx("coin"); editSay();
+      } catch (e) { b.disabled = false; b.textContent = "👤 訪客加入"; d.querySelector(".pmsg small").textContent = (e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"; }
+    };
+    return;
+  }
+  const guest = /^訪客\d+$/.test(me);
+  let sel = mw.look;
+  d.innerHTML = '<div><h3 style="margin:0 0 6px">🧍 我的角色</h3>' +
+    '<p>📛 名字</p>' + (guest ? '<p><b>' + esc(me) + '</b><br><small>訪客名字是固定的，送出預測時再取自己的名字</small></p>' : '<input class="pnick" maxlength="20" value="' + esc(me) + '">') +
+    '<hr class="sep"><p>👕 造型（點縮圖選）</p><div class="plooks">' + LOOKS.map((L,i) => '<button class="plook' + (sel === i ? ' sel' : '') + '" data-i="' + i + '">' + personSVG(L.A, me, L.pal) + '<small>' + L.n + '</small></button>').join("") + '</div>' +
+    '<hr class="sep"><p>💬 口號（10 字內）<br><small>會在舞池裡從你頭上冒出來</small></p><div class="chips">' + SAY_PRESETS.map(p => '<button class="chip psay">' + p + '</button>').join("") + '</div><input class="pmotto" maxlength="10" value="' + esc(mw.say || "") + '" placeholder="自己寫，10 字內">' +
+    '<p><button class="go ok">💾 儲存</button> <button class="go ghost no">取消</button></p><p class="pmsg"><small></small></p></div>';
+  document.body.appendChild(d);
+  const msg = t => { d.querySelector(".pmsg small").textContent = t; };
+  d.querySelectorAll(".plook").forEach(b => b.onclick = () => { sel = +b.dataset.i; d.querySelectorAll(".plook").forEach(x => x.classList.toggle("sel", x === b)); sfx("coin"); });
+  const mi = d.querySelector(".pmotto");
+  d.querySelectorAll(".psay").forEach(b => b.onclick = () => { mi.value = b.textContent; d.querySelectorAll(".psay").forEach(x => x.classList.toggle("sel", x === b)); });
   d.querySelector(".no").onclick = () => d.remove();
   d.querySelector(".ok").onclick = async () => {
-    const v = inp.value.trim().slice(0, 10);
-    try { const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"say", key: deviceKey(), s: v})}); const j = await r.json();
-      if (j.ok) { mw.say = v; mw.cur = v; mw.sayT = v ? 4 : 0; toast(v ? "💬 口號已更新" : "已清除口號"); d.remove(); } else toast(j.error || "沒存成功，你要先送出過預測"); }
-    catch (_) { toast("連線失敗，再試一次"); }
+    const b = d.querySelector(".ok"), nn = guest ? me : d.querySelector(".pnick").value.trim().slice(0, 20), v = mi.value.trim().slice(0, 10);
+    if (!nn) return msg("名字不能空白");
+    b.disabled = true; b.textContent = "儲存中…"; msg("");
+    try {
+      const j = await postJ({action: "profile", key: deviceKey(), nick: nn, a: sel});
+      if (!j.ok) throw new Error(j.error || "沒存成功");
+      store("pred_av", String(sel)); store("pred_nick", j.nick); if (!guest) nick = j.nick;
+      mw.nick = j.nick; mw.look = sel;
+      if (v !== (mw.say || "")) { const k = await postJ({action: "say", key: deviceKey(), s: v}); if (k.ok) { mw.say = v; mw.cur = v; mw.sayT = v ? 4 : 0; } else toast(k.error || "口號沒存成功"); }
+      d.remove(); toast("✅ 角色已更新，大家都看得到"); sfx("win");
+      const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); loadBoard();
+    } catch (e) { b.disabled = false; b.textContent = "💾 儲存"; msg((e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"); }
   };
 }
+async function postJ(o){ const r = await fetch(API, {method: "POST", credentials: "omit", headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(o)}); return r.json(); }
 const chat = {open: false, list: [], lastT: 0, seenT: +(store("pred_chatseen") || 0), born: Date.now(), tick: 0, busy: false};
 function initChat(){
   if ($("chatbtn")) return;
