@@ -819,7 +819,7 @@ function lobbyHTML(){
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm" style="' + (w.hats ? 'bottom:' + ((w.nick === me ? 54 : 50) + hatH(w)) + 'px;' : '') + (w.lab || w.nick === me ? '' : 'display:none') + '">' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + (w.hats ? ' 🎩' + w.hats : '') + '</span>' + hatsHTML(w) + '<span class="say" style="display:none;' + (w.hats ? 'bottom:' + (70 + hatH(w)) + 'px' : '') + '"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm" style="' + (w.hats > 0 ? 'bottom:' + ((w.nick === me ? 54 : 50) + hatH(w)) + 'px;' : '') + (w.lab || w.nick === me ? '' : 'display:none') + '">' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + (w.hats ? ' 🎩' + w.hats : '') + '</span>' + hatsHTML(w) + '<span class="say" style="display:none;' + (w.hats > 0 ? 'bottom:' + (70 + hatH(w)) + 'px' : '') + '"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
 }
 function tickLobby(t){
   const box = $("lobby");
@@ -935,9 +935,9 @@ const DR_RANK = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q"
 const HAT_COL = ["#41a6f6", "#38b764", "#ffcd75", "#ff77a8", "#ef7d57", "#73eff7", "#5d275d", "#94b0c2"];
 const HAT_ROWS = ["...CCCCC...", "..CCCCCCC..", "..BBBBBBB..", "C.CCCCCCC.C", ".CCCCCCCCC."], HAT_STAR = {"0,5": 1, "1,4": 1, "1,5": 1, "1,6": 1};
 function hatSVG(i, top){ const C = top ? "#b13e53" : HAT_COL[i % HAT_COL.length]; return '<svg class="px" viewBox="0 0 11 5" width="33" height="15" style="left:3px;bottom:' + (i * 9) + 'px;filter:drop-shadow(0 1px 0 #0d0e17)">' + HAT_ROWS.map((r, y) => r.split("").map((c, x) => c === "." ? "" : '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + (top && HAT_STAR[y + "," + x] ? "#ffcd75" : c === "B" ? "#5d3a1a" : C) + '"/>').join("")).join("") + '</svg>'; }
-function hatH(w){ return w.hats ? 9 * Math.min(w.hats, 10) + 10 : 0; }
+function hatH(w){ return w.hats > 0 ? 9 * Math.min(w.hats, 10) + 10 : 0; }
 function hatsHTML(w){
-  if (!w.hats) return "";
+  if (!(w.hats > 0)) return "";
   const n = Math.min(w.hats, 10), top = LOOKS[w.look].A.length * 3 - 5;
   let h = ""; for (let i = 0; i < n; i++) h += hatSVG(i, i === n - 1);
   return '<span class="hats" style="bottom:' + top + 'px">' + h + (w.hats > 10 ? '<em style="bottom:' + (n * 9 + 8) + 'px">×' + w.hats + '</em>' : '') + '</span>';
@@ -978,7 +978,7 @@ function openDragon(){
       else body += '<p class="dmsg">🌙 今天 5 局打完了，明天再來疊帽子！</p>';
     }
     d.innerHTML = '<div><h3 style="margin:0 0 4px">🎴 射龍門</h3>' + body + board() +
-      '<p><button class="go ghost dclose">離開賭桌</button></p><p class="drule">規則：每天 5 局，每局最多換牌 5 次，抽不到好牌就是天意。每局押 1～3 枚金幣：射進→戴上同樣數量的帽子 🎩；沒射進→扣同樣數量的帽子；撞柱（同點）→扣兩倍，最少扣到 0。帽子會一直疊在角色頭上，比誰戴最高！</p></div>';
+      '<p><button class="go ghost dclose">離開賭桌</button></p><p class="drule">規則：每天 5 局，每局最多換牌 5 次，抽不到好牌就是天意。每局押 1～3 枚金幣：射進→戴上同樣數量的帽子 🎩；沒射進→扣同樣數量的帽子；撞柱（同點）→扣兩倍，可以扣到負的。帽子會一直疊在角色頭上，比誰戴最高！</p></div>';
     if (busy) d.querySelectorAll("button:not(.dclose)").forEach(b => b.disabled = true);
     d.querySelectorAll(".dbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; draw(); });
     const q = sel => d.querySelector(sel);
