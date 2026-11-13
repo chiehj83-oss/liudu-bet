@@ -216,7 +216,7 @@ tr.me td{background:rgba(255,205,117,.18)}
 .press{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--gold);text-align:center;margin-top:18px}
 .plooks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0}.plook{background:var(--panel);border:3px solid #566c86;padding:4px 2px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;color:var(--mute);font:inherit;font-size:11px}.plook.sel{border-color:var(--gold);color:var(--gold)}.sayed input.pnick,.sayed input.pmotto{width:100%;box-sizing:border-box}.sayed>div{max-height:88vh;overflow-y:auto}
 .toprow{display:flex;gap:12px;align-items:stretch;margin:0 0 12px}.tbtns{flex:0 0 calc(50% - 6px);display:flex;flex-direction:column;gap:10px}.tbtns .go{margin-top:0;flex:1;padding:10px 6px}.toprow .smbb{position:static;flex:1;width:auto;min-width:0;font-size:12px;padding:6px 8px}.toprow .smbb i{font-size:12px}.toprow .smbb p.hd{font-size:11px}
-.bstage{position:absolute;left:4px;bottom:158px;width:150px;height:112px;z-index:700;pointer-events:none}
+.bstage{position:absolute;left:4px;top:26px;width:150px;height:112px;z-index:700;pointer-events:none}
 .bstage .plat{position:absolute;left:12px;right:12px;bottom:0;height:12px;background:linear-gradient(#5d275d,#29366f);border-top:3px solid #ffcd75;box-shadow:0 0 12px rgba(255,119,168,.7)}
 .bstage .bunny{position:absolute;left:55px;bottom:12px;line-height:0}
 .bsign{position:absolute;left:0;right:0;top:0;height:52px;box-sizing:border-box;background:#2a1c2c;border:3px solid #ffcd75;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,236,170,.75)}
@@ -228,6 +228,8 @@ tr.me td{background:rgba(255,205,117,.18)}
 h1.neon{display:table;margin:6px auto 0;padding:8px 16px 10px;font-size:38px;letter-spacing:3px;color:#fff;border:3px solid #ff9ec4;border-radius:14px;text-shadow:0 0 4px #fff,0 0 10px #ff77a8,0 0 22px #ff77a8,0 0 40px #ff2d95;box-shadow:0 0 8px #ff77a8,0 0 22px rgba(255,45,149,.65),inset 0 0 8px #ff77a8,inset 0 0 18px rgba(255,45,149,.4);animation:neon 5s infinite}
 @keyframes neon{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.5}}
 @media(max-width:420px){h1.neon{font-size:30px;letter-spacing:2px}}
+.smbb p.sub2{color:#94b0c2;font-size:9px;margin-top:2px;padding-top:2px;border-top:1px dashed #566c86}
+.welcome .wl{text-align:left;line-height:1.7;margin:4px 0}.welcome .wnick{width:100%;box-sizing:border-box}.welcome .wnote{font-size:12px;color:#ffcd75;margin:8px 0 0}
 </style>
 </head>
 <body>
@@ -698,6 +700,8 @@ function sfx(kind){
   if (kind === "moo") { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(170, t); o.frequency.linearRampToValueAtTime(120, t + .8); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.18, t + .12); g.gain.linearRampToValueAtTime(0, t + .9); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .95); }
   if (kind === "chop") tone("pulse", 220, t, .05, .3, .5);
   if (kind === "fall") [60,55,50,43].forEach((m,i) => tone("pulse", mtof(m), t + i * .08, .12, .25, .5));
+  if (kind === "tick") tone("pulse", 1319, t, .03, .15, .25);
+  if (kind === "card") [1568, 2093, 1760].forEach((f, i) => tone("pulse", f, t + i * .04, .04, .14, .5));
   if (kind === "err") { tone("pulse", 196, t, .15, .25, .5); tone("pulse", 147, t + .15, .3, .25, .5); }
 }
 function setMusicBtn(){ const b = $("music"); b.textContent = musicOn ? "♪ ON" : "♪ OFF"; b.classList.toggle("on", !!musicOn); }
@@ -845,8 +849,14 @@ function rankRows(full){
   }).join('');
 }
 function billboard(){
-  const rows = rankRows(false);
-  return '<div class="smbb" title="點我看完整排行"><i>🎴 射龍門 今日戰報</i>' + (rows ? '<p class="hd"><span>玩家</span><em>帽數</em><tt>撞柱</tt></p>' + rows : '<p><span>今天還沒人玩</span></p>') + '<p class="more"><span>▸ 點我看完整排行</span></p></div>';
+  const ns = (info && info.nicks) || [];
+  const top = ns.filter(o => +o.dg > 0).sort((x, y) => y.dg - x.dg || x.dp - y.dp).slice(0, 3);
+  const bad = ns.filter(o => +o.dp > 0).sort((x, y) => y.dp - x.dp || x.dg - y.dg).slice(0, 2);
+  const row = (l, o, c) => '<p' + (c ? ' class="' + c + '"' : '') + '><span>' + l + esc(o.n) + '</span><em>' + (o.dg > 0 ? '+' : '') + o.dg + '🎩</em><tt>' + (o.dp ? '×' + o.dp : '-') + '</tt></p>';
+  return '<div class="smbb" title="點我看完整排行"><i>🎴 射龍門 今日戰報</i><p class="hd"><span>玩家</span><em>帽數</em><tt>撞柱</tt></p>' +
+    (top.length ? top.map((o, i) => row(['🥇', '🥈', '🥉'][i] + ' ', o)).join('') : '<p><span>今天還沒人射進</span></p>') +
+    (bad.length ? '<p class="sub2"><span>撞柱榜</span></p>' + bad.map(o => row('💀 ', o, 'bad')).join('') : '') +
+    '<p class="more"><span>▸ 點我看完整排行</span></p></div>';
 }
 function openRank(){
   const rows = rankRows(true);
@@ -857,7 +867,7 @@ function openRank(){
   d.onclick = e => { if (e.target === d) d.remove(); };
 }
 document.addEventListener("click", e => { if (e.target.closest && e.target.closest(".toprow .smbb")) openRank(); });
-function stageLo(w, y){ return (!w.zone && info && info.notice && (y === undefined ? w.y : y) < 292) ? 158 : 0; }
+function stageLo(w, y){ return (!w.zone && info && info.notice && (y === undefined ? w.y : y) > 380) ? 158 : 0; }
 function lobbyHTML(){
   const big = true;
   const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div>' + bunnyStage() + '<div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
@@ -931,7 +941,7 @@ document.addEventListener("click", e => {
     return; }
   const box = e.target.closest("#lobby"); if (!box) return;
   const me = myNick(), w = walkers.find(v => v.nick === me);
-  if (!w) { toast("送出預測後，你的角色才會進舞池"); return; }
+  if (!w) { welcome(); return; }
   const r = box.getBoundingClientRect(), W = box.clientWidth - 39, Z = Math.round(box.clientWidth * 0.68);
   const cx = e.clientX - r.left - 19, cy = r.bottom - e.clientY - 20;
   if (cy + 20 >= box.clientHeight - 170 && cx + 19 >= Z) {
@@ -1013,7 +1023,7 @@ function openDragon(){
   };
   const draw = () => {
     let body = "";
-    if (!mw) body = '<p class="dmsg">送出預測後才能上桌，帽子會戴在你的角色頭上 🎩</p>';
+    if (!mw) body = '<p class="dmsg">先取個名字建立角色，就能上桌，帽子會戴在你的角色頭上 🎩</p>';
     else if (!S) body = '<p class="dmsg">' + msg + '</p>';
     else {
       const left = S.rounds - S.used, shown = pil || last;
@@ -1029,26 +1039,26 @@ function openDragon(){
     d.innerHTML = '<div><h3 style="margin:0 0 4px">🎴 射龍門</h3>' + body + board() +
       '<p><button class="go ghost dclose">離開賭桌</button></p><p class="drule">規則：每天 5 局，每局最多換牌 5 次，抽不到好牌就是天意。每局押 1～3 枚金幣：射進→戴上同樣數量的帽子 🎩；沒射進→扣同樣數量的帽子；撞柱（同點）→扣兩倍，可以扣到負的。帽子會一直疊在角色頭上，比誰戴最高！</p></div>';
     if (busy) d.querySelectorAll("button:not(.dclose)").forEach(b => b.disabled = true);
-    d.querySelectorAll(".dbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; draw(); });
+    d.querySelectorAll(".dbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; sfx("tick"); draw(); });
     const q = sel => d.querySelector(sel);
-    q(".dclose").onclick = () => { d.remove(); if (bgm) { bgm.pause(); if (musicOn) startMusic(); } };
+    q(".dclose").onclick = () => { sfx("tick"); d.remove(); if (bgm) { bgm.pause(); if (musicOn) startMusic(); } };
     if (q(".dnew")) q(".dnew").onclick = () => act("new");
     if (q(".dpass")) q(".dpass").onclick = () => act("redeal");
     if (q(".dshoot")) q(".dshoot").onclick = () => act("shoot");
   };
   const act = async (a) => {
-    if (busy) return; busy = true; const prev = pil;
+    if (busy) return; busy = true; const prev = pil; if (a !== "open") sfx("tick");
     if (a === "new") { third = null; last = null; msg = "發牌中…"; } else if (a === "redeal") msg = "換牌中…"; else if (a === "shoot") msg = "🎯 射……";
     draw();
     try {
       const j = await drCall(a, bet);
       if (j.ok) {
-        S = j; pil = j.pil ? j.pil.map(r => ({r, s: rs()})) : null;
+        S = j; pil = j.pil ? j.pil.map(r => ({r, s: rs()})) : null; if (pil && (a === "new" || a === "redeal")) sfx("card");
         if (j.error) msg = j.error;
         else if (a === "shoot" && j.res) {
           last = prev; third = {r: j.t, s: rs()};
           msg = j.res === "in" ? "🎯 射進！戴上 <b>" + bet + "</b> 頂帽子 🎩" : j.res === "post" ? "💥 撞柱！扣 <b>" + (bet * 2) + "</b> 頂帽子" : "😵 沒射進，扣 <b>" + bet + "</b> 頂帽子";
-          sfx(j.res === "in" ? "coin" : "err");
+          sfx(j.res === "in" ? "win" : j.res === "post" ? "fall" : "err"); if (j.res === "in") setTimeout(() => sfx("coin"), 500);
           if (mw) { mw.hats = j.h; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); }
         }
         else if (pil) msg = a === "redeal" ? "換了一副，這局還能換 " + (S.redeals - S.rd) + " 次" : "押幾枚金幣？射進就戴上同樣數量的帽子！";
@@ -1062,7 +1072,8 @@ function openDragon(){
 function editSay(){
   const me = myNick(), mw = walkers.find(v => v.nick === me);
   const d = document.createElement("div"); d.className = "sayed";
-  if (!mw) {
+  if (!mw) { welcome(); return; }
+  if (false) {
     d.innerHTML = '<div><h3 style="margin:0 0 6px">🧍 我的角色</h3><p>你還沒有角色。<br>可以先用<b>訪客</b>身分進舞池玩，不用投票；之後送出預測，就會換成你自己取的名字。</p><p><button class="go ok">👤 訪客加入</button> <button class="go ghost no">取消</button></p><p class="pmsg"><small></small></p></div>';
     document.body.appendChild(d);
     d.querySelector(".no").onclick = () => d.remove();
@@ -1104,6 +1115,41 @@ function editSay(){
     } catch (e) { b.disabled = false; b.textContent = "💾 儲存"; msg((e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"); }
   };
 }
+function welcome(){
+  if (document.querySelector(".welcome")) return;
+  const d = document.createElement("div"); d.className = "sayed welcome";
+  let sel = 0;
+  d.innerHTML = '<div><h3 style="margin:0 0 6px">🍻 歡迎來到開票預測酒吧</h3>' +
+    '<p class="wl">朋友們的 8bit 酒吧：<br>🗳️ 押六都市長誰當選，賭幾杯酒<br>🕺 點地板移動、點別人乾杯、點 DJ 台開趴<br>🎴 射龍門疊帽子 · 💬 右下角聊天</p>' +
+    '<hr class="sep"><p>📛 先取個名字（會顯示在舞池和排行榜）</p><input class="wnick" maxlength="20" placeholder="你的暱稱">' +
+    '<p>👕 選個造型</p><div class="plooks">' + LOOKS.map((L,i) => '<button class="plook' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">' + personSVG(L.A, "new", L.pal) + '<small>' + L.n + '</small></button>').join("") + '</div>' +
+    '<p class="wnote">⏳ 沒有送出預測的角色只保留 1 天；1 天內送出預測，角色就會一直留著。</p>' +
+    '<p><button class="go ok">🍺 進入酒吧</button></p><p class="pmsg"><small></small></p></div>';
+  document.body.appendChild(d);
+  const inp = d.querySelector(".wnick"), msg = t => { d.querySelector(".pmsg small").textContent = t; };
+  setTimeout(() => inp.focus(), 50);
+  d.querySelectorAll(".plook").forEach(b => b.onclick = () => { sel = +b.dataset.i; d.querySelectorAll(".plook").forEach(x => x.classList.toggle("sel", x === b)); sfx("coin"); });
+  const go = async () => {
+    const b = d.querySelector(".ok"), nn = inp.value.trim().slice(0, 20);
+    if (!nn) return msg("先取個名字吧");
+    b.disabled = true; b.textContent = "進場中…"; msg("");
+    try {
+      const j = await postJ({action: "profile", key: deviceKey(), nick: nn, a: sel});
+      if (!j.ok) throw new Error(j.error || "沒存成功");
+      store("pred_nick", j.nick); store("pred_av", String(sel)); nick = j.nick;
+      d.remove(); sfx("win"); toast("👋 歡迎 " + j.nick + "！點地板就能走動");
+      await loadBoard(); const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
+    } catch (e) { b.disabled = false; b.textContent = "🍺 進入酒吧"; msg((e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"); }
+  };
+  d.querySelector(".ok").onclick = go;
+  inp.onkeydown = e => { if (e.key === "Enter") go(); };
+}
+let welcomed = false;
+setInterval(() => {
+  if (welcomed || q !== -1 || !info || !Array.isArray(info.nicks)) return;
+  welcomed = true; const me = myNick();
+  if (!me || !info.nicks.some(o => o.n === me)) welcome();
+}, 800);
 async function postJ(o){ const r = await fetch(API, {method: "POST", credentials: "omit", headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(o)}); return r.json(); }
 const chat = {open: false, list: [], lastT: 0, seenT: +(store("pred_chatseen") || 0), born: Date.now(), tick: 0, busy: false};
 function initChat(){
