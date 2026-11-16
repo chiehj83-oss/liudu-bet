@@ -289,6 +289,7 @@ h1.neon{display:table;margin:6px auto 0;padding:8px 16px 10px;font-size:38px;let
 .rules .rg2>div,.rules .rg3>div{background:#1a1c2c;border:2px solid #566c86;padding:5px 6px;font-size:12px;line-height:1.5}.rules .rg2 b,.rules .rg3 b{display:block;color:#73eff7;font-size:13px}
 .rules .rmain{margin-top:10px;text-align:center;color:#a7f070;font-weight:900;font-size:15px}.rules .rjoke{text-align:center;font-size:12px;color:#94b0c2}
 @media(max-width:480px){.rules .rg3{grid-template-columns:1fr 1fr}}.welcome .rulelink{color:#73eff7}
+.welcome>div{position:relative;max-width:320px}.welcome .wx{position:absolute;right:4px;top:2px;background:none;border:0;color:#94b0c2;font-size:18px;cursor:pointer;padding:4px}
 </style>
 </head>
 <body>
@@ -1251,40 +1252,41 @@ function openRules(){
   d.onclick = e => { if (e.target === d) d.remove(); };
 }
 document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#rulesbtn, .rulelink")) { e.preventDefault(); openRules(); } });
-function welcome(){
+function welcome(force){
   if (document.querySelector(".welcome")) return;
   const d = document.createElement("div"); d.className = "sayed welcome";
-  let sel = 0;
-  d.innerHTML = '<div><h3 style="margin:0 0 6px">🍻 歡迎來到開票預測酒吧</h3>' +
-    '<p class="wl">朋友們的 8bit 酒吧：<br>🗳️ 押六都市長誰當選，賭幾杯酒<br>🕺 點地板移動、點別人乾杯、點 DJ 台開趴<br>🎴 射龍門疊帽子 · 💬 右下角聊天</p>' +
-    '<hr class="sep"><p>📛 先取個名字（會顯示在舞池和排行榜）</p><input class="wnick" maxlength="20" placeholder="你的暱稱">' +
-    '<p>👕 選個造型</p><div class="plooks">' + LOOKS.map((L,i) => '<button class="plook' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">' + personSVG(L.A, "new", L.pal) + '<small>' + L.n + '</small></button>').join("") + '</div>' +
-    '<p class="wnote">⏳ 沒有送出預測的角色只保留 1 天；1 天內送出預測，角色就會一直留著。</p><p class="wnote"><a href="#" class="rulelink">📜 進門前請先看入店須知</a></p>' +
-    '<p><button class="go ok">🍺 進入酒吧</button></p><p class="pmsg"><small></small></p></div>';
+  d.innerHTML = '<div><button class="wx" aria-label="關閉">✕</button><h3 style="margin:0 0 10px">🍻 開票預測酒吧</h3>' +
+    '<input class="wnick" maxlength="20" placeholder="輸入角色暱稱">' +
+    '<p><button class="go ok">🍺 用這個名字進場</button></p>' +
+    '<p><button class="go ghost guest">👤 訪客進場</button></p>' +
+    '<p class="wnote">沒送出預測的角色只保留 1 天 · <a href="#" class="rulelink">📜 入店須知</a></p><p class="pmsg"><small></small></p></div>';
   document.body.appendChild(d);
   const inp = d.querySelector(".wnick"), msg = t => { d.querySelector(".pmsg small").textContent = t; };
-  setTimeout(() => inp.focus(), 50);
-  d.querySelectorAll(".plook").forEach(b => b.onclick = () => { sel = +b.dataset.i; d.querySelectorAll(".plook").forEach(x => x.classList.toggle("sel", x === b)); sfx("coin"); });
-  const go = async () => {
-    const b = d.querySelector(".ok"), nn = inp.value.trim().slice(0, 20);
-    if (!nn) return msg("先取個名字吧");
-    b.disabled = true; b.textContent = "進場中…"; msg("");
+  d.querySelector(".wx").onclick = () => { store("pred_welcomed", "1"); d.remove(); };
+  const go = async guest => {
+    const nn = guest ? "" : inp.value.trim().slice(0, 20);
+    if (!guest && !nn) return msg("先輸入暱稱，或按「訪客進場」");
+    d.querySelectorAll("button").forEach(x => x.disabled = true); msg("進場中…");
     try {
-      const j = await postJ({action: "profile", key: deviceKey(), nick: nn, a: sel});
+      const av = Math.floor(Math.random() * LOOKS.length);
+      const j = await postJ({action: "profile", key: deviceKey(), nick: nn, a: av});
       if (!j.ok) throw new Error(j.error || "沒存成功");
-      store("pred_nick", j.nick); store("pred_av", String(sel)); nick = j.nick;
-      d.remove(); sfx("win"); toast("👋 歡迎 " + j.nick + "！點地板就能走動");
+      store("pred_nick", j.nick); store("pred_av", String(av)); store("pred_welcomed", "1"); if (!j.guest) nick = j.nick;
+      d.remove(); sfx("win"); toast("👋 歡迎 " + j.nick + "！點「我的角色」可以換造型");
       await loadBoard(); const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
-    } catch (e) { b.disabled = false; b.textContent = "🍺 進入酒吧"; msg((e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"); }
+    } catch (e) { d.querySelectorAll("button").forEach(x => x.disabled = false); msg((e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"); }
   };
-  d.querySelector(".ok").onclick = go;
-  inp.onkeydown = e => { if (e.key === "Enter") go(); };
+  d.querySelector(".ok").onclick = () => go(false);
+  d.querySelector(".guest").onclick = () => go(true);
+  inp.onkeydown = e => { if (e.key === "Enter") go(false); };
+  setTimeout(() => inp.focus(), 50);
 }
 let welcomed = false;
 setInterval(() => {
   if (welcomed || q !== -1 || !info || !Array.isArray(info.nicks)) return;
   welcomed = true; const me = myNick();
-  if (!me || !info.nicks.some(o => o.n === me)) welcome();
+  if (store("pred_welcomed") === "1" || store("pred_sent") === "1" || (me && info.nicks.some(o => o.n === me))) { if (me) store("pred_welcomed", "1"); return; }
+  welcome();
 }, 800);
 async function postJ(o){ const r = await fetch(API, {method: "POST", credentials: "omit", headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(o)}); return r.json(); }
 const chat = {open: false, list: [], lastT: 0, seenT: +(store("pred_chatseen") || 0), born: Date.now(), tick: 0, busy: false};
