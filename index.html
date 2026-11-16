@@ -205,6 +205,14 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .sayed input{width:100%;font-size:18px;padding:6px;margin:8px 0;box-sizing:border-box}
 .walker .nm{position:absolute;bottom:50px;left:15px;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:var(--ink);background:rgba(13,14,23,.75);padding:0 4px;line-height:1.4}
 .walker.me{z-index:999 !important}
+.walker .nm.shine{color:#2a1a00;background:linear-gradient(90deg,#ffcd75,#fff6c8,#ffcd75);background-size:200% 100%;box-shadow:0 0 0 2px #fff6c8,0 0 10px 3px #ffcd75;animation:nmshine 1.4s linear infinite}
+@keyframes nmshine{0%{background-position:0 0;box-shadow:0 0 0 2px #fff6c8,0 0 6px 2px #ffcd75}50%{box-shadow:0 0 0 2px #ffcd75,0 0 14px 5px #fff6c8}100%{background-position:200% 0;box-shadow:0 0 0 2px #fff6c8,0 0 6px 2px #ffcd75}}
+.tong .tboard{margin:10px auto 4px;max-width:300px;text-align:left;font-size:14px;background:rgba(0,0,0,.25);padding:6px 10px;border:2px solid #ffcd75}
+.tong .tboard>b{display:block;text-align:center;margin-bottom:4px}
+.tong .tboard div{margin:0;min-height:0;display:flex;justify-content:space-between;gap:8px;padding:1px 0}
+.tong .tboard div.top{color:#ffcd75}
+.tong .tboard div.mine{text-decoration:underline}
+.tong .tboard i{display:block;font-size:11px;opacity:.7;text-align:center;margin-top:4px}
 .walker.me .nm{color:var(--dark);background:var(--gold);font-size:15px;padding:1px 6px;bottom:54px;box-shadow:0 0 0 2px var(--dark)}
 .walker.me .nm::before{content:"▼ YOU";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);font-family:"Press Start 2P",monospace;font-size:8px;color:var(--gold);white-space:nowrap;margin-bottom:2px;animation:blink 1s steps(1) infinite}
 tr.me td{background:rgba(255,205,117,.18)}
@@ -957,7 +965,7 @@ function lobbyHTML(){
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm" style="' + (hatH(w) > 0 ? 'bottom:' + ((w.nick === me ? 54 : 50) + hatH(w)) + 'px;' : '') + (w.lab || w.nick === me ? '' : 'display:none') + '">' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + (w.hats ? ' 🎩' + w.hats : '') + '</span>' + hatsHTML(w) + (w.tooth ? '<span class="htooth" style="bottom:' + (LOOKS[w.look].A.length * 3 - 30) + 'px">' + TOOTH_SVG + '</span>' : '') + (w.zone === "kid" ? '<span class="hp"><i style="width:' + (w.hp ?? 100) + '%"></i></span>' : '') + '<span class="say" style="display:none;' + (hatH(w) > 0 ? 'bottom:' + (70 + hatH(w)) + 'px' : '') + '"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm' + (tongTop(w.nick) ? ' shine' : '') + '" style="' + (hatH(w) > 0 ? 'bottom:' + ((w.nick === me ? 54 : 50) + hatH(w)) + 'px;' : '') + (w.lab || w.nick === me ? '' : 'display:none') + '">' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + (w.hats ? ' 🎩' + w.hats : '') + '</span>' + hatsHTML(w) + (w.tooth ? '<span class="htooth" style="bottom:' + (LOOKS[w.look].A.length * 3 - 30) + 'px">' + TOOTH_SVG + '</span>' : '') + (w.zone === "kid" ? '<span class="hp"><i style="width:' + (w.hp ?? 100) + '%"></i></span>' : '') + '<span class="say" style="display:none;' + (hatH(w) > 0 ? 'bottom:' + (70 + hatH(w)) + 'px' : '') + '"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
 }
 const TOOTH_SVG = '<svg class="px" viewBox="0 0 9 9" width="18" height="18"><rect x="2" y="0" width="1" height="1" fill="#0d0e17"/><rect x="3" y="0" width="1" height="1" fill="#0d0e17"/><rect x="4" y="0" width="1" height="1" fill="#0d0e17"/><rect x="5" y="0" width="1" height="1" fill="#0d0e17"/><rect x="6" y="0" width="1" height="1" fill="#0d0e17"/><rect x="1" y="1" width="1" height="1" fill="#0d0e17"/><rect x="2" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="1" width="1" height="1" fill="#0d0e17"/><rect x="0" y="2" width="1" height="1" fill="#0d0e17"/><rect x="1" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="2" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="2" width="1" height="1" fill="#c2d6dd"/><rect x="8" y="2" width="1" height="1" fill="#0d0e17"/><rect x="0" y="3" width="1" height="1" fill="#0d0e17"/><rect x="1" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="2" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="3" width="1" height="1" fill="#c2d6dd"/><rect x="8" y="3" width="1" height="1" fill="#0d0e17"/><rect x="0" y="4" width="1" height="1" fill="#0d0e17"/><rect x="1" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="2" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="4" width="1" height="1" fill="#c2d6dd"/><rect x="8" y="4" width="1" height="1" fill="#0d0e17"/><rect x="1" y="5" width="1" height="1" fill="#0d0e17"/><rect x="2" y="5" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="5" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="5" width="1" height="1" fill="#0d0e17"/><rect x="5" y="5" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="5" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="5" width="1" height="1" fill="#c2d6dd"/><rect x="8" y="5" width="1" height="1" fill="#0d0e17"/><rect x="1" y="6" width="1" height="1" fill="#0d0e17"/><rect x="2" y="6" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="6" width="1" height="1" fill="#0d0e17"/><rect x="5" y="6" width="1" height="1" fill="#0d0e17"/><rect x="6" y="6" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="6" width="1" height="1" fill="#0d0e17"/><rect x="1" y="7" width="1" height="1" fill="#0d0e17"/><rect x="2" y="7" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="7" width="1" height="1" fill="#0d0e17"/><rect x="5" y="7" width="1" height="1" fill="#0d0e17"/><rect x="6" y="7" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="7" width="1" height="1" fill="#0d0e17"/><rect x="2" y="8" width="1" height="1" fill="#0d0e17"/><rect x="6" y="8" width="1" height="1" fill="#0d0e17"/></svg>';
 function knockTooth(w, box){
@@ -1163,6 +1171,8 @@ function tileSVG(n, w){
   let r = ""; t.forEach((row, y) => row.forEach((c, x) => { if (c) r += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + c + '"/>'; }));
   const ww = w || 45; return '<svg class="px" viewBox="0 0 15 20" width="' + ww + '" height="' + Math.round(ww * 4 / 3) + '">' + r + '</svg>';
 }
+function tongRank(){ try { return ((info && info.nicks) || []).filter(x => x && x.n && (Number(x.t) || 0) !== 0).sort((a, b) => (b.t || 0) - (a.t || 0)); } catch (_) { return []; } }
+function tongTop(n){ if (!n) return false; return tongRank().filter(x => x.t > 0).slice(0, 3).some(x => x.n === n); }
 function openTong(){
   if (document.querySelector(".tong")) return;
   const mw = walkers.find(v => v.nick === myNick());
@@ -1177,13 +1187,15 @@ function openTong(){
     if (!mw) body = '<p class="dmsg">先在「我的角色」取名建立角色，才能上桌 🀄</p>';
     else if (!S) body = '<p class="dmsg">' + msg + '</p>';
     else {
-      body = '<p class="dsub">今天第 <b>' + S.used + '/' + S.rounds + '</b> 把 · 頭上 <b>' + S.h + '</b> 頂帽子</p>';
+      body = '<p class="dsub">今天第 <b>' + S.used + '/' + S.rounds + '</b> 把 · 我的籌碼 <b>' + (S.tc > 0 ? '+' : '') + (S.tc || 0) + '</b> 🪙</p>';
       const sh = last || {d: [-1, -1], p: [-1, -1]};
       body += '<div class="ttable">' + row(sh.d, '莊家', sh.dn) + row(sh.p, '你', sh.pn) + '</div><p class="dmsg">' + msg + '</p>';
       if (S.used < S.rounds) body += '<div class="chips">' + [1, 5, 10].map(n => '<button class="chip tbet' + (n === bet ? ' sel' : '') + '" data-n="' + n + '">押 ' + n + ' 枚 🪙</button>').join("") + '</div><p><button class="go tplay">🀄 開牌</button></p>';
       else body += '<p class="dmsg">🌙 今天 10 把推完了，明天再來！</p>';
     }
-    d.innerHTML = '<div><h3 style="margin:0 0 4px">🀄 推筒子</h3>' + body + '<p><button class="go ghost tclose">離開賭桌</button></p><p class="drule">規則：你和莊家各拿兩張筒子牌。對子最大（白板對＞9筒對＞…＞1筒對）；沒有對子就比兩張加起來的個位數，9 點最大，0 點「鱉十」最小，白板算半點；點數一樣比單張大的。押 1、5 或 10 枚代幣：贏了戴上同樣數量的帽子，拿對子贏翻倍；輸了扣同樣數量，和局退回。每天 10 把。</p></div>';
+    const rk = tongRank().slice(0, 10);
+    body += '<div class="tboard"><b>🏆 推筒子排行榜</b>' + (rk.length ? rk.map((x, k) => '<div class="' + (k < 3 && x.t > 0 ? 'top' : '') + (mw && x.n === mw.nick ? ' mine' : '') + '"><span>' + (k < 3 && x.t > 0 ? ['🥇','🥈','🥉'][k] : (k + 1) + '.') + ' ' + esc(x.n) + '</span><span>' + (x.t > 0 ? '+' : '') + x.t + '</span></div>').join('') : '<div><span>還沒有人上榜，第一個就是你</span></div>') + '<i>前三名（籌碼為正）名牌會閃亮 ✨</i></div>';
+    d.innerHTML = '<div><h3 style="margin:0 0 4px">🀄 推筒子</h3>' + body + '<p><button class="go ghost tclose">離開賭桌</button></p><p class="drule">規則：你和莊家各拿兩張筒子牌。對子最大（白板對＞9筒對＞…＞1筒對）；沒有對子就比兩張加起來的個位數，9 點最大，0 點「鱉十」最小，白板算半點；點數一樣比單張大的。押 1、5 或 10 枚代幣：贏了拿回同樣數量的籌碼，拿對子贏翻倍；輸了扣同樣數量，和局退回。籌碼只算推筒子排行榜，不影響帽子。每天 10 把。</p></div>';
     if (busy) d.querySelectorAll("button:not(.tclose)").forEach(b => b.disabled = true);
     d.querySelectorAll(".tbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; draw(); });
     d.querySelector(".tclose").onclick = () => { d.remove(); if (bgm) { bgm.pause(); if (musicOn) startMusic(); } };
@@ -1200,9 +1212,9 @@ function openTong(){
       last.p = [j.p[0], j.p[1]]; last.pn = j.pn; sfx("card"); draw(); await wait(700);
       msg = "莊家開牌……"; draw(); await wait(700);
       last.d = [j.d[0], j.d[1]]; last.dn = j.dn; sfx("card"); S = j;
-      msg = j.res === "win" ? "🎉 你贏了！戴上 <b>" + j.delta + "</b> 頂帽子 🎩" + (j.delta > bet ? "（對子翻倍！）" : "") : j.res === "lose" ? "😵 莊家贏，扣 <b>" + (-j.delta) + "</b> 頂帽子" : "🤝 和局，押注退回";
+      msg = j.res === "win" ? "🎉 你贏了！贏 <b>" + j.delta + "</b> 枚籌碼 🪙" + (j.delta > bet ? "（對子翻倍！）" : "") : j.res === "lose" ? "😵 莊家贏，輸 <b>" + (-j.delta) + "</b> 枚籌碼" : "🤝 和局，押注退回";
       sfx(j.res === "win" ? "win" : j.res === "lose" ? "err" : "coin"); if (j.res === "win") setTimeout(() => sfx("coin"), 500);
-      if (mw && j.delta) { mw.hats = (mw.hats || 0) + j.delta; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); }
+      if (mw) { try { const me = (info.nicks || []).find(x => x.n === mw.nick); if (me) me.t = j.tc; else (info.nicks = info.nicks || []).push({n: mw.nick, t: j.tc}); } catch (_) {} const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); }
     } catch (_) { msg = "連線失敗，再試一次"; }
     busy = false; draw();
   };
