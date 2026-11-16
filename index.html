@@ -269,6 +269,11 @@ h1.neon{display:table;margin:6px auto 0;padding:8px 16px 10px;font-size:38px;let
 @keyframes kb{0%,100%{transform:translateY(0)}40%,55%{transform:translateY(-14px)}}
 .z-kid .ow{position:absolute;z-index:4;color:#fff;font-size:11px;font-weight:900;text-shadow:0 0 3px #b13e53,1px 1px 0 #0d0e17;white-space:nowrap;pointer-events:none;animation:pop 1s ease-out forwards}
 .yard .z-kid b{animation-delay:8.5s}
+.rulesbox>div{max-width:520px;text-align:left}.rules h3{text-align:center;margin:0 0 6px;color:var(--gold)}.rules h4{margin:14px 0 4px;color:#ffcd75;font-size:15px}.rules p{margin:4px 0;line-height:1.6;font-size:14px}.rules ul{margin:4px 0;padding-left:20px;font-size:14px;line-height:1.6}
+.rules .rq{text-align:center;color:#ff77a8;font-weight:900}.rules .rg2,.rules .rg3{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}.rules .rg3{grid-template-columns:1fr 1fr 1fr}
+.rules .rg2>div,.rules .rg3>div{background:#1a1c2c;border:2px solid #566c86;padding:5px 6px;font-size:12px;line-height:1.5}.rules .rg2 b,.rules .rg3 b{display:block;color:#73eff7;font-size:13px}
+.rules .rmain{margin-top:10px;text-align:center;color:#a7f070;font-weight:900;font-size:15px}.rules .rjoke{text-align:center;font-size:12px;color:#94b0c2}
+@media(max-width:480px){.rules .rg3{grid-template-columns:1fr 1fr}}.welcome .rulelink{color:#73eff7}
 </style>
 </head>
 <body>
@@ -464,7 +469,7 @@ function render(){
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
       '<h1 class="neon">開票預測酒吧</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
-      '<div class="toprow"><div class="tbtns"><button class="go ghost" id="mychar">🧍 我的角色</button><button class="go ghost" id="dragonbtn">🎴 射龍門</button></div>' + billboard() + '</div>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
+      '<div class="toprow"><div class="tbtns"><button class="go ghost" id="mychar">🧍 我的角色</button><button class="go ghost" id="dragonbtn">🎴 射龍門</button><button class="go ghost" id="rulesbtn">📜 入店須知</button></div>' + billboard() + '</div>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
@@ -1197,6 +1202,16 @@ function editSay(){
   };
 }
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("button, .chip, .toprow .smbb"); if (b && !b.disabled) sfx("tick"); }, true);
+const RULES_HTML = '<div class="rules"><h3>🍻 開票預測酒吧・入店須知</h3><p class="rq">不同陣營，可以同桌乾杯嗎？</p><p>藍隊、綠隊、白隊，還有無陣營的路人玩家，今晚都擠在同一個舞池裡。開票前大家是對手，打烊後還是要一起住在這座島上。</p><h4>🚪 01｜進門先把刀收起來</h4><p>政治立場不同，不代表對方是壞人。支持不同政黨、不同政策，都是正常的公民選擇。</p><ul><li>可以批評政策，不用攻擊支持者。</li><li>可以質疑政治人物，不用把整個陣營當成魔王。</li><li>吵輸了請自罰一杯，不要私訊對方祖宗十八代。</li></ul><h4>🔍 02｜看到爆料？先解任務：情報查證四步驟</h4><div class="rg2"><div><b>🙋 誰說的？</b>來源是誰？有沒有原始資料？</div><div><b>🔎 證據呢？</b>有文件、數據，還是只有一張截圖？</div><div><b>🧩 少了什麼？</b>有沒有斷章取義、省略前因後果？</div><div><b>🔄 換邊想想？</b>如果是你支持的人做的，標準還一樣嗎？</div></div><p>任務全部完成，才可以按轉傳。</p><h4>⚖️ 03｜所有陣營，同一套遊戲規則</h4><div class="rg3"><div><b>💰 貪污</b>誰做的都要查</div><div><b>⚖️ 司法</b>不能變成政治工具</div><div><b>🛡️ 國防</b>安全問題不能只看黨派</div><div><b>🗣️ 言論自由</b>不同意見也要受保障</div><div><b>💸 政治獻金</b>金流要透明</div><div><b>🏛️ 政府權力</b>誰執政都要被監督</div></div><h4>🏠 04｜本店最重要的生存守則</h4><p>我們可以不同隊，但不能把整間酒吧拆了。</p><p>民主不是每次都讓自己喜歡的人贏。自己不喜歡的人勝選時，也能接受公平的結果；同時保留監督、批評，還有下次用選票改變它的權利。</p><p class="rmain">🎮 玩家守則：不盲信、不抹黑、不造謠、不放棄思考。</p><p class="rjoke">違規玩家，罰去反虐童包廂被小孩圍毆一輪 🧒🏏<br>守規矩的玩家，開票夜贏了可以多喝一杯，輸了可以少喝一杯 😎</p></div>';
+function openRules(){
+  if (document.querySelector(".rulesbox")) return;
+  const d = document.createElement("div"); d.className = "sayed rulesbox";
+  d.innerHTML = '<div>' + RULES_HTML + '<p><button class="go ghost no">我知道了，進去喝 🍺</button></p></div>';
+  document.body.appendChild(d);
+  d.querySelector(".no").onclick = () => d.remove();
+  d.onclick = e => { if (e.target === d) d.remove(); };
+}
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#rulesbtn, .rulelink")) { e.preventDefault(); openRules(); } });
 function welcome(){
   if (document.querySelector(".welcome")) return;
   const d = document.createElement("div"); d.className = "sayed welcome";
@@ -1205,7 +1220,7 @@ function welcome(){
     '<p class="wl">朋友們的 8bit 酒吧：<br>🗳️ 押六都市長誰當選，賭幾杯酒<br>🕺 點地板移動、點別人乾杯、點 DJ 台開趴<br>🎴 射龍門疊帽子 · 💬 右下角聊天</p>' +
     '<hr class="sep"><p>📛 先取個名字（會顯示在舞池和排行榜）</p><input class="wnick" maxlength="20" placeholder="你的暱稱">' +
     '<p>👕 選個造型</p><div class="plooks">' + LOOKS.map((L,i) => '<button class="plook' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">' + personSVG(L.A, "new", L.pal) + '<small>' + L.n + '</small></button>').join("") + '</div>' +
-    '<p class="wnote">⏳ 沒有送出預測的角色只保留 1 天；1 天內送出預測，角色就會一直留著。</p>' +
+    '<p class="wnote">⏳ 沒有送出預測的角色只保留 1 天；1 天內送出預測，角色就會一直留著。</p><p class="wnote"><a href="#" class="rulelink">📜 進門前請先看入店須知</a></p>' +
     '<p><button class="go ok">🍺 進入酒吧</button></p><p class="pmsg"><small></small></p></div>';
   document.body.appendChild(d);
   const inp = d.querySelector(".wnick"), msg = t => { d.querySelector(".pmsg small").textContent = t; };
