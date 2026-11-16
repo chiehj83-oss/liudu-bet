@@ -674,14 +674,14 @@ function tone(type, freq, t, dur, vol, duty){
   else o.type = type;
   o.frequency.setValueAtTime(freq, t);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .02);
+  o.connect(g); g.connect(SFXON && fxBus ? fxBus : master); o.start(t); o.stop(t + dur + .02);
 }
 function noise(t, dur, vol){
   const len = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
   for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   const s = AC.createBufferSource(), g = AC.createGain(), f = AC.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 6000;
   s.buffer = buf; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  s.connect(f); f.connect(g); g.connect(master); s.start(t);
+  s.connect(f); f.connect(g); g.connect(SFXON && fxBus ? fxBus : master); s.start(t);
 }
 function playStep(i, t){
   const bar = Math.floor(i / 8) % 8, e = i % 8;
@@ -693,7 +693,7 @@ function playStep(i, t){
 }
 let partyStyle = "house", pstep = 0, djAudio = null, djLast = -1;
 const DJ_SONGS = ["dj.mp3", "dj2.mp3", "dj3.mp3"];
-function bus(node){ node.connect(master); }
+function bus(node){ node.connect(SFXON && fxBus ? fxBus : master); }
 function kick(t, v){ const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(42, t + .14); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + .32); o.connect(g); bus(g); o.start(t); o.stop(t + .34); }
 function nz(t, dur, vol, type, freq){
   const len = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
@@ -752,21 +752,27 @@ function startMusic(){
   seqTimer = setInterval(scheduler, 25);
 }
 function stopMusic(){ if (seqTimer) { clearInterval(seqTimer); seqTimer = null; } }
+let SFXON = false, fxBus = null;
 function sfx(kind){
+  if (!musicOn || !ensureAudio()) return;
+  if (!fxBus) { fxBus = AC.createGain(); fxBus.gain.value = 0.22; fxBus.connect(AC.destination); }
+  SFXON = true; try { sfx0(kind); } finally { SFXON = false; }
+}
+function sfx0(kind){
   if (!musicOn || !ensureAudio()) return;
   if (AC.state === "suspended") AC.resume();
   const t = AC.currentTime + 0.01;
   if (kind === "coin") { tone("pulse", 988, t, .07, .25, .5); tone("pulse", 1319, t + .07, .22, .25, .5); }
   if (kind === "win") [72,76,79,84,79,84].forEach((m,i) => tone("pulse", mtof(m), t + i * .09, .16, .22, .25));
   if (kind === "moo") { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(170, t); o.frequency.linearRampToValueAtTime(120, t + .8); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.06, t + .12); g.gain.linearRampToValueAtTime(0, t + .9); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .95); }
-  if (kind === "chop") { tone("pulse", 160, t, .09, .45, .5); tone("pulse", 520, t, .025, .25, .125); const len = Math.floor(AC.sampleRate * .08), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / len); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "lowpass"; f.frequency.value = 1200; g.gain.value = .6; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(master); sr.start(t); }
+  if (kind === "chop") { tone("pulse", 160, t, .09, .45, .5); tone("pulse", 520, t, .025, .25, .125); const len = Math.floor(AC.sampleRate * .08), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / len); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "lowpass"; f.frequency.value = 1200; g.gain.value = .6; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(SFXON && fxBus ? fxBus : master); sr.start(t); }
   if (kind === "fall") [60,55,50,43].forEach((m,i) => tone("pulse", mtof(m), t + i * .08, .12, .25, .5));
-  if (kind === "slap" || kind === "boom") { const L2 = kind === "boom" ? .6 : .12, len = Math.floor(AC.sampleRate * L2), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, kind === "boom" ? 2 : 1); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "lowpass"; f.frequency.setValueAtTime(kind === "boom" ? 1800 : 900 + Math.random() * 700, t); if (kind === "boom") f.frequency.exponentialRampToValueAtTime(120, t + L2); g.gain.value = kind === "boom" ? .28 : .5; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(master); sr.start(t);
-    const o = AC.createOscillator(), og = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(kind === "boom" ? 90 : 170, t); o.frequency.exponentialRampToValueAtTime(40, t + L2); og.gain.setValueAtTime(.45, t); og.gain.exponentialRampToValueAtTime(.001, t + L2 + .02); o.connect(og); og.connect(master); o.start(t); o.stop(t + L2 + .05); }
+  if (kind === "slap" || kind === "boom") { const L2 = kind === "boom" ? .6 : .12, len = Math.floor(AC.sampleRate * L2), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, kind === "boom" ? 2 : 1); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "lowpass"; f.frequency.setValueAtTime(kind === "boom" ? 1800 : 900 + Math.random() * 700, t); if (kind === "boom") f.frequency.exponentialRampToValueAtTime(120, t + L2); g.gain.value = kind === "boom" ? .28 : .5; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(SFXON && fxBus ? fxBus : master); sr.start(t);
+    const o = AC.createOscillator(), og = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(kind === "boom" ? 90 : 170, t); o.frequency.exponentialRampToValueAtTime(40, t + L2); og.gain.setValueAtTime(.45, t); og.gain.exponentialRampToValueAtTime(.001, t + L2 + .02); o.connect(og); og.connect(SFXON && fxBus ? fxBus : master); o.start(t); o.stop(t + L2 + .05); }
   if (kind === "drill") { tone("pulse", 1480, t, .25, .07, .5); tone("pulse", 1560, t + .03, .22, .06, .25); }
   if (kind === "shoot") { tone("pulse", 880, t, .05, .05, .5); tone("pulse", 1760, t + .06, .08, .05, .25); }
   if (kind === "gulp") [392, 330, 294].forEach((f, i) => tone("pulse", f, t + i * .1, .07, .12, .5));
-  if (kind === "cough") [0, .24].forEach(d0 => { const len = Math.floor(AC.sampleRate * .14), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / len); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "bandpass"; f.frequency.value = 700; g.gain.value = .5; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(master); sr.start(t + d0); });
+  if (kind === "cough") [0, .24].forEach(d0 => { const len = Math.floor(AC.sampleRate * .14), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / len); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "bandpass"; f.frequency.value = 700; g.gain.value = .5; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(SFXON && fxBus ? fxBus : master); sr.start(t + d0); });
   if (kind === "tick") tone("pulse", 1319, t, .03, .15, .25);
   if (kind === "card") [1568, 2093, 1760].forEach((f, i) => tone("pulse", f, t + i * .04, .04, .14, .5));
   if (kind === "err") { tone("pulse", 196, t, .15, .25, .5); tone("pulse", 147, t + .15, .3, .25, .5); }
@@ -1145,7 +1151,7 @@ function openDragon(){
   if (document.querySelector(".dragon")) return;
   const mw = walkers.find(v => v.nick === myNick());
   const d = document.createElement("div"); d.className = "sayed dragon"; document.body.appendChild(d);
-  const bgm = musicOn ? (window.casinoAudio = window.casinoAudio || Object.assign(new Audio("casino.mp3"), {loop: true, volume: 0.6})) : null;
+  const bgm = musicOn ? (window.casinoAudio = window.casinoAudio || Object.assign(new Audio("casino.mp3"), {loop: true, volume: 0.35})) : null;
   if (bgm) { stopMusic(); if (djAudio) djAudio.pause(); try { bgm.currentTime = 0; } catch (_) {} bgm.play().catch(() => { if (musicOn) startMusic(); }); }
   const rs = () => Math.floor(Math.random() * 4);
   let S = null, pil = null, last = null, third = null, bet = 1, busy = false, msg = "洗牌中…";
@@ -1163,13 +1169,13 @@ function openDragon(){
       if (shown) { const gap = shown[1].r - shown[0].r - 1;
         body += '<div class="dtable">' + drCard(shown[0]) + '<div class="dmid">' + (third && !pil ? drCard(third) : drCard(null, true)) + '</div>' + drCard(shown[1]) + '</div><p class="dodds">中間有 ' + gap + ' 種點數 · 射進機率約 ' + Math.round(gap / 13 * 100) + '%</p>'; }
       body += '<p class="dmsg">' + msg + '</p>';
-      if (pil) body += '<div class="chips">' + [1, 2, 3].filter(n => n <= S.maxBet).map(n => '<button class="chip dbet' + (n === bet ? ' sel' : '') + '" data-n="' + n + '">押 ' + n + ' 枚 🪙</button>').join("") + '</div>' +
+      if (pil) body += '<div class="chips">' + [1, 5, 10].map(n => '<button class="chip dbet' + (n === bet ? ' sel' : '') + '" data-n="' + n + '">押 ' + n + ' 枚 🪙</button>').join("") + '</div>' +
         '<p><button class="go dshoot">🎯 射！</button> <button class="go ghost dpass"' + (S.rd >= S.redeals ? ' disabled' : '') + '>換牌（剩 ' + (S.redeals - S.rd) + ' 次）</button></p>';
       else if (left > 0) body += '<p><button class="go dnew">' + (S.used ? '下一局' : '開始第一局') + '（第 ' + (S.used + 1) + '/' + S.rounds + ' 局）</button></p>';
       else body += '<p class="dmsg">🌙 今天 5 局打完了，明天再來疊帽子！</p>';
     }
     d.innerHTML = '<div><h3 style="margin:0 0 4px">🎴 射龍門</h3>' + body + board() +
-      '<p><button class="go ghost dclose">離開賭桌</button></p><p class="drule">規則：每天 5 局，每局最多換牌 5 次，抽不到好牌就是天意。每局押 1～3 枚金幣：射進→戴上同樣數量的帽子 🎩；沒射進→扣同樣數量的帽子；撞柱（同點）→扣兩倍，可以扣到負的。帽子會一直疊在角色頭上，比誰戴最高！</p></div>';
+      '<p><button class="go ghost dclose">離開賭桌</button></p><p class="drule">規則：每天 5 局，每局最多換牌 5 次，抽不到好牌就是天意。每局押 1、5 或 10 枚代幣：射進→戴上同樣數量的帽子 🎩；沒射進→扣同樣數量的帽子；撞柱（同點）→扣兩倍，可以扣到負的。帽子會一直疊在角色頭上，比誰戴最高！</p></div>';
     if (busy) d.querySelectorAll("button:not(.dclose)").forEach(b => b.disabled = true);
     d.querySelectorAll(".dbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; draw(); });
     const q = sel => d.querySelector(sel);
@@ -1193,7 +1199,7 @@ function openDragon(){
           sfx(j.res === "in" ? "win" : j.res === "post" ? "fall" : "err"); if (j.res === "in") setTimeout(() => sfx("coin"), 500);
           if (mw) { mw.hats = (mw.hats || 0) + (j.res === "in" ? bet : j.res === "post" ? -2 * bet : -bet); const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); }
         }
-        else if (pil) msg = a === "redeal" ? "換了一副，這局還能換 " + (S.redeals - S.rd) + " 次" : "押幾枚金幣？射進就戴上同樣數量的帽子！";
+        else if (pil) msg = a === "redeal" ? "換了一副，這局還能換 " + (S.redeals - S.rd) + " 次" : "押幾枚代幣？射進就戴上同樣數量的帽子！";
         else if (a === "open") msg = S.used >= S.rounds ? "" : "準備好就開局吧！";
       } else msg = j.error || "出了點問題，再試一次";
     } catch (_) { msg = "連線失敗，再試一次"; }
