@@ -242,8 +242,17 @@ h1.neon{display:table;margin:6px auto 0;padding:8px 16px 10px;font-size:38px;let
 .yard .z-air b{animation-delay:6.8s}
 .z-kid{background:repeating-linear-gradient(45deg,#ef7d57 0 8px,#e0ac69 8px 16px);border-left:4px solid #566c86;border-top:4px solid #566c86;overflow:hidden}
 .z-kid .ksign{position:absolute;right:4px;top:4px;background:#f4f4f4;color:#b13e53;font-size:10px;font-weight:900;padding:1px 4px;border:2px solid #b13e53;line-height:1.3;text-align:center}
-.z-kid .k{position:absolute;bottom:16px;line-height:0;z-index:3;transition:left .4s,bottom .4s;animation:kb .35s steps(2) infinite}.z-kid .k svg{width:28px;height:auto}.z-kid .k.f svg{transform:scaleX(-1)}
-@keyframes kb{50%{transform:translateY(-4px)}}
+.z-kid .k{position:absolute;bottom:16px;line-height:0;z-index:3;transition:left .4s,bottom .4s;animation:kb .5s ease-in-out infinite}
+.z-kid .club{position:absolute;left:-1px;bottom:12px;width:4px;height:16px;background:linear-gradient(#e0ac69,#5d3a1a);border:1px solid #0d0e17;transform-origin:50% 100%;animation:swing .5s ease-in infinite;animation-delay:inherit}
+.z-kid .k.f .club{left:auto;right:-1px;animation-name:swingf}
+@keyframes swing{0%,35%{transform:rotate(-70deg)}60%{transform:rotate(60deg)}100%{transform:rotate(-70deg)}}
+@keyframes swingf{0%,35%{transform:rotate(70deg)}60%{transform:rotate(-60deg)}100%{transform:rotate(70deg)}}
+.walker.hurt svg{filter:sepia(1) saturate(9) hue-rotate(-45deg) brightness(1.2)}
+.walker .hp{position:absolute;left:4px;bottom:46px;width:31px;height:4px;background:#0d0e17;border:1px solid #f4f4f4;z-index:3}.walker .hp i{display:block;height:100%;background:#38b764;transition:width .2s}.walker .hp.low i{background:#b13e53}
+.z-kid .dmg{position:absolute;z-index:5;color:#ff3b3b;font-size:13px;font-weight:900;text-shadow:1px 1px 0 #0d0e17,0 0 4px #fff;pointer-events:none;animation:dmg .9s ease-out forwards}
+@keyframes dmg{0%{transform:scale(1.5)}100%{transform:translateY(-24px);opacity:0}}
+.z-kid .fx{position:absolute;z-index:5;font-size:15px;line-height:1;pointer-events:none;animation:pop .6s ease-out forwards}.z-kid .k svg{width:28px;height:auto}.z-kid .k.f svg{transform:scaleX(-1)}
+@keyframes kb{0%,100%{transform:translateY(0)}40%,55%{transform:translateY(-14px)}}
 .z-kid .ow{position:absolute;z-index:4;color:#fff;font-size:11px;font-weight:900;text-shadow:0 0 3px #b13e53,1px 1px 0 #0d0e17;white-space:nowrap;pointer-events:none;animation:pop 1s ease-out forwards}
 .yard .z-kid b{animation-delay:8.5s}
 </style>
@@ -716,7 +725,7 @@ function sfx(kind){
   if (kind === "moo") { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(170, t); o.frequency.linearRampToValueAtTime(120, t + .8); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.18, t + .12); g.gain.linearRampToValueAtTime(0, t + .9); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .95); }
   if (kind === "chop") tone("pulse", 220, t, .05, .3, .5);
   if (kind === "fall") [60,55,50,43].forEach((m,i) => tone("pulse", mtof(m), t + i * .08, .12, .25, .5));
-  if (kind === "slap") { tone("pulse", 220, t, .04, .2, .5); tone("pulse", 147, t + .05, .06, .18, .5); }
+  if (kind === "slap") { tone("pulse", 523, t, .02, .22, .125); tone("pulse", 110, t + .02, .09, .3, .5); tone("pulse", 82, t + .07, .1, .22, .5); }
   if (kind === "shoot") { tone("pulse", 880, t, .05, .12, .5); tone("pulse", 1760, t + .06, .08, .12, .25); }
   if (kind === "tick") tone("pulse", 1319, t, .03, .15, .25);
   if (kind === "card") [1568, 2093, 1760].forEach((f, i) => tone("pulse", f, t + i * .04, .04, .14, .5));
@@ -895,12 +904,12 @@ document.addEventListener("click", e => { if (e.target.closest && e.target.close
 function stageLo(w, y){ return (!w.zone && info && info.notice && (y === undefined ? w.y : y) > YD + 192) ? 158 : 0; }
 function lobbyHTML(){
   const big = true;
-  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div>' + bunnyStage() + '<div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div><div class="z-air"><b>✈️ 松山機場</b><div class="rw"></div><span class="tower">' + TOWER_SVG + '</span><span class="plane">' + PLANE_SVG + '</span><span class="plane p2">' + PLANE_SVG + '</span></div><div class="z-kid"><b>🧒 反虐童包廂</b><span class="ksign">多一分關心<br>保護專線 113</span>' + [0,1,2,3].map(i => '<span class="k' + (i > 1 ? ' f' : '') + '" style="left:' + [10, 34, 120, 146][i] + 'px;animation-delay:-' + i * 0.13 + 's">' + personSVG(i % 2 ? KID_B : KID_A, "kid" + i) + '</span>').join("") + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div>' + bunnyStage() + '<div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div><div class="z-air"><b>✈️ 松山機場</b><div class="rw"></div><span class="tower">' + TOWER_SVG + '</span><span class="plane">' + PLANE_SVG + '</span><span class="plane p2">' + PLANE_SVG + '</span></div><div class="z-kid"><b>🧒 反虐童包廂</b><span class="ksign">多一分關心<br>保護專線 113</span>' + [0,1,2,3].map(i => '<span class="k' + (i > 1 ? ' f' : '') + '" style="left:' + [10, 34, 120, 146][i] + 'px;animation-delay:-' + i * 0.13 + 's"><i class="club"></i>' + personSVG(i % 2 ? KID_B : KID_A, "kid" + i) + '</span>').join("") + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
   return head + walkers.map((w,i) =>
-    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm" style="' + (hatH(w) > 0 ? 'bottom:' + ((w.nick === me ? 54 : 50) + hatH(w)) + 'px;' : '') + (w.lab || w.nick === me ? '' : 'display:none') + '">' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + (w.hats ? ' 🎩' + w.hats : '') + '</span>' + hatsHTML(w) + '<span class="say" style="display:none;' + (hatH(w) > 0 ? 'bottom:' + (70 + hatH(w)) + 'px' : '') + '"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
+    '<div class="walker' + (w.nick === me ? " me" : "") + (w.zone === "milk" ? " milky" : "") + '" data-i="' + i + '" style="bottom:' + w.y.toFixed(0) + 'px;z-index:' + (10 + Math.round(600 - w.y)) + '">' + '<span class="nm" style="' + (hatH(w) > 0 ? 'bottom:' + ((w.nick === me ? 54 : 50) + hatH(w)) + 'px;' : '') + (w.lab || w.nick === me ? '' : 'display:none') + '">' + esc(w.nick) + (w.cheers ? ' 🍻' + w.cheers : '') + (w.hats ? ' 🎩' + w.hats : '') + '</span>' + hatsHTML(w) + (w.zone === "kid" ? '<span class="hp"><i style="width:' + (w.hp ?? 100) + '%"></i></span>' : '') + '<span class="say" style="display:none;' + (hatH(w) > 0 ? 'bottom:' + (70 + hatH(w)) + 'px' : '') + '"></span>' + (w.zone === "smoke" ? '<span class="puff"></span>' : '') + '<span class="fa">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][0] : LOOKS[w.look].A, w.nick, LOOKS[w.look].pal) + '</span><span class="fb" style="display:none">' + personSVG((w.zone || w.item) ? LOOKS[w.look].P[w.zone || ("it_" + w.item)][1] : LOOKS[w.look].B, w.nick, LOOKS[w.look].pal) + '</span></div>').join("") + '</div>';
 }
 function tickLobby(t){
   const box = $("lobby");
@@ -922,7 +931,12 @@ function tickLobby(t){
   const victims = walkers.filter(w => w.zone === "kid");
   const zk = box.querySelector(".z-kid");
   if (zk) { const zl = Math.round(box.clientWidth / 2) + 4; const v = victims[0]; zk.querySelectorAll(".k").forEach((k, i) => { const tx = v ? Math.max(0, Math.min(zk.clientWidth - 30, v.x - zl + [-28, -14, 34, 48][i])) : [10, 34, 120, 146][i]; k.style.left = tx + "px"; k.style.bottom = (v ? Math.max(2, v.y - 2) : 16) + "px"; });
-    if (victims.length) { slapAcc += dt * Math.min(victims.length, 3) * 0.8; if (slapAcc >= 1) { slapAcc = 0; const vv = victims[Math.floor(Math.random() * victims.length)]; const h = document.createElement("span"); h.className = "ow"; h.textContent = ["啪！", "好痛！", "砰！", "救命！", "★彡"][Math.floor(Math.random() * 5)]; h.style.left = Math.max(0, vv.x - zl + Math.random() * 30 - 5) + "px"; h.style.bottom = (vv.y + 46 + Math.random() * 12) + "px"; zk.appendChild(h); setTimeout(() => h.remove(), 1100); sfx("slap"); } } }
+    if (victims.length) { slapAcc += dt * Math.min(victims.length, 3) * 1.6; if (slapAcc >= 1) { slapAcc = 0; const vv = victims[Math.floor(Math.random() * victims.length)]; const h = document.createElement("span"); h.className = "ow"; h.textContent = ["啪！", "好痛！", "砰！", "救命！", "★彡"][Math.floor(Math.random() * 5)]; h.style.left = Math.max(0, vv.x - zl + Math.random() * 30 - 5) + "px"; h.style.bottom = (vv.y + 46 + Math.random() * 12) + "px"; zk.appendChild(h); setTimeout(() => h.remove(), 1100); sfx("slap");
+      const ix = walkers.indexOf(vv), wel = box.querySelector('.walker[data-i="' + ix + '"]'), dm = 5 + Math.floor(Math.random() * 11);
+      vv.hp = (vv.hp ?? 100) - dm; const ko = vv.hp <= 0; if (ko) vv.hp = 100;
+      if (wel) { wel.classList.add("hurt"); setTimeout(() => wel.classList.remove("hurt"), 240); const hb = wel.querySelector(".hp i"); if (hb) { hb.style.width = vv.hp + "%"; hb.parentNode.classList.toggle("low", vv.hp < 35); } }
+      const dt2 = document.createElement("span"); dt2.className = "dmg"; dt2.textContent = ko ? "K.O.!" : "-" + dm; dt2.style.left = Math.max(0, vv.x - zl + 8) + "px"; dt2.style.bottom = (vv.y + 40) + "px"; zk.appendChild(dt2); setTimeout(() => dt2.remove(), 950);
+      for (let q2 = 0; q2 < 2; q2++) { const fx = document.createElement("span"); fx.className = "fx"; fx.textContent = ["💥", "✦", "💢", "⭐", "💫"][Math.floor(Math.random() * 5)]; fx.style.left = Math.max(0, vv.x - zl + Math.random() * 34 - 4) + "px"; fx.style.bottom = (vv.y + 10 + Math.random() * 34) + "px"; zk.appendChild(fx); setTimeout(() => fx.remove(), 650); } } } }
   box.querySelectorAll(".tree").forEach((el, i) => { const s = treeS[i]; if (!s) return; el.classList.toggle("down", s.down > t); el.classList.toggle("shake", s.shake > t); });
   box.querySelectorAll(".walker").forEach(el => {
     const w = walkers[+el.dataset.i]; if (!w) return;
