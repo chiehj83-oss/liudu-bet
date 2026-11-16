@@ -216,11 +216,11 @@ tr.me td{background:rgba(255,205,117,.18)}
 .press{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--gold);text-align:center;margin-top:18px}
 .plooks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0}.plook{background:var(--panel);border:3px solid #566c86;padding:4px 2px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;color:var(--mute);font:inherit;font-size:11px}.plook.sel{border-color:var(--gold);color:var(--gold)}.sayed input.pnick,.sayed input.pmotto{width:100%;box-sizing:border-box}.sayed>div{max-height:88vh;overflow-y:auto}
 .toprow{display:flex;gap:12px;align-items:stretch;margin:0 0 12px}.tbtns{flex:0 0 calc(50% - 6px);display:flex;flex-direction:column;gap:10px}.tbtns .go{margin-top:0;flex:1;padding:10px 6px}.toprow .smbb{position:static;flex:1;width:auto;min-width:0;font-size:12px;padding:6px 8px}.toprow .smbb i{font-size:12px}.toprow .smbb p.hd{font-size:11px}
-.bstage{position:absolute;left:4px;top:26px;width:150px;height:112px;z-index:700;pointer-events:none}
+.bstage{position:absolute;left:4px;top:26px;width:150px;height:130px;z-index:700;pointer-events:none}
 .bstage .plat{position:absolute;left:12px;right:12px;bottom:0;height:12px;background:linear-gradient(#5d275d,#29366f);border-top:3px solid #ffcd75;box-shadow:0 0 12px rgba(255,119,168,.7)}
 .bstage .bunny{position:absolute;left:55px;bottom:12px;line-height:0}
-.bsign{position:absolute;left:0;right:0;top:0;height:52px;box-sizing:border-box;background:#2a1c2c;border:3px solid #ffcd75;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,236,170,.75)}
-.bsign b{position:relative;z-index:1;color:#ff77a8;text-shadow:0 0 6px #ff77a8;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:124px;letter-spacing:1px}
+.bsign{position:absolute;left:0;right:0;top:0;height:70px;box-sizing:border-box;background:#2a1c2c;border:3px solid #ffcd75;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,236,170,.75)}
+.bsign b{position:relative;z-index:1;color:#ff77a8;text-shadow:0 0 6px #ff77a8;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;max-width:130px;line-height:1.2;text-align:center;letter-spacing:1px}
 .bsign i{position:absolute;width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 5px 2px #ffcd75,0 0 10px 3px rgba(255,205,117,.6);animation:bulb 1s steps(1) infinite}
 .bsign i.o{animation-delay:.5s}
 @keyframes bulb{0%{opacity:1}50%{opacity:.25;box-shadow:none}}
@@ -855,10 +855,13 @@ const BUNNY = ["s..W...W..s..","s..WP..WP.s..","s..WP..WP.s..","s.hhhhhhh.s..","
 function bunnyStage(){
   const t = String((info && info.notice) || "").trim();
   if (!t) return "";
+  const sp = t.indexOf(" "), hf = Math.ceil(t.length / 2);
+  const nls = t.length <= 7 ? [t] : sp > 0 ? [t.slice(0, sp), t.slice(sp + 1).trim()] : [t.slice(0, hf), t.slice(hf)];
+  const nfs = Math.min(17, Math.max(10, Math.floor(126 / Math.max(...nls.map(l => l.length)))));
   let bulbs = "";
   for (let k = 0; k < 7; k++) { const x = 5 + k * 21; bulbs += '<i' + (k % 2 ? ' class="o"' : '') + ' style="left:' + x + 'px;top:2px"></i><i' + (k % 2 ? '' : ' class="o"') + ' style="left:' + x + 'px;bottom:2px"></i>'; }
-  bulbs += '<i class="o" style="left:2px;top:20px"></i><i style="right:2px;top:20px"></i>';
-  return '<div class="bstage"><div class="bsign">' + bulbs + '<b style="font-size:' + (t.length <= 7 ? 17 : Math.max(10, Math.floor(124 / t.length))) + 'px;letter-spacing:' + (t.length <= 7 ? 1 : 0) + 'px">' + esc(t) + '</b></div><div class="bunny">' + personSVG(BUNNY, "bunny", {h:"#8a4b2a", P:"#ff77a8"}) + '</div><div class="plat"></div></div>';
+  bulbs += '<i class="o" style="left:2px;top:22px"></i><i style="right:2px;top:22px"></i><i style="left:2px;top:38px"></i><i class="o" style="right:2px;top:38px"></i>';
+  return '<div class="bstage"><div class="bsign">' + bulbs + '<b style="font-size:' + nfs + 'px">' + nls.map(esc).join("<br>") + '</b></div><div class="bunny">' + personSVG(BUNNY, "bunny", {h:"#8a4b2a", P:"#ff77a8"}) + '</div><div class="plat"></div></div>';
 }
 function rankRows(full){
   const ns = ((info && info.nicks) || []).filter(o => +o.dg !== 0 || +o.dp > 0 || (full && +o.h !== 0));
@@ -889,7 +892,7 @@ function openRank(){
   d.onclick = e => { if (e.target === d) d.remove(); };
 }
 document.addEventListener("click", e => { if (e.target.closest && e.target.closest(".toprow .smbb")) openRank(); });
-function stageLo(w, y){ return (!w.zone && info && info.notice && (y === undefined ? w.y : y) > YD + 210) ? 158 : 0; }
+function stageLo(w, y){ return (!w.zone && info && info.notice && (y === undefined ? w.y : y) > YD + 192) ? 158 : 0; }
 function lobbyHTML(){
   const big = true;
   const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div>' + bunnyStage() + '<div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div><div class="z-air"><b>✈️ 松山機場</b><div class="rw"></div><span class="tower">' + TOWER_SVG + '</span><span class="plane">' + PLANE_SVG + '</span><span class="plane p2">' + PLANE_SVG + '</span></div><div class="z-kid"><b>🧒 反虐童包廂</b><span class="ksign">多一分關心<br>保護專線 113</span>' + [0,1,2,3].map(i => '<span class="k' + (i > 1 ? ' f' : '') + '" style="left:' + [10, 34, 120, 146][i] + 'px;animation-delay:-' + i * 0.13 + 's">' + personSVG(i % 2 ? KID_B : KID_A, "kid" + i) + '</span>').join("") + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
