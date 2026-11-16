@@ -290,6 +290,7 @@ h1.neon{display:table;margin:6px auto 0;padding:8px 16px 10px;font-size:38px;let
 .rules .rmain{margin-top:10px;text-align:center;color:#a7f070;font-weight:900;font-size:15px}.rules .rjoke{text-align:center;font-size:12px;color:#94b0c2}
 @media(max-width:480px){.rules .rg3{grid-template-columns:1fr 1fr}}.welcome .rulelink{color:#73eff7}
 .welcome>div{position:relative;max-width:320px}.welcome .wx{position:absolute;right:4px;top:2px;background:none;border:0;color:#94b0c2;font-size:18px;cursor:pointer;padding:4px}
+.nickbox{background:var(--panel);border:3px solid #566c86;padding:10px;text-align:center;font-size:16px;line-height:1.6}.nickbox b{color:var(--gold)}.nickbox .go{display:block;margin:8px auto 0;padding:8px 12px;font-size:15px;width:auto}
 </style>
 </head>
 <body>
@@ -493,7 +494,7 @@ function render(){
           const mine = p.name === myNick();
           return '<button class="namebtn' + (nick === p.name ? " sel" : "") + '" data-name="' + esc(p.name) + '"' + (p.taken && !mine ? " disabled" : "") + '>' + esc(p.name) + '</button>';
         }).join("") + '</div><p class="note" style="margin-top:4px">劃掉的名字已經被登記。名單上沒有你？找主辦人。</p>'
-      : '<input id="nick" maxlength="20" placeholder="取個暱稱（會顯示在排行榜）" value="' + esc(nick) + '" autocomplete="nickname"><p class="note" style="margin-top:6px">暱稱會公開顯示，請友善命名。一個裝置一張注單。</p>') +
+      : '<div class="nickbox">🧍 以「<b>' + esc(nick.trim() || '尚未取名') + '</b>」下注<button class="go ghost" id="nickedit">改名／換造型</button>' + (nick.trim() ? '' : '<p class="note">先到「我的角色」取個名字，才能下注喔</p>') + '</div><input id="nick" type="hidden" value="' + esc(nick) + '">') +
       (info && info.needPass ? '<p class="label">群組通關碼：</p><input id="pass" maxlength="30" placeholder="通關碼" value="' + esc(pass) + '">' : '') +
       '<button class="go" id="start"' + (nick.trim() ? "" : " disabled") + '>▶ START</button>' +
       (sentBefore ? '<p class="note">你已經送出過預測，重押一次會覆蓋舊的。</p>' : '<p class="press blink">PRESS START</p>'))) +
@@ -634,7 +635,7 @@ function renderBoard(m){
   }
   if (Array.isArray(data.tally) && total) {
     h += '<h2>大家最看好誰</h2><div class="box">' + CITIES.map((c,i) => {
-      const rows = (data.tally[i] || []).filter(t => t.votes > 0).sort((a,b) => b.votes - a.votes || b.cups - a.cups);
+      const rows = (data.tally[i] || []).filter(t => t.votes > 0).sort((a,b) => b.votes - a.votes || b.cups - a.cups).slice(0, 3);
       const sum = rows.reduce((a,t) => a + t.votes, 0), maxV = rows.length ? rows[0].votes : 1;
       return '<div class="city2">' + c.name + '<small>' + sum + ' 人押</small></div>' + (rows.length ? rows.map((t,j) =>
         '<div class="tl' + (j === 0 ? ' top' : '') + '"><span>' + esc(t.name) + (winners[i] === t.name ? '<span class="fav">當選</span>' : (!winners[i] && j === 0 ? '<span class="fav">最看好</span>' : '')) + '</span><span class="bar"><i style="width:' + Math.round(t.votes / maxV * 100) + '%"></i></span><span class="ct">' + t.votes + ' 人 · ' + t.cups + ' 杯</span></div>').join('') : '<p class="note" style="margin:4px 0">還沒有人押這都</p>');
@@ -757,8 +758,8 @@ function sfx(kind){
   const t = AC.currentTime + 0.01;
   if (kind === "coin") { tone("pulse", 988, t, .07, .25, .5); tone("pulse", 1319, t + .07, .22, .25, .5); }
   if (kind === "win") [72,76,79,84,79,84].forEach((m,i) => tone("pulse", mtof(m), t + i * .09, .16, .22, .25));
-  if (kind === "moo") { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(170, t); o.frequency.linearRampToValueAtTime(120, t + .8); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.18, t + .12); g.gain.linearRampToValueAtTime(0, t + .9); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .95); }
-  if (kind === "chop") tone("pulse", 220, t, .05, .3, .5);
+  if (kind === "moo") { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(170, t); o.frequency.linearRampToValueAtTime(120, t + .8); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.06, t + .12); g.gain.linearRampToValueAtTime(0, t + .9); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .95); }
+  if (kind === "chop") { tone("pulse", 160, t, .09, .45, .5); tone("pulse", 520, t, .025, .25, .125); const len = Math.floor(AC.sampleRate * .08), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / len); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "lowpass"; f.frequency.value = 1200; g.gain.value = .6; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(master); sr.start(t); }
   if (kind === "fall") [60,55,50,43].forEach((m,i) => tone("pulse", mtof(m), t + i * .08, .12, .25, .5));
   if (kind === "slap" || kind === "boom") { const L2 = kind === "boom" ? .6 : .12, len = Math.floor(AC.sampleRate * L2), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, kind === "boom" ? 2 : 1); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "lowpass"; f.frequency.setValueAtTime(kind === "boom" ? 1800 : 900 + Math.random() * 700, t); if (kind === "boom") f.frequency.exponentialRampToValueAtTime(120, t + L2); g.gain.value = kind === "boom" ? .28 : .5; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(master); sr.start(t);
     const o = AC.createOscillator(), og = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(kind === "boom" ? 90 : 170, t); o.frequency.exponentialRampToValueAtTime(40, t + L2); og.gain.setValueAtTime(.45, t); og.gain.exponentialRampToValueAtTime(.001, t + L2 + .02); o.connect(og); og.connect(master); o.start(t); o.stop(t + L2 + .05); }
@@ -1103,7 +1104,7 @@ const DJ_LINES = ["如果你是DJ你會愛我嗎？", "小妹你別慌", "這是
 let djT = 0, djNext = 3, djLine = "", djShow = 0;
 const treeS = [0,1,2].map(() => ({hp: 6, down: 0, shake: 0}));
 let chopAcc = 0, shotAcc = 0, slapAcc = 0, dentAcc = 0, zsT = 0;
-const ZONE_SFX = {tree: [1.5, () => sfx("chop")], milk: [2.6, () => sfx(Math.random() < .3 ? "moo" : "gulp")], smoke: [3.2, () => sfx("cough")]};
+const ZONE_SFX = {tree: [1.5, () => { sfx("chop"); const nw = performance.now(), up = treeS.map((x, i) => i).filter(i => !(treeS[i].down > nw)); if (up.length) hitTree(up[Math.floor(Math.random() * up.length)], nw); }], milk: [2.6, () => sfx(Math.random() < .3 ? "moo" : "gulp")], smoke: [3.2, () => sfx("cough")]};
 function hitTree(i, t, manual){
   const s = treeS[i]; if (!s || s.down > t) return;
   s.hp--; s.shake = t + 250; if (manual) sfx("chop");
@@ -1241,7 +1242,7 @@ function editSay(){
       store("pred_av", String(sel)); store("pred_nick", j.nick); if (!guest) nick = j.nick;
       mw.nick = j.nick; mw.look = sel;
       if (v !== (mw.say || "")) { const k = await postJ({action: "say", key: deviceKey(), s: v}); if (k.ok) { mw.say = v; mw.cur = v; mw.sayT = v ? 4 : 0; } else toast(k.error || "口號沒存成功"); }
-      d.remove(); toast("✅ 角色已更新，大家都看得到"); sfx("win");
+      d.remove(); toast("✅ 角色已更新，大家都看得到"); sfx("win"); if (q === -1) { render(); return; }
       const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); loadBoard();
     } catch (e) { b.disabled = false; b.textContent = "💾 儲存"; msg((e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"); }
   };
@@ -1256,6 +1257,7 @@ function openRules(){
   d.querySelector(".no").onclick = () => d.remove();
   d.onclick = e => { if (e.target === d) d.remove(); };
 }
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#nickedit")) { e.preventDefault(); editSay(); } });
 document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#rulesbtn, .rulelink")) { e.preventDefault(); openRules(); } });
 function welcome(force){
   if (document.querySelector(".welcome")) return;
@@ -1278,7 +1280,7 @@ function welcome(force){
       if (!j.ok) throw new Error(j.error || "沒存成功");
       store("pred_nick", j.nick); store("pred_av", String(av)); store("pred_welcomed", "1"); if (!j.guest) nick = j.nick;
       d.remove(); sfx("win"); toast("👋 歡迎 " + j.nick + "！點「我的角色」可以換造型");
-      await loadBoard(); const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML();
+      await loadBoard(); if (q === -1) render(); else { const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); }
     } catch (e) { d.querySelectorAll("button").forEach(x => x.disabled = false); msg((e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"); }
   };
   d.querySelector(".ok").onclick = () => go(false);
