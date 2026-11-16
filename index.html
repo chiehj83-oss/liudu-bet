@@ -231,6 +231,15 @@ h1.neon{display:table;margin:6px auto 0;padding:8px 16px 10px;font-size:38px;let
 .smbb p.sub2{color:#94b0c2;font-size:9px;margin-top:2px;padding-top:2px;border-top:1px dashed #566c86}
 .welcome .wl{text-align:left;line-height:1.7;margin:4px 0}.welcome .wnick{width:100%;box-sizing:border-box}.welcome .wnote{font-size:12px;color:#ffcd75;margin:8px 0 0}
 .walker .hats.cloud svg{animation:rain .6s steps(2) infinite}@keyframes rain{50%{transform:translateY(1px)}}
+.z-air{background:linear-gradient(#73eff7 0 38%,#94b0c2 38% 42%,#333c57 42%);border-left:4px solid #566c86;overflow:hidden}
+.z-air .rw{position:absolute;left:0;right:0;bottom:30px;height:3px;background:repeating-linear-gradient(90deg,#f4f4f4 0 10px,transparent 10px 20px)}
+.z-air .tower{position:absolute;right:6px;bottom:46px;line-height:0}
+.z-air .plane{position:absolute;top:30px;left:-40px;line-height:0;animation:fly 7s linear infinite}
+.z-air .plane.p2{top:12px;animation:fly2 9s linear -4s infinite}.z-air .plane.p2 svg{transform:scaleX(-1)}
+@keyframes fly{to{left:110%}}@keyframes fly2{from{left:110%}to{left:-40px}}
+.z-air .hit{position:absolute;color:#ffcd75;font-size:11px;font-weight:900;white-space:nowrap;text-shadow:0 0 4px #b13e53;animation:pop 1.2s ease-out forwards;pointer-events:none;z-index:3}
+@keyframes pop{0%{transform:scale(.4);opacity:1}100%{transform:translateY(-14px) scale(1.2);opacity:0}}
+.yard .z-air b{animation-delay:6.8s}
 </style>
 </head>
 <body>
@@ -701,6 +710,7 @@ function sfx(kind){
   if (kind === "moo") { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(170, t); o.frequency.linearRampToValueAtTime(120, t + .8); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.18, t + .12); g.gain.linearRampToValueAtTime(0, t + .9); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .95); }
   if (kind === "chop") tone("pulse", 220, t, .05, .3, .5);
   if (kind === "fall") [60,55,50,43].forEach((m,i) => tone("pulse", mtof(m), t + i * .08, .12, .25, .5));
+  if (kind === "shoot") { tone("pulse", 880, t, .05, .12, .5); tone("pulse", 1760, t + .06, .08, .12, .25); }
   if (kind === "tick") tone("pulse", 1319, t, .03, .15, .25);
   if (kind === "card") [1568, 2093, 1760].forEach((f, i) => tone("pulse", f, t + i * .04, .04, .14, .5));
   if (kind === "err") { tone("pulse", 196, t, .15, .25, .5); tone("pulse", 147, t + .15, .3, .25, .5); }
@@ -752,8 +762,9 @@ function propRows(rows, pat){
   return rows.map((r,i) => { const o = pat[i - hr]; return r.slice(0,9) + (o || r.slice(9).replace(/[wky]/g, ".")); });
 }
 const AXE_UP = {"-3":"..ZZ","-2":".oZZ","-1":".o..","0":"o...","1":"...."}, AXE_DN = {"-1":"....","0":"oooZ","1":"..ZZ"};
+const SLING_A = {"-3":"o..o","-2":".oo.","-1":".o..","0":"o...","1":"...."}, SLING_B = {"-3":"oKKo","-2":".oo.","-1":".o..","0":"o...","1":"...."};
 const MILK = {"-6":".BB.","-5":".WW.","-4":"kWWk","-3":"kWWk","-2":"kBBk","-1":"kWWk","0":"kWWk","1":".kk."};
-LOOKS.forEach(L => { L.P = {smoke:[cigRows(L.A), cigRows(L.B)], tree:[propRows(L.A, AXE_UP), propRows(L.B, AXE_DN)], milk:[propRows(L.A, MILK), propRows(L.B, MILK)], none:[propRows(L.A, {}), propRows(L.B, {})]}; });
+LOOKS.forEach(L => { L.P = {smoke:[cigRows(L.A), cigRows(L.B)], tree:[propRows(L.A, AXE_UP), propRows(L.B, AXE_DN)], milk:[propRows(L.A, MILK), propRows(L.B, MILK)], air:[propRows(L.A, SLING_A), propRows(L.B, SLING_B)], none:[propRows(L.A, {}), propRows(L.B, {})]}; });
 const ITEM_PAT = {
   boba: {"-6":"...k","-5":"..k.","-4":"WWWW","-3":"cccc","-2":"cccc","-1":"cKcc","0":"KcKK","1":"cKKc"},
   wine: {"-6":"W..W","-5":"WRRW","-4":"WRRW","-3":".WW.","-2":".W..","-1":".W..","0":"WWW.","1":"...."},
@@ -772,11 +783,12 @@ const ITEM_PAT = {
 LOOKS.forEach(L => Object.keys(ITEM_PAT).forEach(k => { L.P["it_" + k] = [propRows(L.A, ITEM_PAT[k]), propRows(L.B, ITEM_PAT[k])]; }));
 const ITEM_EMO = ITEM_PAT;
 const ITEM_LIST = [["", "🍺 啤酒"], ["taibeer", "🍺 台啤"], ["boba", "🧋 珍奶"], ["wine", "🍷 紅酒"], ["cocktail", "🍸 調酒"], ["champ", "🍾 香檳"], ["drum", "🍗 雞腿"], ["burger", "🍔 漢堡"], ["pizza", "🍕 披薩"], ["melon", "🍉 西瓜"], ["lolli", "🍭 棒棒糖"], ["rose", "🌹 玫瑰"], ["basket", "🏀 籃球"], ["cash", "💵 鈔票"]];
-const ZONES = ["smoke", "tree", "milk"], ZMSG = {smoke:"🚬 你走進吸菸區了", tree:"🪓 去砍樹囉", milk:"🥛 來一瓶鮮乳"};
+const ZONES = ["smoke", "tree", "milk", "air"], ZMSG = {smoke:"🚬 你走進吸菸區了", tree:"🪓 去砍樹囉", milk:"🥛 來一瓶鮮乳", air:"✈️ 拿彈弓射飛機！"};
+const PLANE_SVG = '<svg class="px" viewBox="0 0 12 6" width="36" height="18"><rect x="6" y="0" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="8" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="0" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="1" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="2" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="2" width="1" height="1" fill="#41a6f6"/><rect x="8" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="9" y="2" width="1" height="1" fill="#41a6f6"/><rect x="10" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="11" y="2" width="1" height="1" fill="#3b5dc9"/><rect x="0" y="3" width="1" height="1" fill="#b13e53"/><rect x="1" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="2" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="8" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="9" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="10" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="5" width="1" height="1" fill="#f4f4f4"/></svg>', TOWER_SVG = '<svg class="px" viewBox="0 0 7 7" width="14" height="14"><rect x="2" y="0" width="1" height="1" fill="#333c57"/><rect x="3" y="0" width="1" height="1" fill="#333c57"/><rect x="4" y="0" width="1" height="1" fill="#333c57"/><rect x="1" y="1" width="1" height="1" fill="#333c57"/><rect x="2" y="1" width="1" height="1" fill="#73eff7"/><rect x="3" y="1" width="1" height="1" fill="#73eff7"/><rect x="4" y="1" width="1" height="1" fill="#73eff7"/><rect x="5" y="1" width="1" height="1" fill="#333c57"/><rect x="2" y="2" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="2" width="1" height="1" fill="#c2c3c7"/><rect x="4" y="2" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="3" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="4" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="5" width="1" height="1" fill="#c2c3c7"/><rect x="2" y="6" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="6" width="1" height="1" fill="#c2c3c7"/><rect x="4" y="6" width="1" height="1" fill="#c2c3c7"/></svg>';
 const YD = 170, YARD = 150;
-function zBounds(z, bw){ const W = bw - 39, Z = Math.round(bw * 0.68), H = Math.round(bw / 2);
-  return z === "smoke" ? [Z, W] : z === "tree" ? [0, H - 45] : z === "milk" ? [H + 6, W] : [0, Z - 39]; }
-function zY(z){ return (z === "tree" || z === "milk") ? [4, 48] : [YD + 4, YD + 274]; }
+function zBounds(z, bw){ const W = bw - 39, Z = Math.round(bw * 0.68), T = Math.round(bw / 3);
+  return z === "smoke" ? [Z, W] : z === "tree" ? [0, T - 39] : z === "milk" ? [T + 4, 2 * T - 39] : z === "air" ? [2 * T + 4, W] : [0, Z - 39]; }
+function zY(z){ return (z === "tree" || z === "milk" || z === "air") ? [4, 48] : [YD + 4, YD + 274]; }
 function zY2(z){ return z === "smoke" ? [YD + 4, YD + 160] : zY(z); }
 const HUMANS = [0, 1, 2, 5];
 function lookOf(nick, av){ return (av >= 0 && av < LOOKS.length) ? av : HUMANS[(hash(nick) >>> 16) % 4]; }
@@ -871,7 +883,7 @@ document.addEventListener("click", e => { if (e.target.closest && e.target.close
 function stageLo(w, y){ return (!w.zone && info && info.notice && (y === undefined ? w.y : y) > 380) ? 158 : 0; }
 function lobbyHTML(){
   const big = true;
-  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div>' + bunnyStage() + '<div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div><div class="smz"><b>🚬 吸菸區</b></div>' + bunnyStage() + '<div class="yard"><div class="z-tree"><b>🪓 砍樹包廂</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 鮮乳包廂</b>' + COW + COW + '</div><div class="z-air"><b>✈️ 松山機場</b><div class="rw"></div><span class="tower">' + TOWER_SVG + '</span><span class="plane">' + PLANE_SVG + '</span><span class="plane p2">' + PLANE_SVG + '</span></div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
@@ -893,6 +905,8 @@ function tickLobby(t){
   const dsy = box.querySelector(".djsay"); if (dsy) { if (dsy.textContent !== djLine) dsy.textContent = djLine; dsy.style.display = djShow > 0 ? "" : "none"; }
   const choppers = walkers.filter(w => w.zone === "tree").length;
   if (choppers) { chopAcc += dt * choppers * 0.25; if (chopAcc >= 1) { chopAcc = 0; const up = treeS.map((s,i) => i).filter(i => !(treeS[i].down > t)); if (up.length) hitTree(up[Math.floor(Math.random() * up.length)], t); } }
+  const shooters = walkers.filter(w => w.zone === "air").length;
+  if (shooters) { shotAcc += dt * Math.min(shooters, 3) * 0.35; if (shotAcc >= 1) { shotAcc = 0; const za = box.querySelector(".z-air"); if (za) { const h = document.createElement("span"); h.className = "hit"; h.textContent = Math.random() < .55 ? "💥 打中了！" : "😵 沒中"; h.style.left = (8 + Math.random() * 50) + "%"; h.style.top = (8 + Math.random() * 22) + "px"; za.appendChild(h); setTimeout(() => h.remove(), 1300); sfx("shoot"); } } }
   box.querySelectorAll(".tree").forEach((el, i) => { const s = treeS[i]; if (!s) return; el.classList.toggle("down", s.down > t); el.classList.toggle("shake", s.shake > t); });
   box.querySelectorAll(".walker").forEach(el => {
     const w = walkers[+el.dataset.i]; if (!w) return;
@@ -956,7 +970,7 @@ document.addEventListener("click", e => {
     }
     toast(musicOn ? "🎧 DJ：放歌！全場跳起來！" : "🎧 全場跳起來！打開右上角 ♪ 才聽得到 DJ 的歌");
     return; }
-  const zone = cy + 20 < YARD ? (cx + 19 < box.clientWidth / 2 ? "tree" : "milk") : (cx + 19 >= Z ? "smoke" : null);
+  const zone = cy + 20 < YARD ? (cx + 19 < box.clientWidth / 3 ? "tree" : cx + 19 < box.clientWidth * 2 / 3 ? "milk" : "air") : (cx + 19 >= Z ? "smoke" : null);
   const b = zBounds(zone, box.clientWidth), yb = zY2(zone);
   w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(b[0], Math.min(b[1], cx)); w.jy1 = Math.max(yb[0], Math.min(yb[1], cy)); w.jt = 0;
   if (zone === null && w.jx1 < stageLo({zone: null}, w.jy1)) w.jx1 = 158;
@@ -975,7 +989,7 @@ const SAY_PRESETS = ["我賭三杯！", "今晚不醉不歸", "投票了沒？",
 const DJ_LINES = ["如果你是DJ你會愛我嗎？", "小妹你別慌", "這是北部的口音", "這是中部的口音"];
 let djT = 0, djNext = 3, djLine = "", djShow = 0;
 const treeS = [0,1,2].map(() => ({hp: 6, down: 0, shake: 0}));
-let chopAcc = 0;
+let chopAcc = 0, shotAcc = 0;
 function hitTree(i, t, manual){
   const s = treeS[i]; if (!s || s.down > t) return;
   s.hp--; s.shake = t + 250; if (manual) sfx("chop");
