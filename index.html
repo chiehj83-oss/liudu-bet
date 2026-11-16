@@ -1247,11 +1247,11 @@ function editSay(){
   };
 }
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("button, .chip, .toprow .smbb"); if (b && !b.disabled) sfx("tick"); }, true);
-const RULES_HTML = '<div class="rules"><h3>🍻 開票預測酒吧・入店須知</h3><p class="rq">不同陣營，可以同桌乾杯嗎？</p><p>藍隊、綠隊、白隊，還有無陣營的路人玩家，今晚都擠在同一個舞池裡。開票前大家是對手，打烊後還是要一起住在這座島上。</p><h4>🚪 01｜進門先把刀收起來</h4><p>政治立場不同，不代表對方是壞人。支持不同政黨、不同政策，都是正常的公民選擇。</p><ul><li>可以批評政策，不用攻擊支持者。</li><li>可以質疑政治人物，不用把整個陣營當成魔王。</li><li>吵輸了請自罰一杯，不要私訊對方祖宗十八代。</li></ul><h4>🔍 02｜看到爆料？先解任務：情報查證四步驟</h4><div class="rg2"><div><b>🙋 誰說的？</b>來源是誰？有沒有原始資料？</div><div><b>🔎 證據呢？</b>有文件、數據，還是只有一張截圖？</div><div><b>🧩 少了什麼？</b>有沒有斷章取義、省略前因後果？</div><div><b>🔄 換邊想想？</b>如果是你支持的人做的，標準還一樣嗎？</div></div><p>任務全部完成，才可以按轉傳。</p><h4>⚖️ 03｜所有陣營，同一套遊戲規則</h4><div class="rg3"><div><b>💰 貪污</b>誰做的都要查</div><div><b>⚖️ 司法</b>不能變成政治工具</div><div><b>🛡️ 國防</b>安全問題不能只看黨派</div><div><b>🗣️ 言論自由</b>不同意見也要受保障</div><div><b>💸 政治獻金</b>金流要透明</div><div><b>🏛️ 政府權力</b>誰執政都要被監督</div></div><h4>🏠 04｜本店最重要的生存守則</h4><p>我們可以不同隊，但不能把整間酒吧拆了。</p><p>民主不是每次都讓自己喜歡的人贏。自己不喜歡的人勝選時，也能接受公平的結果；同時保留監督、批評，還有下次用選票改變它的權利。</p><p class="rmain">🎮 玩家守則：不盲信、不抹黑、不造謠、不放棄思考。</p><p class="rjoke">違規玩家，罰去反虐童包廂被小孩圍毆一輪 🧒🏏<br>守規矩的玩家，開票夜贏了可以多喝一杯，輸了可以少喝一杯 😎</p></div>';
+const RULES_HTML = '<div class="rules"><h3>🍻 開票預測酒吧・入店須知</h3><p class="rq">藍、綠、白、無陣營，今晚都是同一間酒吧的酒客 🍺</p><p>開票前是對手，打烊後還是鄰居。</p><h4>🚪 進門先把刀收起來</h4><p>立場不同不是壞人。罵政策可以，罵人祖宗不行；吵輸了自罰一杯。</p><h4>🔍 轉傳前，先過酒保四關</h4><div class="rg2"><div><b>🙋 誰說的？</b></div><div><b>🔎 證據呢？</b></div><div><b>🧩 少了什麼？</b></div><div><b>🔄 換邊想想？</b></div></div><p class="rmain">🎮 不盲信、不抹黑、不造謠、不放棄思考</p><p style="text-align:center">我們可以不同隊，但別把酒吧拆了。</p><p class="rjoke">違規者，罰去反兒虐包廂被小孩圍毆一輪 🧒🏏</p></div>';
 function openRules(){
   if (document.querySelector(".rulesbox")) return;
   const d = document.createElement("div"); d.className = "sayed rulesbox";
-  d.innerHTML = '<div>' + RULES_HTML + '<p><button class="go ghost no">我知道了，進去喝 🍺</button></p></div>';
+  d.innerHTML = '<div>' + RULES_HTML + '<p style="text-align:center"><button class="go ghost no">乾杯，進去喝 🍺</button></p></div>';
   document.body.appendChild(d);
   d.querySelector(".no").onclick = () => d.remove();
   d.onclick = e => { if (e.target === d) d.remove(); };
