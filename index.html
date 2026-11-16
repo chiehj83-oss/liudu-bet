@@ -207,6 +207,7 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .walker.me{z-index:999 !important}
 .walker .nm.shine{color:#2a1a00;background:linear-gradient(90deg,#ffcd75,#fff6c8,#ffcd75);background-size:200% 100%;box-shadow:0 0 0 2px #fff6c8,0 0 10px 3px #ffcd75;animation:nmshine 1.4s linear infinite}
 @keyframes nmshine{0%{background-position:0 0;box-shadow:0 0 0 2px #fff6c8,0 0 6px 2px #ffcd75}50%{box-shadow:0 0 0 2px #ffcd75,0 0 14px 5px #fff6c8}100%{background-position:200% 0;box-shadow:0 0 0 2px #fff6c8,0 0 6px 2px #ffcd75}}
+.sayed.tong{max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .tong .tboard{margin:10px auto 4px;max-width:300px;text-align:left;font-size:14px;background:rgba(0,0,0,.25);padding:6px 10px;border:2px solid #ffcd75}
 .tong .tboard>b{display:block;text-align:center;margin-bottom:4px}
 .tong .tboard div{margin:0;min-height:0;display:flex;justify-content:space-between;gap:8px;padding:1px 0}
@@ -776,7 +777,12 @@ function sfx0(kind){
   if (AC.state === "suspended") AC.resume();
   const t = AC.currentTime + 0.01;
   if (kind === "coin") { tone("pulse", 988, t, .07, .25, .5); tone("pulse", 1319, t + .07, .22, .25, .5); }
-  if (kind === "win") [72,76,79,84,79,84].forEach((m,i) => tone("pulse", mtof(m), t + i * .09, .16, .22, .25));
+  if (kind === "win") {
+    [[55,59,62],[55,59,62]].forEach((ch, i) => ch.forEach(n => tone("square", mtof(n), t + i * .13, .1, .07)));
+    [60,64,67,72].forEach(n => tone("square", mtof(n), t + .3, .55, .08));
+    tone("triangle", mtof(48), t + .3, .6, .3);
+    [96,93,91,88,96,100].forEach((n, i) => tone("pulse", mtof(n), t + .32 + i * .06, .07, .1, .5));
+  }
   if (kind === "moo") { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.setValueAtTime(170, t); o.frequency.linearRampToValueAtTime(120, t + .8); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.06, t + .12); g.gain.linearRampToValueAtTime(0, t + .9); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .95); }
   if (kind === "chop") { tone("pulse", 160, t, .09, .45, .5); tone("pulse", 520, t, .025, .25, .125); const len = Math.floor(AC.sampleRate * .08), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / len); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "lowpass"; f.frequency.value = 1200; g.gain.value = .6; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(SFXON && fxBus ? fxBus : master); sr.start(t); }
   if (kind === "fall") [60,55,50,43].forEach((m,i) => tone("pulse", mtof(m), t + i * .08, .12, .25, .5));
@@ -786,7 +792,7 @@ function sfx0(kind){
   if (kind === "shoot") { tone("pulse", 880, t, .05, .05, .5); tone("pulse", 1760, t + .06, .08, .05, .25); }
   if (kind === "gulp") [392, 330, 294].forEach((f, i) => tone("pulse", f, t + i * .1, .07, .12, .5));
   if (kind === "cough") [0, .24].forEach(d0 => { const len = Math.floor(AC.sampleRate * .14), buf = AC.createBuffer(1, len, AC.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / len); const sr = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); f.type = "bandpass"; f.frequency.value = 700; g.gain.value = .5; sr.buffer = buf; sr.connect(f); f.connect(g); g.connect(SFXON && fxBus ? fxBus : master); sr.start(t + d0); });
-  if (kind === "tick") tone("pulse", 1319, t, .03, .15, .25);
+  if (kind === "tick") { tone("pulse", 880, t, .05, .3, .5); tone("pulse", 1320, t + .035, .06, .22, .5); }
   if (kind === "card") [1568, 2093, 1760].forEach((f, i) => tone("pulse", f, t + i * .04, .04, .14, .5));
   if (kind === "err") { tone("pulse", 196, t, .15, .25, .5); tone("pulse", 147, t + .15, .3, .25, .5); }
 }
@@ -1198,8 +1204,8 @@ function openTong(){
       if (S.used < S.rounds) body += '<div class="chips">' + [1, 5, 10].map(n => '<button class="chip tbet' + (n === bet ? ' sel' : '') + '" data-n="' + n + '">押 ' + n + ' 枚 🪙</button>').join("") + '</div><p><button class="go tplay">🀄 開牌</button></p>';
       else body += '<p class="dmsg">🌙 今天 10 把推完了，明天再來！</p>';
     }
-    const rk = tongRank().slice(0, 10);
-    body += '<div class="tboard"><b>🏆 推筒子排行榜</b>' + (rk.length ? rk.map((x, k) => '<div class="' + (k < 3 && x.t > 0 ? 'top' : '') + (mw && x.n === mw.nick ? ' mine' : '') + '"><span>' + (k < 3 && x.t > 0 ? ['🥇','🥈','🥉'][k] : (k + 1) + '.') + ' ' + esc(x.n) + (k === 0 && x.t > 0 ? ' <em class="tgod">👑亞洲筒神</em>' : '') + '</span><span>' + (x.t > 0 ? '+' : '') + x.t + '</span></div>').join('') : '<div><span>還沒有人上榜，第一個就是你</span></div>') + '<i>前三名（籌碼為正）名牌會閃亮 ✨ 第一名封「亞洲筒神」👑</i></div>';
+    const rk = tongRank().slice(0, 5);
+    body = '<div class="tboard"><b>🏆 推筒子排行榜</b>' + (rk.length ? rk.map((x, k) => '<div class="' + (k < 3 && x.t > 0 ? 'top' : '') + (mw && x.n === mw.nick ? ' mine' : '') + '"><span>' + (k < 3 && x.t > 0 ? ['🥇','🥈','🥉'][k] : (k + 1) + '.') + ' ' + esc(x.n) + (k === 0 && x.t > 0 ? ' <em class="tgod">👑亞洲筒神</em>' : '') + '</span><span>' + (x.t > 0 ? '+' : '') + x.t + '</span></div>').join('') : '<div><span>還沒有人上榜，第一個就是你</span></div>') + '<i>前三名（籌碼為正）名牌會閃亮 ✨ 第一名封「亞洲筒神」👑</i></div>' + body;
     d.innerHTML = '<div><h3 style="margin:0 0 4px">🀄 推筒子</h3>' + body + '<p><button class="go ghost tclose">離開賭桌</button></p><p class="drule">規則：你和莊家各拿兩張筒子牌。對子最大（白板對＞9筒對＞…＞1筒對）；沒有對子就比兩張加起來的個位數，9 點最大，0 點「鱉十」最小，白板算半點；點數一樣比單張大的。押 1、5 或 10 枚代幣：贏了拿回同樣數量的籌碼，拿對子贏翻倍；輸了扣同樣數量，和局退回。籌碼只算推筒子排行榜，不影響帽子。每天 10 把。</p></div>';
     if (busy) d.querySelectorAll("button:not(.tclose)").forEach(b => b.disabled = true);
     d.querySelectorAll(".tbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; draw(); });
@@ -1333,7 +1339,13 @@ function editSay(){
     } catch (e) { b.disabled = false; b.textContent = "💾 儲存"; msg((e && e.message && !/fetch|network|JSON/i.test(e.message)) ? e.message : "連線失敗，再試一次"); }
   };
 }
-document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("button, .chip, .toprow .smbb"); if (b && !b.disabled) sfx("tick"); }, true);
+document.addEventListener("click", e => {
+  let el = e.target, hit = null;
+  for (let k = 0; el && el.nodeType === 1 && k < 6; k++, el = el.parentElement) {
+    if (el.matches("button, a, .chip, .smbb, [onclick], [role=button], select, label, input[type=checkbox], input[type=radio]") || getComputedStyle(el).cursor === "pointer") { hit = el; break; }
+  }
+  if (hit && !hit.disabled) sfx("tick");
+}, true);
 const RULES_HTML = '<div class="rules"><h3>🍻 開票預測酒吧・入店須知</h3><p class="rq">藍、綠、白、無陣營，今晚都是同一間酒吧的酒客 🍺</p><p>開票前是對手，打烊後還是鄰居。</p><h4>🚪 進門先把刀收起來</h4><p>立場不同不是壞人。罵政策可以，罵人祖宗不行；吵輸了自罰一杯。</p><h4>🔍 轉傳前，先過酒保四關</h4><div class="rg2"><div><b>🙋 誰說的？</b></div><div><b>🔎 證據呢？</b></div><div><b>🧩 少了什麼？</b></div><div><b>🔄 換邊想想？</b></div></div><p class="rmain">🎮 不盲信、不抹黑、不造謠、不放棄思考</p><p style="text-align:center">我們可以不同隊，但別把酒吧拆了。</p><p class="rjoke">違規者，罰去反兒虐包廂被小孩圍毆一輪 🧒🏏</p></div>';
 function openRules(){
   if (document.querySelector(".rulesbox")) return;
