@@ -771,7 +771,7 @@ function propRows(rows, pat){
 const AXE_UP = {"-3":"..ZZ","-2":".oZZ","-1":".o..","0":"o...","1":"...."}, AXE_DN = {"-1":"....","0":"oooZ","1":"..ZZ"};
 const SLING_A = {"-3":"o..o","-2":".oo.","-1":".o..","0":"o...","1":"...."}, SLING_B = {"-3":"oKKo","-2":".oo.","-1":".o..","0":"o...","1":"...."};
 const MILK = {"-6":".BB.","-5":".WW.","-4":"kWWk","-3":"kWWk","-2":"kBBk","-1":"kWWk","0":"kWWk","1":".kk."};
-LOOKS.forEach(L => { L.P = {smoke:[cigRows(L.A), cigRows(L.B)], tree:[propRows(L.A, AXE_UP), propRows(L.B, AXE_DN)], milk:[propRows(L.A, MILK), propRows(L.B, MILK)], air:[propRows(L.A, SLING_A), propRows(L.B, SLING_B)], none:[propRows(L.A, {}), propRows(L.B, {})]}; });
+LOOKS.forEach(L => { L.P = {smoke:[cigRows(L.A), cigRows(L.B)], tree:[propRows(L.A, AXE_UP), propRows(L.B, AXE_DN)], milk:[propRows(L.A, MILK), propRows(L.B, MILK)], air:[propRows(L.A, SLING_A), propRows(L.B, SLING_B)], kid:[propRows(L.A, {}), propRows(L.B, {})], none:[propRows(L.A, {}), propRows(L.B, {})]}; });
 const ITEM_PAT = {
   boba: {"-6":"...k","-5":"..k.","-4":"WWWW","-3":"cccc","-2":"cccc","-1":"cKcc","0":"KcKK","1":"cKKc"},
   wine: {"-6":"W..W","-5":"WRRW","-4":"WRRW","-3":".WW.","-2":".W..","-1":".W..","0":"WWW.","1":"...."},
