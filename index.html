@@ -291,6 +291,7 @@ h1.neon{display:table;margin:6px auto 0;padding:8px 16px 10px;font-size:38px;let
 @media(max-width:480px){.rules .rg3{grid-template-columns:1fr 1fr}}.welcome .rulelink{color:#73eff7}
 .welcome>div{position:relative;max-width:320px}.welcome .wx{position:absolute;right:4px;top:2px;background:none;border:0;color:#94b0c2;font-size:18px;cursor:pointer;padding:4px}
 .nickbox{background:var(--panel);border:3px solid #566c86;padding:10px;text-align:center;font-size:16px;line-height:1.6}.nickbox b{color:var(--gold)}.nickbox .go{display:block;margin:8px auto 0;padding:8px 12px;font-size:15px;width:auto}
+.tong .ttable{display:flex;flex-direction:column;gap:10px;align-items:center;margin:10px 0}.tong .trow{display:flex;align-items:center;gap:6px}.tong .trow span{width:3em;text-align:right;color:#94b0c2}.tong .trow b{color:#ffcd75;min-width:5em;text-align:left;margin-left:4px}
 </style>
 </head>
 <body>
@@ -486,7 +487,7 @@ function render(){
       '<div class="hero">' + sprite("mega",4,"") + sprite("ballot",6,"bob") + sprite("mug",4,"") + '</div>' +
       '<h1 class="neon">開票預測酒吧</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
-      '<div class="toprow"><div class="tbtns"><button class="go ghost" id="mychar">🧍 我的角色</button><button class="go ghost" id="dragonbtn">🎴 射龍門</button><button class="go ghost" id="rulesbtn">📜 入店須知</button></div>' + billboard() + '</div>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
+      '<div class="toprow"><div class="tbtns"><button class="go ghost" id="mychar">🧍 我的角色</button><button class="go ghost" id="dragonbtn">🎴 射龍門</button><button class="go ghost" id="tongbtn">🀄 推筒子</button><button class="go ghost" id="rulesbtn">📜 入店須知</button></div>' + billboard() + '</div>' + lobbyHTML() + '<div class="lhint"><p>👆 舞池可以點</p><ul><li><b>地板</b>移動</li><li><b>別人</b>乾杯</li><li><b>自己</b>改角色</li><li><b>DJ 台</b>開趴</li><li><b>右下角 💬</b>聊天</li></ul></div>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
@@ -1147,6 +1148,68 @@ async function drCall(act, bet){
   const r = await fetch(API, {method:"POST", credentials:"omit", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"dragon", key: deviceKey(), act, bet})});
   return r.json();
 }
+
+const TG_POS = {2:[[6,2],[6,11]],3:[[2,2],[6,7],[10,11]],4:[[2,2],[10,2],[2,11],[10,11]],5:[[2,2],[10,2],[6,7],[2,11],[10,11]],6:[[2,2],[10,2],[2,7],[10,7],[2,11],[10,11]],7:[[2,1],[6,3],[10,5],[2,8],[10,8],[2,12],[10,12]],8:[[2,2],[6,2],[10,2],[4,7],[8,7],[2,11],[6,11],[10,11]],9:[[2,2],[6,2],[10,2],[2,7],[6,7],[10,7],[2,11],[6,11],[10,11]]};
+const TB = "#3b5dc9", TGC = "#38b764", TRC = "#b13e53";
+const TG_COL = {2:[TGC,TB],3:[TB,TRC,TGC],4:[TB,TGC,TGC,TB],5:[TB,TGC,TRC,TGC,TB],6:[TGC,TGC,TRC,TRC,TRC,TRC],7:[TGC,TGC,TGC,TRC,TRC,TRC,TRC],8:[TB,TB,TB,TB,TB,TB,TB,TB],9:[TB,TB,TB,TRC,TRC,TRC,TGC,TGC,TGC]};
+function tileSVG(n, w){
+  const W = 15, H = 20, t = [];
+  for (let y = 0; y < H; y++) { t.push([]); for (let x = 0; x < W; x++) t[y].push((x === 0 || x === W - 1 || y === 0 || y === H - 1) ? "#0d0e17" : (n < 0 || y >= H - 4) ? "#38b764" : y === H - 5 ? "#d6d0be" : "#f4f0e2"); }
+  t[0][0] = t[0][W - 1] = t[H - 1][0] = t[H - 1][W - 1] = null;
+  if (n < 0) { for (let y = 3; y < H - 3; y += 3) for (let x = 3; x < W - 2; x += 3) t[y][x] = "#257179"; }
+  else if (n === 1) { for (let y = 1; y < 15; y++) for (let x = 1; x < 14; x++) { const r = Math.hypot(x - 7, y - 7); if (r <= 1.2) t[y][x] = "#ffcd75"; else if (r <= 2.6) t[y][x] = TRC; else if (r <= 4.4) t[y][x] = TGC; else if (r <= 5.6) t[y][x] = TB; } }
+  else if (n === 0) { for (let x = 3; x < 12; x++) { t[2][x] = TB; t[13][x] = TB; } for (let y = 2; y < 14; y++) { t[y][3] = TB; t[y][11] = TB; } }
+  else TG_POS[n].forEach((p, i) => { const c = TG_COL[n][i], x = p[0], y = p[1]; [[1,0],[0,1],[1,1],[2,1],[1,2]].forEach(q => { t[y + q[1]][x + q[0]] = c; }); t[y + 1][x + 1] = c === TRC ? "#ffcd75" : "#f4f0e2"; });
+  let r = ""; t.forEach((row, y) => row.forEach((c, x) => { if (c) r += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + c + '"/>'; }));
+  const ww = w || 45; return '<svg class="px" viewBox="0 0 15 20" width="' + ww + '" height="' + Math.round(ww * 4 / 3) + '">' + r + '</svg>';
+}
+function openTong(){
+  if (document.querySelector(".tong")) return;
+  const mw = walkers.find(v => v.nick === myNick());
+  const d = document.createElement("div"); d.className = "sayed dragon tong"; document.body.appendChild(d);
+  const bgm = musicOn ? (window.casinoAudio = window.casinoAudio || Object.assign(new Audio("casino.mp3"), {loop: true, volume: 0.35})) : null;
+  if (bgm) { stopMusic(); if (djAudio) djAudio.pause(); try { bgm.currentTime = 0; } catch (_) {} bgm.play().catch(() => { if (musicOn) startMusic(); }); }
+  let S = null, bet = 1, busy = false, msg = "洗牌中…", last = null;
+  const row = (arr, lab, nm) => '<div class="trow"><span>' + lab + '</span>' + arr.map(x => tileSVG(x, 42)).join("") + '<b>' + (nm || "") + '</b></div>';
+  const call = act => postJ({action: "tong", key: deviceKey(), act: act, bet: bet});
+  const draw = () => {
+    let body;
+    if (!mw) body = '<p class="dmsg">先在「我的角色」取名建立角色，才能上桌 🀄</p>';
+    else if (!S) body = '<p class="dmsg">' + msg + '</p>';
+    else {
+      body = '<p class="dsub">今天第 <b>' + S.used + '/' + S.rounds + '</b> 把 · 頭上 <b>' + S.h + '</b> 頂帽子</p>';
+      const sh = last || {d: [-1, -1], p: [-1, -1]};
+      body += '<div class="ttable">' + row(sh.d, '莊家', sh.dn) + row(sh.p, '你', sh.pn) + '</div><p class="dmsg">' + msg + '</p>';
+      if (S.used < S.rounds) body += '<div class="chips">' + [1, 5, 10].map(n => '<button class="chip tbet' + (n === bet ? ' sel' : '') + '" data-n="' + n + '">押 ' + n + ' 枚 🪙</button>').join("") + '</div><p><button class="go tplay">🀄 開牌</button></p>';
+      else body += '<p class="dmsg">🌙 今天 10 把推完了，明天再來！</p>';
+    }
+    d.innerHTML = '<div><h3 style="margin:0 0 4px">🀄 推筒子</h3>' + body + '<p><button class="go ghost tclose">離開賭桌</button></p><p class="drule">規則：你和莊家各拿兩張筒子牌。對子最大（白板對＞9筒對＞…＞1筒對）；沒有對子就比兩張加起來的個位數，9 點最大，0 點「鱉十」最小，白板算半點；點數一樣比單張大的。押 1、5 或 10 枚代幣：贏了戴上同樣數量的帽子，拿對子贏翻倍；輸了扣同樣數量，和局退回。每天 10 把。</p></div>';
+    if (busy) d.querySelectorAll("button:not(.tclose)").forEach(b => b.disabled = true);
+    d.querySelectorAll(".tbet").forEach(b => b.onclick = () => { bet = +b.dataset.n; draw(); });
+    d.querySelector(".tclose").onclick = () => { d.remove(); if (bgm) { bgm.pause(); if (musicOn) startMusic(); } };
+    const pb = d.querySelector(".tplay"); if (pb) pb.onclick = play;
+  };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const play = async () => {
+    if (busy) return; busy = true; msg = "發牌中…"; last = {d: [-1, -1], p: [-1, -1]}; draw();
+    try {
+      const j = await call("play");
+      if (!j.ok || j.error) { if (j.ok) S = j; msg = j.error || "出了點問題，再試一次"; busy = false; draw(); return; }
+      last = {d: [j.d[0], -1], p: [-1, -1]}; sfx("card"); draw(); await wait(500);
+      last.p = [j.p[0], -1]; sfx("card"); draw(); await wait(450);
+      last.p = [j.p[0], j.p[1]]; last.pn = j.pn; sfx("card"); draw(); await wait(700);
+      msg = "莊家開牌……"; draw(); await wait(700);
+      last.d = [j.d[0], j.d[1]]; last.dn = j.dn; sfx("card"); S = j;
+      msg = j.res === "win" ? "🎉 你贏了！戴上 <b>" + j.delta + "</b> 頂帽子 🎩" + (j.delta > bet ? "（對子翻倍！）" : "") : j.res === "lose" ? "😵 莊家贏，扣 <b>" + (-j.delta) + "</b> 頂帽子" : "🤝 和局，押注退回";
+      sfx(j.res === "win" ? "win" : j.res === "lose" ? "err" : "coin"); if (j.res === "win") setTimeout(() => sfx("coin"), 500);
+      if (mw && j.delta) { mw.hats = (mw.hats || 0) + j.delta; const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); }
+    } catch (_) { msg = "連線失敗，再試一次"; }
+    busy = false; draw();
+  };
+  if (mw) call("open").then(j => { if (j.ok) { S = j; msg = S.used >= S.rounds ? "" : "押好代幣，按「開牌」！"; } else msg = j.error || "出了點問題"; draw(); }).catch(() => { msg = "連線失敗，再試一次"; draw(); });
+  draw();
+}
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest("#tongbtn")) openTong(); });
 function openDragon(){
   if (document.querySelector(".dragon")) return;
   const mw = walkers.find(v => v.nick === myNick());
