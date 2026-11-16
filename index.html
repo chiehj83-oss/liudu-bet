@@ -100,7 +100,11 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .floor i{animation:disco 2.4s steps(1) infinite;opacity:.85}
 @keyframes disco{0%{background:#b13e53}25%{background:#3b5dc9}50%{background:#38b764}75%{background:#5d275d}}
 .ball{position:absolute;left:calc(50% - 15px);top:0;z-index:2;overflow:visible;transform-origin:50% 0;transition:top .9s ease-out,scale .9s ease-out}
-.lobby.party .ball{top:58px!important;scale:3.2;z-index:800;filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px #73eff7);animation:ballspin 1.3s linear infinite}
+.lobby.party .ball{top:58px!important;scale:3.2;z-index:800;filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px #73eff7)}.lobby.party .dball b{animation-duration:.9s}
+.dball{width:26px;height:26px;left:calc(50% - 13px)!important}
+.dball i{position:absolute;left:12px;top:-60px;width:2px;height:60px;background:#566c86}
+.dball b{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 6px rgba(255,255,255,.35);background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95) 0 6%,rgba(255,255,255,0) 22%),radial-gradient(circle at 50% 50%,rgba(13,14,23,0) 45%,rgba(13,14,23,.75) 100%),repeating-linear-gradient(0deg,rgba(13,14,23,0) 0 3px,rgba(13,14,23,.55) 3px 4px),repeating-linear-gradient(90deg,#f4f4f4 0 3px,#566c86 3px 4px,#c2c3c7 4px 7px,#73eff7 7px 8px,#94b0c2 8px 11px,#333c57 11px 12px);background-size:auto,auto,100% 4px,24px 100%;animation:dspin 2.4s linear infinite}
+@keyframes dspin{to{background-position:0 0,0 0,0 0,24px 0}}
 @keyframes ballspin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
 .beam{position:absolute;top:30px;width:3px;height:3px;background:#f4f4f4;box-shadow:0 0 6px #fff;animation:beam 1.6s steps(4) infinite;z-index:1}
 @keyframes beam{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
@@ -858,7 +862,7 @@ function floorHTML(big){
   let beams = ""; for (let i = 0; i < 10; i++) beams += '<span class="beam" style="left:' + (8 + i * 9.3) + '%;top:' + (24 + (i * 13) % 50) + 'px;animation-delay:-' + (i * 0.37).toFixed(2) + 's"></span>';
   const pal = {k:"#0d0e17",g:"#94b0c2",w:"#f4f4f4",s:"#566c86"};
   let r = ""; BALL.forEach((row,y) => { for (let x = 0; x < row.length; x++) { const c = pal[row[x]]; if (c) r += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
-  return '<div class="floor"' + (big ? ' style="height:320px;bottom:' + YARD + 'px;grid-template-rows:repeat(11,1fr)"' : '') + '>' + tiles + '</div>' + beams + '<svg class="px ball" viewBox="0 0 10 9" width="30" height="27" style="top:6px">' + r + '<rect x="4.5" y="-9" width="1" height="9" fill="#566c86"/></svg>';
+  return '<div class="floor"' + (big ? ' style="height:320px;bottom:' + YARD + 'px;grid-template-rows:repeat(11,1fr)"' : '') + '>' + tiles + '</div>' + beams + '<div class="ball dball" style="top:8px"><i></i><b></b></div>';
 }
 const TREE = '<svg class="px tree" viewBox="0 0 9 12" width="27" height="36">' + ["..ggggg..",".ggGgggg.","gggggGggg","ggGgggggg","gggggggGg",".ggggggg.","..ggggg..","....o....","....o....","...ooo...","....o....","...ooo..."].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({g:"#257179",G:"#38b764",o:"#5d3a1a"})[c]+'"/>').join("")).join("") + '</svg>';
 const COW = '<svg class="px cow" viewBox="0 0 14 10" width="42" height="30">' + ["k..........k..",".kwwwwwwwkkwk.","wwwkkwwwwwwwww","wwkkkwwwwkkwpp","wwwkwwwkkkwwpp",".wwwwwwwkwww..",".wwwwwwwwww...","..w.w...w.w...","..k.k...k.k...","..............".slice(0)].map((r,y) => r.split("").map((c,x) => c === "." ? "" : '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+({w:"#f4f4f4",k:"#0d0e17",p:"#ff9eb0"})[c]+'"/>').join("")).join("") + '</svg>';
@@ -923,15 +927,15 @@ function fireShot(za, w){
   const hit = !!pl && Math.random() < .65; if (pl && !hit) { tx += 28; ty -= 16; }
   const b = document.createElement("span"); b.className = "bullet"; b.style.left = sx + "px"; b.style.top = sy + "px"; za.appendChild(b);
   sfx("shoot");
-  const an = b.animate([{transform: "translate(0,0)"}, {transform: "translate(" + (tx - sx) + "px," + (ty - sy) + "px)"}], {duration: 380, easing: "ease-out", fill: "forwards"});
-  an.onfinish = () => {
+  b.animate([{transform: "translate(0,0)"}, {transform: "translate(" + (tx - sx) + "px," + (ty - sy) + "px)"}], {duration: 380, easing: "ease-out", fill: "forwards"});
+  setTimeout(() => {
     b.remove();
     const t = document.createElement("span"); t.style.left = tx + "px"; t.style.top = Math.max(2, ty) + "px";
     if (hit) { t.className = "boom"; t.textContent = "💥"; pl.style.visibility = "hidden"; sfx("boom"); setTimeout(() => { pl.style.visibility = ""; }, 1600);
       const tag = document.createElement("span"); tag.className = "hit"; tag.textContent = "擊落！"; tag.style.left = Math.max(0, tx - 14) + "px"; tag.style.top = Math.max(0, ty + 8) + "px"; za.appendChild(tag); setTimeout(() => tag.remove(), 1300); }
     else { t.className = "hit"; t.textContent = "😵 沒中"; }
     za.appendChild(t); setTimeout(() => t.remove(), 1000);
-  };
+  }, 380);
 }
 function tickLobby(t){
   const box = $("lobby");
