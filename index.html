@@ -163,7 +163,7 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .smbb{position:absolute;right:4px;bottom:4px;width:150px;background:rgba(13,14,23,.88);border:2px solid #ffcd75;padding:3px 5px;font-size:10px;line-height:1.5;color:#f4f4f4;box-shadow:0 0 8px rgba(255,205,117,.35)}
 .smbb i{display:block;font-style:normal;color:#ffcd75;font-size:10px;border-bottom:1px dashed #566c86;margin-bottom:2px;text-align:center}
 .smbb p{margin:0;display:flex;justify-content:space-between;gap:6px}.smbb span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.smbb em{flex:none;font-style:normal;color:#ffcd75;text-align:right}
-.smbb p.bad{color:#ff77a8}.smbb p.bad em,.smbb p.bad tt{color:#ff77a8}.smbb em{width:3.1em}.smbb tt{flex:none;width:2.4em;text-align:right;font:inherit;color:#94b0c2}.smbb p.hd{color:#94b0c2;font-size:9px}.smbb p.hd em,.smbb p.hd tt{color:#94b0c2}.smbb span{flex:1}
+.smbb p.bad{color:#ff77a8}.smbb p.tg span{color:#ffcd75;text-shadow:0 0 4px rgba(255,205,117,.6)}.smbb p.tsub{border-top:1px dashed #566c86;margin-top:3px;padding-top:2px;color:#94b0c2}.smbb p.bad em,.smbb p.bad tt{color:#ff77a8}.smbb em{width:3.1em}.smbb tt{flex:none;width:2.4em;text-align:right;font:inherit;color:#94b0c2}.smbb p.hd{color:#94b0c2;font-size:9px}.smbb p.hd em,.smbb p.hd tt{color:#94b0c2}.smbb span{flex:1}
 @keyframes glint{0%,86%,100%{filter:none}90%,95%{filter:drop-shadow(0 0 3px #ffcd75) drop-shadow(0 0 7px #ffcd75) brightness(1.3)}}
 @keyframes zoneGlint{0%,86%,100%{box-shadow:none}90%,95%{box-shadow:inset 0 0 18px #ffcd75}}
 .walker.me .fa svg,.walker.me .fb svg{animation:glint 4s infinite 2s}
@@ -953,15 +953,19 @@ function billboard(){
   const top = ns.filter(o => +o.dg > 0).sort((x, y) => y.dg - x.dg || x.dp - y.dp).slice(0, 3);
   const bad = ns.filter(o => +o.dp > 0).sort((x, y) => y.dp - x.dp || x.dg - y.dg).slice(0, 2);
   const row = (l, o, c) => '<p' + (c ? ' class="' + c + '"' : '') + '><span>' + l + esc(o.n) + '</span><em>' + (o.dg > 0 ? '+' : '') + o.dg + '🎩</em><tt>' + (o.dp ? '×' + o.dp : '-') + '</tt></p>';
-  return '<div class="smbb" title="點我看完整排行"><i>🎴 射龍門 今日戰報</i><p class="hd"><span>玩家</span><em>帽數</em><tt>撞柱</tt></p>' +
+  return '<div class="smbb" title="點我看完整排行"><i>🎴 射龍門 ・ 🀄 推筒子 戰報</i><p class="hd"><span>玩家</span><em>帽數</em><tt>撞柱</tt></p>' +
     (top.length ? top.map((o, i) => row(['🥇', '🥈', '🥉'][i] + ' ', o)).join('') : '<p><span>今天還沒人射進</span></p>') +
     (bad.length ? '<p class="sub2"><span>撞柱榜</span></p>' + bad.map(o => row('💀 ', o, 'bad')).join('') : '') +
-    '<p class="more"><span>▸ 點我看完整排行</span></p></div>';
+    tongBoard(3) + '<p class="more"><span>▸ 點我看完整排行</span></p></div>';
+}
+function tongBoard(lim){
+  const tg = tongRank().filter(o => lim ? o.t > 0 : true).slice(0, lim || 999);
+  return '<p class="sub2 tsub"><span>🀄 推筒子榜</span></p>' + (tg.length ? tg.map((o, i) => '<p' + (o.t > 0 && i < 3 ? ' class="tg"' : (o.t < 0 ? ' class="bad"' : '')) + '><span>' + (o.t > 0 && i < 3 ? ['🥇', '🥈', '🥉'][i] + ' ' : (i + 1) + '. ') + esc(o.n) + '</span><em>' + (o.t > 0 ? '+' : '') + o.t + '🪙</em><tt>' + (o.t > 0 && i === 0 ? '👑' : '') + '</tt></p>').join('') : '<p><span>還沒人推出籌碼</span></p>');
 }
 function openRank(){
   const rows = rankRows(true);
   const d = document.createElement("div"); d.className = "sayed";
-  d.innerHTML = '<div><h3 style="margin:0 0 6px">🎴 射龍門 完整排行</h3><div class="smbb full">' + (rows ? '<p class="hd"><span>玩家</span><em>今日</em><tt>撞柱</tt><tt class="tot">總帽</tt></p>' + rows : '<p><span>還沒有人玩過</span></p>') + '</div><p><small>今日＝今天贏的減輸的帽子；💀＝今天撞柱最多；總帽＝頭上累積的帽子</small></p><p><button class="go ghost no">關閉</button></p></div>';
+  d.innerHTML = '<div><h3 style="margin:0 0 6px">🎴 射龍門 完整排行</h3><div class="smbb full">' + (rows ? '<p class="hd"><span>玩家</span><em>今日</em><tt>撞柱</tt><tt class="tot">總帽</tt></p>' + rows : '<p><span>還沒有人玩過</span></p>') + '</div><h3 style="margin:10px 0 6px">🀄 推筒子 完整排行</h3><div class="smbb full">' + tongBoard(0).replace(/^<p class="sub2 tsub">.*?<\/p>/, '<p class="hd"><span>玩家</span><em>籌碼</em><tt></tt></p>') + '</div><p><small>今日＝今天贏的減輸的帽子；💀＝今天撞柱最多；總帽＝頭上累積的帽子</small></p><p><button class="go ghost no">關閉</button></p></div>';
   document.body.appendChild(d);
   d.querySelector(".no").onclick = () => d.remove();
   d.onclick = e => { if (e.target === d) d.remove(); };
