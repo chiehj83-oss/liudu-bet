@@ -243,7 +243,9 @@ tr.me td{background:rgba(255,205,117,.18)}
 #main>.nickbox,#main>.howto{display:none}
 .tpair{display:flex;gap:8px;flex:1}.tpair .go{flex:1;margin:0;padding:6px 2px;font-size:13px;min-width:0}
 .hero .logo{animation:bob 2s steps(2) infinite}
-.toprow{display:flex;gap:12px;align-items:stretch;margin:0 0 12px}.tbtns{flex:0 0 calc(50% - 6px);display:flex;flex-direction:column;gap:10px}.tbtns .go{margin-top:0;flex:1;padding:10px 6px}.toprow .smbb{position:static;flex:1;width:auto;min-width:0;font-size:12px;padding:6px 8px}.toprow .smbb i{font-size:12px}.toprow .smbb p.hd{font-size:11px}
+.toprow{display:flex;gap:12px;align-items:stretch;margin:0 0 12px}#main>#start{display:none}
+#predbtn{font-size:15px;box-shadow:0 0 10px rgba(255,119,168,.55)}
+.tbtns{flex:0 0 calc(64% - 6px);display:flex;flex-direction:column;gap:10px}.tbtns .go{margin-top:0;flex:1;padding:10px 6px}.toprow .smbb{position:static;flex:1;width:auto;min-width:0;font-size:10px;line-height:1.35;padding:4px 5px;align-self:flex-start}.toprow .smbb i{font-size:10px}.toprow .smbb p.hd{font-size:9px}.toprow .smbb em{width:auto}.toprow .smbb tt{width:2.4em;white-space:nowrap}
 .bstage{position:absolute;left:4px;top:26px;width:150px;height:130px;z-index:700;pointer-events:none}
 .bstage .plat{position:absolute;left:12px;right:12px;bottom:0;height:12px;background:linear-gradient(#5d275d,#29366f);border-top:3px solid #ffcd75;box-shadow:0 0 12px rgba(255,119,168,.7)}
 .bstage .bunny{position:absolute;left:55px;bottom:12px;line-height:0}
@@ -530,7 +532,7 @@ function render(){
       '<div class="hero">' + LOGO_SVG + '</div>' +
       '<h1 class="neon">開票預測酒吧</h1><p class="sub">賭酒大賽 · ELECTION 2026 · 11.28</p>' +
       '<p class="lead">猜猜六都市長誰當選，押上幾杯酒<br>開票夜跟朋友一起對答案！</p>' +
-      '<div class="toprow"><div class="tbtns"><div class="tpair"><button class="go ghost" id="mychar">🧍 我的角色</button><button class="go ghost" id="rulesbtn">📜 入店須知</button></div><button class="go ghost" id="dragonbtn">🎴 射龍門</button><button class="go ghost" id="tongbtn">🀄 推筒子</button></div>' + billboard() + '</div>' + lobbyHTML() + '<p class="lhint1">👆 點地板移動・點別人乾杯・點 DJ 台開趴・右下角 💬 聊天</p>' +
+      '<div class="toprow"><div class="tbtns"><div class="tpair"><button class="go ghost" id="mychar">🧍 我的角色</button><button class="go ghost" id="rulesbtn">📜 入店須知</button></div><button class="go" id="predbtn">🗳️ 預測六都開票結果</button><button class="go ghost" id="dragonbtn">🎴 射龍門</button><button class="go ghost" id="tongbtn">🀄 推筒子</button></div>' + billboard() + '</div>' + lobbyHTML() + '<p class="lhint1">👆 點地板移動・點別人乾杯・點 DJ 台開趴・右下角 💬 聊天</p>' +
       (closed || (info && info.closed) ? '<p class="warn">▶ 下注已截止或暫停中，等開票吧。</p>' :
       (!info && !infoFailed ? '<p class="lead">NOW LOADING<span class="blink">…</span></p>' :
       (info && info.players && info.players.length ?
@@ -561,6 +563,7 @@ function render(){
     const pi = $("pass");
     if (pi) pi.addEventListener("input", () => { pass = pi.value; try { localStorage.setItem("pred_pass", pass); } catch (_) {} });
     if ($("start")) $("start").onclick = startGame;
+    if ($("predbtn")) $("predbtn").onclick = () => { const st = $("start"); if (st && !st.disabled) startGame(); else if (!st) openBoard(); else { toast("先到「我的角色」取個名字，才能下注喔"); const mc = $("mychar"); if (mc) mc.click(); } };
     startLobby();
     $("seeall").onclick = openBoard;
     return;
