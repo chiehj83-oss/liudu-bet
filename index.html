@@ -155,7 +155,23 @@ h2{font-size:22px;color:var(--gold);margin:26px 0 6px}
 .smz b{animation-delay:1.7s}.yard .z-tree b{animation-delay:3.4s}.yard .z-milk b{animation-delay:5.1s}
 @keyframes tagGlint{0%,86%,100%{background:#0d0e17;color:inherit;box-shadow:none}90%,95%{background:#ffcd75;color:#0d0e17;box-shadow:0 0 10px #ffcd75}}
 .yard .z-milk .cow{animation:glint 7s infinite 5.4s}.yard .z-tree .tree:not(.down):not(.shake){animation:glint 7s infinite 3.7s}
-.djz{animation:zoneGlint 14s infinite 4s}
+.djz{animation:zoneGlint 9s infinite 4s}
+.z-lunch .chef{position:absolute;bottom:30px;line-height:0;z-index:3;transition:left .6s,bottom .6s;animation:chefbob .5s steps(2) infinite}
+.z-lunch .chef svg{transition:none}
+.z-lunch .chef .ctag{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px;white-space:nowrap;font-style:normal;font-size:10px;line-height:1.3;color:#f4f4f4;background:#b13e53;border:2px solid #0d0e17;padding:0 4px}
+.z-lunch .chef::after{content:"";position:absolute;left:4px;right:4px;bottom:-4px;height:6px;background:repeating-linear-gradient(90deg,#ef7d57 0 4px,#ffcd75 4px 8px);animation:flick .25s steps(2) infinite;opacity:.9}
+@keyframes flick{50%{transform:translateX(2px) scaleY(1.6);opacity:.6}}
+@keyframes chefbob{50%{transform:translateY(-3px)}}
+.z-lunch .chefsay{background:#b13e53!important;color:#f4f4f4!important;border-color:#0d0e17!important;font-weight:bold}
+.z-screw .scoin{position:absolute;width:12px;height:12px;background:#ffcd75;border:2px solid #c67c3a;border-radius:50%;box-shadow:inset -2px -2px 0 #e0a83a,0 0 6px #ffcd75;z-index:4;animation:coinpop 1.1s ease-out forwards}
+.z-screw .scplus{position:absolute;z-index:4;font-size:11px;font-weight:bold;color:#ffcd75;text-shadow:1px 1px 0 #0d0e17;animation:coinplus 1.1s ease-out forwards}
+@keyframes coinpop{0%{transform:translateY(0) scaleX(1)}25%{transform:translateY(-22px) scaleX(.3)}50%{transform:translateY(-30px) scaleX(1)}75%{transform:translateY(-24px) scaleX(.3)}100%{transform:translateY(-10px) scaleX(1);opacity:0}}
+@keyframes coinplus{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+.pball{cursor:pointer;animation:glint 9s infinite 8.5s}
+.pball::after{content:"👆 點我開趩";position:absolute;left:50%;top:44px;transform:translateX(-50%);font-size:11px;background:#ffcd75;color:#0d0e17;padding:1px 6px;border:2px solid #0d0e17;white-space:nowrap;z-index:7;opacity:0;pointer-events:none;animation:hintPop 9s infinite 8.5s}
+.lobby.party .pball::after{display:none}
+.yard>div{animation:zoneGlint 12s infinite}
+.yard>div:nth-child(1){animation-delay:1s}.yard>div:nth-child(2){animation-delay:1.6s}.yard>div:nth-child(3){animation-delay:2.2s}.yard>div:nth-child(4){animation-delay:2.8s}.yard>div:nth-child(5){animation-delay:3.4s}.yard>div:nth-child(6){animation-delay:4s}.yard>div:nth-child(7){animation-delay:4.6s}.yard>div:nth-child(8){animation-delay:5.2s}
 .djz::before{content:"👆 點我開趴";position:absolute;left:50%;top:44px;transform:translateX(-50%);font-size:11px;background:#ffcd75;color:#0d0e17;padding:1px 6px;border:2px solid #0d0e17;white-space:nowrap;z-index:7;opacity:0;pointer-events:none;animation:hintPop 14s infinite 4s}
 @keyframes hintPop{0%,82%,100%{opacity:0;transform:translateX(-50%) scale(.8)}86%,96%{opacity:1;transform:translateX(-50%) scale(1)}}
 #chatbtn::before{content:"來聊天吧！";position:absolute;right:64px;top:12px;white-space:nowrap;font-size:13px;background:#f4f4f4;color:#0d0e17;border:2px solid #0d0e17;padding:2px 8px;opacity:0;pointer-events:none;animation:hintPop2 20s infinite 8s}
@@ -929,6 +945,8 @@ const ITEM_EMO = ITEM_PAT;
 const ITEM_LIST = [["", "🍺 啤酒"], ["taibeer", "🍺 台啤"], ["boba", "🧋 珍奶"], ["wine", "🍷 紅酒"], ["cocktail", "🍸 調酒"], ["champ", "🍾 香檳"], ["drum", "🍗 雞腿"], ["burger", "🍔 漢堡"], ["pizza", "🍕 披薩"], ["melon", "🍉 西瓜"], ["lolli", "🍭 棒棒糖"], ["rose", "🌹 玫瑰"], ["basket", "🏀 籃球"], ["cash", "💵 鈔票"]];
 const ZONES = ["smoke", "tree", "milk", "air", "kid", "dent", "screw", "lunch"], ZMSG = {lunch:"🍱 營養午餐食堂：今天的燉肉…好像怪怪的 🤢", screw:"🔩 鎖螺絲研究室：戴上工地帽，開工！", dent:"🦷 巧慧牙醫幫你補門牙", kid:"🧒 反兒虐包廂：被小孩圍毆了！多一分關心，保護專線 113", smoke:"🚬 歡迎來到台北無菸城市（？）", tree:"🪓 伐伐伐伐木工上工", milk:"🥛 來一瓶鮮乳", air:"✈️ 拿彈弓射飛機！"};
 const KID_A = ["...hhh.......","..hhhhh......","..hksks......","..sssss......","...ttt.......","stttttts.....","s.ttttt.s....","..ppppp......","..pp.pp......",".kk...kk....."], KID_B = ["s..hhh.......","s.hhhhh......","s.hksks......","s.sssss......","s..ttt.......",".ttttttts....","..ttttt.s....","..ppppp......","...ppp.......","...kkk......."];
+const CHEF_ROWS = [".O.WWW.O.....","..WWWWW......","..WWWWW......","..kkkkk......","..sssss......","..ksssk......","..sksks......","..sRRRs......","...sss.......","..WWWWW......",".WWWkWWWZ....",".sWWWWWsZ....","..WWkWW.Z....","..WWWWW.ZZ...","..ppppp......","..pp.pp......","..kk.kk......"];
+const CHEF_LINES = ["吃！給我吃完！", "這叫營養！", "誰說難吃？", "盤子舔乾淨！", "今天加料😈", "嘔什麼嘔！", "不准剩！", "再來一碗？"];
 const DOC_ROWS = ["...BBBB......","..BBBBBB.....","..sksskY.....","..BBBBBB.....","...BBBB......","..WWWWWW.ZZ..",".WWWWWWWWZ...",".sWWBWWss....","..WWWWWW.....","..WWWWWW.....","..pp..pp.....","..pp..pp.....",".kk....kk...."], CHAIR_SVG = '<svg class="px" viewBox="0 0 14 7" width="56" height="28"><rect x="10" y="0" width="1" height="1" fill="#73eff7"/><rect x="11" y="0" width="1" height="1" fill="#73eff7"/><rect x="9" y="1" width="1" height="1" fill="#73eff7"/><rect x="10" y="1" width="1" height="1" fill="#73eff7"/><rect x="11" y="1" width="1" height="1" fill="#73eff7"/><rect x="8" y="2" width="1" height="1" fill="#73eff7"/><rect x="9" y="2" width="1" height="1" fill="#73eff7"/><rect x="10" y="2" width="1" height="1" fill="#73eff7"/><rect x="0" y="3" width="1" height="1" fill="#73eff7"/><rect x="1" y="3" width="1" height="1" fill="#73eff7"/><rect x="2" y="3" width="1" height="1" fill="#73eff7"/><rect x="3" y="3" width="1" height="1" fill="#73eff7"/><rect x="4" y="3" width="1" height="1" fill="#73eff7"/><rect x="5" y="3" width="1" height="1" fill="#73eff7"/><rect x="6" y="3" width="1" height="1" fill="#73eff7"/><rect x="7" y="3" width="1" height="1" fill="#73eff7"/><rect x="8" y="3" width="1" height="1" fill="#73eff7"/><rect x="9" y="3" width="1" height="1" fill="#73eff7"/><rect x="0" y="4" width="1" height="1" fill="#73eff7"/><rect x="1" y="4" width="1" height="1" fill="#73eff7"/><rect x="2" y="4" width="1" height="1" fill="#73eff7"/><rect x="3" y="4" width="1" height="1" fill="#73eff7"/><rect x="4" y="4" width="1" height="1" fill="#73eff7"/><rect x="5" y="4" width="1" height="1" fill="#73eff7"/><rect x="6" y="4" width="1" height="1" fill="#73eff7"/><rect x="7" y="4" width="1" height="1" fill="#73eff7"/><rect x="8" y="4" width="1" height="1" fill="#73eff7"/><rect x="9" y="4" width="1" height="1" fill="#73eff7"/><rect x="4" y="5" width="1" height="1" fill="#566c86"/><rect x="5" y="5" width="1" height="1" fill="#566c86"/><rect x="3" y="6" width="1" height="1" fill="#566c86"/><rect x="4" y="6" width="1" height="1" fill="#566c86"/><rect x="5" y="6" width="1" height="1" fill="#566c86"/><rect x="6" y="6" width="1" height="1" fill="#566c86"/></svg>';
 const PLANE_SVG = '<svg class="px" viewBox="0 0 12 6" width="36" height="18"><rect x="6" y="0" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="8" y="1" width="1" height="1" fill="#f4f4f4"/><rect x="0" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="1" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="2" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="2" width="1" height="1" fill="#41a6f6"/><rect x="8" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="9" y="2" width="1" height="1" fill="#41a6f6"/><rect x="10" y="2" width="1" height="1" fill="#f4f4f4"/><rect x="11" y="2" width="1" height="1" fill="#3b5dc9"/><rect x="0" y="3" width="1" height="1" fill="#b13e53"/><rect x="1" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="2" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="3" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="7" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="8" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="9" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="10" y="3" width="1" height="1" fill="#f4f4f4"/><rect x="4" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="6" y="4" width="1" height="1" fill="#f4f4f4"/><rect x="5" y="5" width="1" height="1" fill="#f4f4f4"/></svg>', TOWER_SVG = '<svg class="px" viewBox="0 0 7 7" width="14" height="14"><rect x="2" y="0" width="1" height="1" fill="#333c57"/><rect x="3" y="0" width="1" height="1" fill="#333c57"/><rect x="4" y="0" width="1" height="1" fill="#333c57"/><rect x="1" y="1" width="1" height="1" fill="#333c57"/><rect x="2" y="1" width="1" height="1" fill="#73eff7"/><rect x="3" y="1" width="1" height="1" fill="#73eff7"/><rect x="4" y="1" width="1" height="1" fill="#73eff7"/><rect x="5" y="1" width="1" height="1" fill="#333c57"/><rect x="2" y="2" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="2" width="1" height="1" fill="#c2c3c7"/><rect x="4" y="2" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="3" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="4" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="5" width="1" height="1" fill="#c2c3c7"/><rect x="2" y="6" width="1" height="1" fill="#c2c3c7"/><rect x="3" y="6" width="1" height="1" fill="#c2c3c7"/><rect x="4" y="6" width="1" height="1" fill="#c2c3c7"/></svg>';
 const YD = 560, YARD = 540;
@@ -1037,7 +1055,7 @@ document.addEventListener("click", e => { if (e.target.closest && e.target.close
 function stageLo(w, y){ return (!w.zone && info && info.notice && (y === undefined ? w.y : y) > YD + 192) ? 158 : 0; }
 function lobbyHTML(){
   const big = true;
-  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div>' + bunnyStage() + '<div class="yard"><div class="z-screw"><b>🔩 鎖螺絲研究室</b><span class="ssign">工地安全<br>帽子戴好</span><div class="planks">' + [0,1,2].map(i => '<div class="pk" style="left:' + (5 + i * 32) + '%;top:' + [40, 32, 44][i] + 'px;transform:rotate(' + [-2, 1, -1][i] + 'deg)">' + SCREWHEAD + SCREWHEAD + SCREWHEAD + SCREWHEAD + '</div>').join('') + '</div><div class="cstripe"></div></div><div class="z-lunch"><b>🍱 營養午餐食堂</b><span class="lsign">今日菜色<br>神秘燉肉</span><span class="pot"><i></i><i></i><i></i></span><div class="ltable">' + [0,1,2].map(() => '<span class="tray"><i></i><i></i><i></i></span>').join('') + '</div></div><div class="z-tree"><b>🪓 伐伐伐伐木工</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 生生喝鮮乳</b>' + COW + COW + '</div><div class="z-dent"><b>🦷 巧慧牙醫</b><span class="dsign">掛號請排隊<br>看牙不要怕</span><span class="chair">' + CHAIR_SVG + '</span><span class="doc">' + personSVG(DOC_ROWS, "doc", {p:"#29366f"}) + '</span></div><div class="z-kid"><b>🧒 反兒虐包廂</b><span class="ksign">多一分關心<br>保護專線 113</span>' + [0,1,2,3].map(i => '<span class="k' + (i > 1 ? ' f' : '') + '" style="left:' + [8, 30, 92, 114][i] + 'px;animation-delay:-' + i * 0.13 + 's"><i class="club"></i>' + personSVG(i % 2 ? KID_B : KID_A, "kid" + i) + '</span>').join("") + '</div><div class="z-air"><b>✈️ 松山機場</b><div class="rw"></div><span class="tower">' + TOWER_SVG + '</span><span class="plane">' + PLANE_SVG + '</span><span class="plane p2">' + PLANE_SVG + '</span></div><div class="z-smk"><b>🚬 台北無菸城市</b><span class="nosmk">🚭</span><span class="smog s1"></span><span class="smog s2"></span><span class="smog s3"></span></div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
+  const head = '<div class="lobby" id="lobby"' + (big ? ' style="height:' + (420 + YARD) + 'px"' : '') + '>' + floorHTML(big) + '<div class="djz"><b>🎧 DJ 台</b><span class="djsay" style="display:none"></span><i>♪</i><i>♫</i><i>♪</i>' + DJ + '</div>' + bunnyStage() + '<div class="yard"><div class="z-screw"><b>🔩 鎖螺絲研究室</b><span class="ssign">工地安全<br>帽子戴好</span><div class="planks">' + [0,1,2].map(i => '<div class="pk" style="left:' + (5 + i * 32) + '%;top:' + [40, 32, 44][i] + 'px;transform:rotate(' + [-2, 1, -1][i] + 'deg)">' + SCREWHEAD + SCREWHEAD + SCREWHEAD + SCREWHEAD + '</div>').join('') + '</div><div class="cstripe"></div></div><div class="z-lunch"><b>🍱 營養午餐食堂</b><span class="lsign">今日菜色<br>神秘燉肉</span><span class="pot"><i></i><i></i><i></i></span><span class="chef"><em class="ctag">😈 地獄廚師</em>' + personSVG(CHEF_ROWS, "chef", {s:"#b13e53", O:"#ef7d57", R:"#0d0e17", p:"#333c57"}) + '</span><div class="ltable">' + [0,1,2].map(() => '<span class="tray"><i></i><i></i><i></i></span>').join('') + '</div></div><div class="z-tree"><b>🪓 伐伐伐伐木工</b>' + TREE + TREE + TREE + '</div><div class="z-milk"><b>🥛 生生喝鮮乳</b>' + COW + COW + '</div><div class="z-dent"><b>🦷 巧慧牙醫</b><span class="dsign">掛號請排隊<br>看牙不要怕</span><span class="chair">' + CHAIR_SVG + '</span><span class="doc">' + personSVG(DOC_ROWS, "doc", {p:"#29366f"}) + '</span></div><div class="z-kid"><b>🧒 反兒虐包廂</b><span class="ksign">多一分關心<br>保護專線 113</span>' + [0,1,2,3].map(i => '<span class="k' + (i > 1 ? ' f' : '') + '" style="left:' + [8, 30, 92, 114][i] + 'px;animation-delay:-' + i * 0.13 + 's"><i class="club"></i>' + personSVG(i % 2 ? KID_B : KID_A, "kid" + i) + '</span>').join("") + '</div><div class="z-air"><b>✈️ 松山機場</b><div class="rw"></div><span class="tower">' + TOWER_SVG + '</span><span class="plane">' + PLANE_SVG + '</span><span class="plane p2">' + PLANE_SVG + '</span></div><div class="z-smk"><b>🚬 台北無菸城市</b><span class="nosmk">🚭</span><span class="smog s1"></span><span class="smog s2"></span><span class="smog s3"></span></div></div><span class="tag2">DANCE FLOOR' + (info && info.total ? ' · 共 ' + info.total + ' 人進場' + (info.total > 40 ? '（輪播中）' : '') : '') + '</span>';
   if (!info) return head + '</div>';
   const me = myNick();
   if (!walkers.length) return head + '<div class="empty">舞池還沒有人，送出預測就能進場跳舞 🍺</div></div>';
@@ -1110,6 +1128,19 @@ function tickLobby(t){
       const h = document.createElement("span"); h.className = "ow"; h.textContent = done ? "✨補好了！" : ["滋滋～", "張嘴～啊～", "不要動喔", "滋滋滋～"][pp.dn % 4]; h.style.left = Math.max(0, pp.x - dl) + "px"; h.style.bottom = (pp.y - db + 50) + "px"; zd.appendChild(h); setTimeout(() => h.remove(), 1100);
       if (pp.nick === myNick()) sfx(done ? "win" : "drill");
       if (done) { pp.ddone = true; pp.tooth = false; const bk = box.querySelector('.walker[data-i="' + walkers.indexOf(pp) + '"] .htooth'); if (bk) bk.remove(); const t2 = document.createElement("span"); t2.className = "fx"; t2.textContent = "🦷✨"; t2.style.left = Math.max(0, pp.x - dl + 6) + "px"; t2.style.bottom = (pp.y - db + 34) + "px"; zd.appendChild(t2); setTimeout(() => t2.remove(), 2500); } } } }
+  const zlu = box.querySelector(".z-lunch");
+  if (zlu) { const ll = zlu.offsetLeft, lb = zlu.parentNode.clientHeight - zlu.offsetTop - zlu.offsetHeight, chef = zlu.querySelector(".chef"), eaters = walkers.filter(w => w.zone === "lunch" && w.jt == null);
+    if (chef) { if (!(chef._tgt && eaters.includes(chef._tgt))) chef._tgt = eaters.length ? eaters[Math.floor(Math.random() * eaters.length)] : null; const tg = chef._tgt;
+      chef.style.left = (tg ? Math.max(0, Math.min(zlu.clientWidth - 40, tg.x - ll + (tg.x - ll > zlu.clientWidth / 2 ? -44 : 44))) : zlu.clientWidth - 92) + "px"; chef.style.bottom = (tg ? Math.max(2, tg.y - lb - 2) : 30) + "px";
+      chef.querySelector("svg").style.transform = tg && tg.x - ll > zlu.clientWidth / 2 ? "" : (tg ? "scaleX(-1)" : "");
+      chefAcc += dt; if (chefAcc >= (eaters.length ? 2.4 : 5)) { chefAcc = 0; if (eaters.length) chef._tgt = eaters[Math.floor(Math.random() * eaters.length)];
+        const h = document.createElement("span"); h.className = "ow chefsay"; h.textContent = CHEF_LINES[Math.floor(Math.random() * CHEF_LINES.length)]; h.style.left = Math.max(0, Math.min(zlu.clientWidth - 90, parseFloat(chef.style.left) - 20)) + "px"; h.style.bottom = Math.min(zlu.clientHeight - 50, parseFloat(chef.style.bottom) + 54) + "px"; zlu.appendChild(h); setTimeout(() => h.remove(), 1500);
+        if (chef._tgt && chef._tgt.nick === me) sfx("err"); } } }
+  const screwers = walkers.filter(w => w.zone === "screw" && w.jt == null), zsc = box.querySelector(".z-screw");
+  if (zsc && screwers.length) { coinAcc += dt * Math.min(screwers.length, 3) * 0.55; if (coinAcc >= 1) { coinAcc = 0; const sw = screwers[Math.floor(Math.random() * screwers.length)], sl = zsc.offsetLeft, sbm = zsc.parentNode.clientHeight - zsc.offsetTop - zsc.offsetHeight;
+      const c = document.createElement("span"); c.className = "scoin"; c.style.left = Math.max(0, sw.x - sl + (sw.v < 0 ? -4 : 34)) + "px"; c.style.bottom = (sw.y - sbm + 26) + "px"; zsc.appendChild(c); setTimeout(() => c.remove(), 1100);
+      const p1 = document.createElement("span"); p1.className = "scplus"; p1.textContent = "+1"; p1.style.left = c.style.left; p1.style.bottom = (sw.y - sbm + 44) + "px"; zsc.appendChild(p1); setTimeout(() => p1.remove(), 1100);
+      if (sw.nick === me) sfx("coin"); } }
   const mz = walkers.find(v => v.nick === me && v.zone && v.jt == null);
   if (mz && ZONE_SFX[mz.zone]) { zsT += dt; if (zsT >= ZONE_SFX[mz.zone][0]) { zsT = 0; ZONE_SFX[mz.zone][1](); } } else zsT = 0;
   box.querySelectorAll(".tree").forEach((el, i) => { const s = treeS[i]; if (!s) return; el.classList.toggle("down", s.down > t); el.classList.toggle("shake", s.shake > t); });
@@ -1147,8 +1178,20 @@ function tickLobby(t){
   });
   lobbyRAF = requestAnimationFrame(tickLobby);
 }
+function djParty(){
+  partyUntil = performance.now() + 30000; pstep = 0; partyStyle = "house";
+  if (musicOn && ensureAudio()) {
+    let k; do { k = Math.floor(Math.random() * DJ_SONGS.length); } while (k === djLast && DJ_SONGS.length > 1); djLast = k;
+    if (djAudio) { try { djAudio.pause(); } catch (_) {} }
+    djAudio = new Audio(DJ_SONGS[k]); djAudio.preload = "auto"; djAudio.onended = () => { partyUntil = 0; if (musicOn) startMusic(); };
+    stopMusic();
+    djAudio.play().catch(() => { startMusic(); });
+  }
+  toast(musicOn ? "🎧 DJ：放歌！全場跳起來！" : "🎧 全場跳起來！打開右上角 ♪ 才聽得到 DJ 的歌");
+}
 document.addEventListener("click", e => {
   if (!e.target.closest) return;
+  if (e.target.closest("#lobby .pball")) { djParty(); return; }
   const cow = e.target.closest("#lobby .cow");
   if (cow) { sfx("moo"); const b = document.createElement("span"); b.className = "moo"; b.textContent = "哞～"; b.style.right = cow.style.right || getComputedStyle(cow).right; b.style.bottom = (parseInt(getComputedStyle(cow).bottom) + 30) + "px"; cow.parentNode.appendChild(b); setTimeout(() => b.remove(), 1400); return; }
   const tr = e.target.closest("#lobby .tree");
@@ -1164,17 +1207,7 @@ document.addEventListener("click", e => {
   if (!w) { welcome(); return; }
   const r = box.getBoundingClientRect(), W = box.clientWidth - 39, Z = Math.round(box.clientWidth * 0.68);
   const cx = e.clientX - r.left - 19, cy = r.bottom - e.clientY - 20;
-  if (cy + 20 >= box.clientHeight - 170 && cx + 19 >= Z) {
-    partyUntil = performance.now() + 30000; pstep = 0; partyStyle = "house";
-    if (musicOn && ensureAudio()) {
-      let k; do { k = Math.floor(Math.random() * DJ_SONGS.length); } while (k === djLast && DJ_SONGS.length > 1); djLast = k;
-      if (djAudio) { try { djAudio.pause(); } catch (_) {} }
-      djAudio = new Audio(DJ_SONGS[k]); djAudio.preload = "auto"; djAudio.onended = () => { partyUntil = 0; if (musicOn) startMusic(); };
-      stopMusic();
-      djAudio.play().catch(() => { startMusic(); });
-    }
-    toast(musicOn ? "🎧 DJ：放歌！全場跳起來！" : "🎧 全場跳起來！打開右上角 ♪ 才聽得到 DJ 的歌");
-    return; }
+  if (cy + 20 >= box.clientHeight - 170 && cx + 19 >= Z) { djParty(); return; }
   const zone = cy + 20 < YARD ? yardZone(cx, cy, box.clientWidth) : null;
   const b = zBounds(zone, box.clientWidth), yb = zY2(zone);
   w.jx0 = w.x; w.jy0 = w.y; w.jx1 = Math.max(b[0], Math.min(b[1], cx)); w.jy1 = Math.max(yb[0], Math.min(yb[1], cy)); w.jt = 0;
@@ -1190,12 +1223,12 @@ setInterval(async () => {
   if (q !== -1 || document.hidden) return;
   try { const r = await fetch(API, {credentials:"omit"}); const j = await r.json(); if (j && Array.isArray(j.nicks)) { info = j; data = j; syncWalkers(); const lb = $("lobby"); if (lb) lb.outerHTML = lobbyHTML(); } } catch (_) {}
 }, 30000);
-const ZONE_LINES = {lunch:["嘔～～", "這肉是什麼肉", "我好像中毒了", "營養午餐好營養", "臉怎麼綠了", "阿姨我不要湯"], screw:["左鬆右緊！", "又滑牙了啦", "誰拿走我的十字起子", "鎖好鎖滿", "這顆幾號的？", "螺絲越鎖越多"], kid:["啊我的牙齒", "說好不打臉", "小朋友冷靜", "我是來呼籲的啊", "113 救我"], milk:["哇真的有牛耶", "濃醇香～", "牛來", "這瓶今天擠的嗎", "哞～"], tree:["伐伐伐伐～", "樹倒啦！", "我的斧頭呢", "砍完這棵就收工"], air:["飛機好低", "我射到了嗎", "機場不是這樣用的", "彈弓神射手"], dent:["可以打麻藥嗎", "我不怕痛…騙你的", "門牙回來了嗎", "醫生輕一點"], smoke:["無菸城市還能抽？", "最後一根", "咳咳咳", "出來透透氣"]};
+const ZONE_LINES = {lunch:["廚師好兇…", "嘔～～", "這肉是什麼肉", "我好像中毒了", "營養午餐好營養", "臉怎麼綠了", "阿姨我不要湯"], screw:["左鬆右緊！", "又滑牙了啦", "誰拿走我的十字起子", "鎖好鎖滿", "這顆幾號的？", "螺絲越鎖越多"], kid:["啊我的牙齒", "說好不打臉", "小朋友冷靜", "我是來呼籲的啊", "113 救我"], milk:["哇真的有牛耶", "濃醇香～", "牛來", "這瓶今天擠的嗎", "哞～"], tree:["伐伐伐伐～", "樹倒啦！", "我的斧頭呢", "砍完這棵就收工"], air:["飛機好低", "我射到了嗎", "機場不是這樣用的", "彈弓神射手"], dent:["可以打麻藥嗎", "我不怕痛…騙你的", "門牙回來了嗎", "醫生輕一點"], smoke:["無菸城市還能抽？", "最後一根", "咳咳咳", "出來透透氣"]};
 const SAY_PRESETS = ["我押三杯！", "今晚不醉不歸", "投票了沒？", "理性討論 感性喝酒", "開票見真章", "神預言就是我", "我只是來跳舞的", "乾了這杯！"];
 const DJ_LINES = ["如果你是DJ你會愛我嗎？", "小妹你別慌", "這是北部的口音", "這是中部的口音"];
 let djT = 0, djNext = 3, djLine = "", djShow = 0;
 const treeS = [0,1,2].map(() => ({hp: 6, down: 0, shake: 0}));
-let chopAcc = 0, shotAcc = 0, slapAcc = 0, dentAcc = 0, zsT = 0;
+let chopAcc = 0, shotAcc = 0, slapAcc = 0, dentAcc = 0, zsT = 0, chefAcc = 0, coinAcc = 0;
 const ZONE_SFX = {tree: [1.5, () => { sfx("chop"); const nw = performance.now(), up = treeS.map((x, i) => i).filter(i => !(treeS[i].down > nw)); if (up.length) hitTree(up[Math.floor(Math.random() * up.length)], nw); }], milk: [2.6, () => sfx(Math.random() < .3 ? "moo" : "gulp")], screw: [2.2, () => sfx("screw")], lunch: [3, () => sfx(Math.random() < .35 ? "gulp" : "puke")], smoke: [3.2, () => sfx("cough")]};
 function hitTree(i, t, manual){
   const s = treeS[i]; if (!s || s.down > t) return;
